@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Google Sheets Credentials (IMPORTANT: Never commit!)
+credentials.json
+packages/cli/credentials.json
+*.json
+!package.json
+!package-lock.json
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.cursor
+
+# Project specific
+*.log
+
+.cursorrules
+
+data

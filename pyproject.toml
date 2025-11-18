@@ -1,0 +1,11 @@
+[project]
+name = "psx"
+version = "1.0.0"
+requires-python = ">=3.10,<3.13"
+
+[tool.uv.workspace]
+members = ["packages/analysis", "packages/web", "packages/cli"]
+
+[tool.uv.sources]
+psx-analysis = { workspace = true }
+
