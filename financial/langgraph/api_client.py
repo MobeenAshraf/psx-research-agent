@@ -1,7 +1,7 @@
 """OpenRouter API client for LangGraph workflow."""
 
 import requests
-from typing import Dict, Any, Optional, List
+from typing import Dict, Optional, List
 from financial.pdf_exceptions import LLMAnalysisError
 
 
