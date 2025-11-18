@@ -3,7 +3,6 @@
 import requests
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
-from psx_analysis.models.stock_price import StockPrice
 
 
 class WebPriceRepository:

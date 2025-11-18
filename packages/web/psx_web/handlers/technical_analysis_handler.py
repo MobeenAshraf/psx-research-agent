@@ -2,6 +2,7 @@
 
 from typing import Dict, Any
 from psx_web.handlers.dependency_factory import DependencyFactory
+from psx_analysis.domain.entities.stock_analysis import StockAnalysis
 
 
 def _normalize_indicators(indicators: dict) -> dict:
@@ -60,8 +61,6 @@ def get_technical_analysis(symbol: str) -> Dict[str, Any]:
         Dictionary with analysis results or error
     """
     try:
-        from psx_analysis.domain.entities.stock_analysis import StockAnalysis
-        
         symbol_upper = symbol.upper()
         price_repo = DependencyFactory.get_price_repository()
         analysis_repo = DependencyFactory.get_analysis_repository()

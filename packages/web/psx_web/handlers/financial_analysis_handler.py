@@ -1,7 +1,18 @@
 """Handler for financial analysis requests."""
 
+import os
 import json
 import shutil
+from psx_analysis.financial_analysis.langgraph.analyzer import LangGraphAnalyzer
+from psx_analysis.financial_analysis.repositories import FileResultRepository
+from psx_analysis.financial_analysis.services import (
+    FinancialService,
+    FinancialStatementAnalyzerService,
+    PDFDownloadService,
+)
+from psx_analysis.financial_analysis.pdfplumber_extractor import PDFPlumberExtractor
+from psx_analysis.financial_analysis.services import StatementNameGenerator
+from psx_web.handlers.price_repository import WebPriceRepository
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -11,16 +22,7 @@ _executor = ThreadPoolExecutor(max_workers=2)
 
 def create_financial_analyzer():
     """Create financial statement analyzer service."""
-    import os
-    from psx_analysis.financial_analysis.langgraph.analyzer import LangGraphAnalyzer
-    from psx_analysis.financial_analysis.repositories import FileResultRepository
-    from psx_analysis.financial_analysis.services import (
-        FinancialService,
-        FinancialStatementAnalyzerService,
-        PDFDownloadService,
-    )
-    from psx_analysis.financial_analysis.pdfplumber_extractor import PDFPlumberExtractor
-    from psx_web.handlers.price_repository import WebPriceRepository
+
 
     api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
@@ -39,7 +41,7 @@ def create_financial_analyzer():
 def check_latest_report(symbol: str) -> Dict[str, Any]:
     """Check for cached analysis results using shared services."""
     try:
-        from psx_analysis.financial_analysis.services import StatementNameGenerator
+
 
         symbol_upper = symbol.upper()
         analyzer = create_financial_analyzer()
@@ -116,7 +118,6 @@ def _get_existing_states(symbol: str) -> Dict[str, Any]:
     
     for state_file in state_files:
         try:
-            import json
             with open(state_file, 'r', encoding='utf-8') as f:
                 state_data = json.load(f)
                 step_name = state_file.stem.replace('_state', '')

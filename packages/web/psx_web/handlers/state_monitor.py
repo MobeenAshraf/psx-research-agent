@@ -4,7 +4,7 @@ import json
 import time
 import asyncio
 from pathlib import Path
-from typing import Dict, Any, Optional, AsyncIterator
+from typing import Dict, Any, AsyncIterator
 
 
 def get_state_progress(step_name: str) -> int:
