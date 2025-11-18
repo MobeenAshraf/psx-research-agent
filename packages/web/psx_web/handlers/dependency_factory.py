@@ -44,16 +44,16 @@ class DependencyFactory:
     def get_technical_analyzer():
         """Get technical analyzer instance."""
         if DependencyFactory._technical_analyzer is None:
-            from psx_analysis.technical_analysis.analyzers import TechnicalAnalyzerImpl
-            DependencyFactory._technical_analyzer = TechnicalAnalyzerImpl()
+            from psx_analysis.technical_analysis.analyzers import TechnicalAnalyzer
+            DependencyFactory._technical_analyzer = TechnicalAnalyzer()
         return DependencyFactory._technical_analyzer
     
     @staticmethod
     def get_financial_analyzer():
         """Get financial analyzer instance."""
         if DependencyFactory._financial_analyzer is None:
-            from psx_analysis.financial_analysis.analyzers import FinancialAnalyzerImpl
-            DependencyFactory._financial_analyzer = FinancialAnalyzerImpl()
+            from psx_analysis.financial_analysis.analyzers import FinancialAnalyzer
+            DependencyFactory._financial_analyzer = FinancialAnalyzer()
         return DependencyFactory._financial_analyzer
     
     @staticmethod

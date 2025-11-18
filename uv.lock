@@ -7,13 +7,6 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 
-[manifest]
-members = [
-    "psx",
-    "psx-analysis",
-    "psx-web",
-]
-
 [[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
@@ -1393,15 +1386,12 @@ wheels = [
 ]
 
 [[package]]
-name = "psx"
+name = "psx-research-agent"
 version = "1.0.0"
-source = { virtual = "." }
-
-[[package]]
-name = "psx-analysis"
-version = "1.0.0"
-source = { editable = "packages/analysis" }
+source = { editable = "." }
 dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "fastapi" },
     { name = "langchain" },
     { name = "langchain-community" },
     { name = "langchain-core" },
@@ -1412,12 +1402,15 @@ dependencies = [
     { name = "pandas" },
     { name = "pdfplumber" },
     { name = "python-dotenv" },
+    { name = "requests" },
+    { name = "uvicorn", extra = ["standard"] },
 ]
 
 [package.optional-dependencies]
 dev = [
     { name = "black" },
     { name = "flake8" },
+    { name = "httpx" },
     { name = "pylint" },
     { name = "pytest" },
     { name = "ruff" },
@@ -1425,8 +1418,11 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "beautifulsoup4", specifier = ">=4.12.0" },
     { name = "black", marker = "extra == 'dev'", specifier = ">=23.0.0" },
+    { name = "fastapi", specifier = ">=0.100.0" },
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=6.0.0" },
+    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.24.0" },
     { name = "langchain", specifier = ">=1.0.0" },
     { name = "langchain-community", specifier = ">=0.2.0" },
     { name = "langchain-core", specifier = ">=1.0.0" },
@@ -1438,36 +1434,8 @@ requires-dist = [
     { name = "pylint", marker = "extra == 'dev'", specifier = ">=2.15.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
-]
-provides-extras = ["dev"]
-
-[[package]]
-name = "psx-web"
-version = "1.0.0"
-source = { editable = "packages/web" }
-dependencies = [
-    { name = "beautifulsoup4" },
-    { name = "fastapi" },
-    { name = "psx-analysis" },
-    { name = "requests" },
-    { name = "uvicorn", extra = ["standard"] },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "httpx" },
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "beautifulsoup4", specifier = ">=4.12.0" },
-    { name = "fastapi", specifier = ">=0.100.0" },
-    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.24.0" },
-    { name = "psx-analysis", editable = "packages/analysis" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "requests", specifier = ">=2.31.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.23.0" },
 ]
 provides-extras = ["dev"]

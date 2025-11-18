@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from typing import Optional
 from pathlib import Path
 from routes import get_technical_analysis, check_latest_report, run_financial_analysis
-from psx_web.handlers import state_monitor
+from state_monitor import stream_states, get_current_states
 
 
 app = FastAPI(
@@ -151,7 +151,7 @@ async def stream_financial_analysis(symbol: str):
     """
     async def event_generator():
         try:
-            async for state_update in state_monitor.stream_states(symbol):
+            async for state_update in stream_states(symbol):
                 data = json.dumps(state_update)
                 yield f"data: {data}\n\n"
                 
@@ -186,7 +186,7 @@ async def get_financial_analysis_status(symbol: str):
     Returns:
         Current status and states
     """
-    result = state_monitor.get_current_states(symbol)
+    result = get_current_states(symbol)
     return result
 
 

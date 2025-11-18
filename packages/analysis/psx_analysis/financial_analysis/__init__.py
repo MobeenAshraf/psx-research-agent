@@ -1,2 +1,0 @@
-"""Financial analysis module."""
-
