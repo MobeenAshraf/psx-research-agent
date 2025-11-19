@@ -24,6 +24,10 @@ class FormatStep(BaseWorkflowStep):
             
             report_lines = []
             self._format_company_info(extracted, report_lines)
+            self._format_investor_statements(extracted, report_lines)
+            self._format_investment_growth_areas(analysis, report_lines)
+            self._format_holding_focus_areas(analysis, report_lines)
+            self._format_loss_causing_areas(extracted, analysis, report_lines)
             self._format_growth_metrics(calculated, report_lines)
             self._format_investment_analysis(extracted, analysis, report_lines)
             self._format_dividend_analysis(extracted, analysis, report_lines)
@@ -83,6 +87,20 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append(f"- Payout Ratio: {div_analysis.get('payout_ratio', 'N/A')}%")
         report_lines.append(f"- FCF Coverage: {div_analysis.get('fcf_coverage', 'N/A')}x")
         report_lines.append(f"- Strategy: {div_analysis.get('strategy', 'N/A')}")
+        
+        dividend_statements = div_analysis.get("dividend_statements", [])
+        if dividend_statements and isinstance(dividend_statements, list):
+            report_lines.append("")
+            report_lines.append("Dividend Policy Statements:")
+            for stmt in dividend_statements:
+                if stmt and isinstance(stmt, str) and stmt.strip():
+                    report_lines.append(f"- {stmt}")
+        
+        dividend_explanation = div_analysis.get("dividend_explanation")
+        if dividend_explanation and isinstance(dividend_explanation, str) and dividend_explanation.strip():
+            report_lines.append("")
+            report_lines.append(f"Dividend Explanation: {dividend_explanation}")
+        
         report_lines.append("")
     
     def _format_valuation_metrics(self, extracted: Dict[str, Any], calculated: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
@@ -172,5 +190,49 @@ class FormatStep(BaseWorkflowStep):
             report_lines.append("RED FLAGS:")
             for flag in red_flags:
                 report_lines.append(f"- {flag}")
+            report_lines.append("")
+    
+    def _format_investor_statements(self, extracted: Dict[str, Any], report_lines: List[str]) -> None:
+        """Format investor statements section."""
+        investor_statements = extracted.get("investor_statements", [])
+        if investor_statements and isinstance(investor_statements, list) and investor_statements:
+            report_lines.append("KEY INVESTOR STATEMENTS:")
+            for stmt in investor_statements:
+                if stmt and isinstance(stmt, str) and stmt.strip():
+                    report_lines.append(f"- {stmt}")
+            report_lines.append("")
+    
+    def _format_investment_growth_areas(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
+        """Format investment growth areas section."""
+        growth_areas = analysis.get("investment_growth_areas", [])
+        if growth_areas and isinstance(growth_areas, list) and growth_areas:
+            report_lines.append("INVESTMENT & GROWTH AREAS:")
+            for area in growth_areas:
+                if area and isinstance(area, str) and area.strip():
+                    report_lines.append(f"- {area}")
+            report_lines.append("")
+    
+    def _format_holding_focus_areas(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
+        """Format holding company focus areas section."""
+        company_type = analysis.get("company_type")
+        if company_type not in ["holding", "mixed"]:
+            return
+        
+        focus_areas = analysis.get("holding_focus_areas", [])
+        if focus_areas and isinstance(focus_areas, list) and focus_areas:
+            report_lines.append("HOLDING COMPANY FOCUS AREAS:")
+            for area in focus_areas:
+                if area and isinstance(area, str) and area.strip():
+                    report_lines.append(f"- {area}")
+            report_lines.append("")
+    
+    def _format_loss_causing_areas(self, extracted: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
+        """Format loss causing areas section."""
+        loss_areas = analysis.get("loss_causing_areas", [])
+        if loss_areas and isinstance(loss_areas, list) and loss_areas:
+            report_lines.append("LOSS-CAUSING AREAS:")
+            for area in loss_areas:
+                if area and isinstance(area, str) and area.strip():
+                    report_lines.append(f"- {area}")
             report_lines.append("")
 

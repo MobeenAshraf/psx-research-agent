@@ -36,7 +36,9 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "accounts_receivable": number or null,
   "inventory": number or null,
   "interest_expense": number or null,
-  "new_initiatives": ["string"] or []
+  "new_initiatives": ["string"] or [],
+  "dividend_statements": ["string"] or [],
+  "investor_statements": ["string"] or []
 }}
 ```
 
@@ -99,6 +101,27 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
 - If truly not found after exhaustive search, use `null`
 - DO NOT make up or estimate values
 
+### Step 6: Extract Investor-Relevant Statements
+**CRITICAL: Extract explicit investor-relevant statements from narrative text.**
+
+**For dividend_statements:**
+- Extract ONLY explicit statements about dividend policy changes, explanations, or plans
+- Examples: "paused dividends to invest in X", "suspended dividend payments due to capital requirements", "no dividends declared to fund expansion"
+- MUST extract 1-2 line quotes or close paraphrases
+- Use imperative language: EXTRACT only dividend-related statements
+
+**For investor_statements:**
+- Extract investment priorities, growth area announcements, loss explanations, holding company focus areas
+- Examples: "investing heavily in renewable energy sector", "focusing on digital transformation initiatives", "losses primarily from discontinued operations"
+- MUST extract 1-2 line quotes or close paraphrases
+- Clear boundary: dividend_statements = ONLY dividend-related. investor_statements = all other investor-relevant statements
+
+**Extraction Rules:**
+- Extract EXACT quotes or close paraphrases (1-2 lines each)
+- Provide 2-3 concrete positive examples per field type
+- Use imperative language: MUST, ONLY, EXTRACT
+- Return empty array [] if no statements found
+
 ## Critical Rules
 
 1. **Return ONLY valid JSON** - no markdown, no code blocks, no explanations
@@ -138,7 +161,9 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "accounts_receivable": 100000000,
   "inventory": 50000000,
   "interest_expense": 20000000,
-  "new_initiatives": ["New product line X", "Expansion into market Y"]
+  "new_initiatives": ["New product line X", "Expansion into market Y"],
+  "dividend_statements": ["Paused dividend payments to invest in new manufacturing facility", "No dividends declared this period due to capital allocation priorities"],
+  "investor_statements": ["Focusing on expanding digital services segment", "Losses primarily from restructuring charges in European operations"]
 }}
 ```
 

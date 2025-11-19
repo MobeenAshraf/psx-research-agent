@@ -58,6 +58,19 @@ Return the JSON object now:"""
                 state_context={"pdf_text": state["pdf_text"], "delimiter": "="*80}
             )
             
+            if not isinstance(extracted_data, dict):
+                extracted_data = {}
+            
+            dividend_statements = extracted_data.get("dividend_statements")
+            if not isinstance(dividend_statements, list):
+                dividend_statements = []
+            extracted_data["dividend_statements"] = dividend_statements
+            
+            investor_statements = extracted_data.get("investor_statements")
+            if not isinstance(investor_statements, list):
+                investor_statements = []
+            extracted_data["investor_statements"] = investor_statements
+            
             state["extracted_data"] = extracted_data
             
             if state.get("token_usage") is None:

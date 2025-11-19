@@ -4,7 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PSX Stock Analysis</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="manifest" href="/static/site.webmanifest">
+    <link rel="stylesheet" href="/static/tailwind.css" id="fallback-css" media="print" onerror="this.media='all'">
+    <script src="https://cdn.tailwindcss.com" onerror="document.getElementById('fallback-css').media='all'"></script>
+    <script>
+        (function() {
+            function checkTailwindLoaded() {
+                var testEl = document.createElement('div');
+                testEl.className = 'bg-blue-600';
+                testEl.style.position = 'absolute';
+                testEl.style.visibility = 'hidden';
+                testEl.style.height = '1px';
+                document.body.appendChild(testEl);
+                var computed = window.getComputedStyle(testEl);
+                var bgColor = computed.backgroundColor;
+                document.body.removeChild(testEl);
+                
+                var isTailwindWorking = bgColor && (
+                    bgColor === 'rgb(37, 99, 235)' || 
+                    bgColor.includes('37, 99, 235') ||
+                    bgColor === '#2563eb'
+                );
+                
+                if (!isTailwindWorking) {
+                    var fallbackLink = document.getElementById('fallback-css');
+                    if (fallbackLink) {
+                        fallbackLink.media = 'all';
+                    } else {
+                        var link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = '/static/tailwind.css';
+                        document.head.appendChild(link);
+                    }
+                }
+            }
+            
+            setTimeout(checkTailwindLoaded, 500);
+            setTimeout(checkTailwindLoaded, 1500);
+        })();
+    </script>
     <style>
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }

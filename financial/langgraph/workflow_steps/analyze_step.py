@@ -25,10 +25,32 @@ class AnalyzeStep(BaseWorkflowStep):
             extracted = state.get("extracted_data", {})
             calculated = state.get("calculated_metrics", {})
             
+            if not isinstance(extracted, dict):
+                extracted = {}
+            if not isinstance(calculated, dict):
+                calculated = {}
+            
+            dividend_statements = extracted.get("dividend_statements")
+            if not isinstance(dividend_statements, list):
+                dividend_statements = []
+            
+            investor_statements = extracted.get("investor_statements")
+            if not isinstance(investor_statements, list):
+                investor_statements = []
+            
             extracted_json_str = json.dumps(extracted, indent=2)
             calculated_json_str = json.dumps(calculated, indent=2)
             extracted_json_str = extracted_json_str.replace("{", "{{").replace("}", "}}")
             calculated_json_str = calculated_json_str.replace("{", "{{").replace("}", "}}")
+            
+            statements_context = ""
+            if dividend_statements or investor_statements:
+                statements_context = "\n\n**CRITICAL: Investor Statements from Extraction:**\n"
+                if dividend_statements:
+                    statements_context += f"dividend_statements: {json.dumps(dividend_statements, indent=2)}\n"
+                if investor_statements:
+                    statements_context += f"investor_statements: {json.dumps(investor_statements, indent=2)}\n"
+                statements_context += "\n**You MUST incorporate these statements into your analysis.**"
             
             user_prompt_content = f"""{analysis_prompt_content}
 
@@ -36,7 +58,7 @@ Extracted Data:
 {extracted_json_str}
 
 Calculated Metrics:
-{calculated_json_str}
+{calculated_json_str}{statements_context}
 
 Provide investor-focused analysis as structured JSON. Return ONLY valid JSON, no additional text."""
             
