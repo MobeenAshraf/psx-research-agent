@@ -45,19 +45,20 @@ A comprehensive web application for analyzing PSX stocks: technical analysis and
 
 ## Screenshots
 
+### Web Interface
+
+![Web Interface](docs/imgs/main.png)
+
 ### Financial Analysis
 
-![Financial Analysis](docs/imgs/financial.png)
+![Financial Analysis](docs/imgs/financial-analysis.png)
 
 *Financial analysis workflow showing LangGraph-powered multi-step analysis*
 
-### Web Interface
+### Technical Analysis
 
-![Web Interface](docs/imgs/web-ui.png)
+![Technical Analysis](docs/imgs/technical.png)
 
-*Main web interface for PSX stock analysis*
-
-> **Note**: Replace `docs/imgs/web-ui.png` with an actual screenshot of your web interface when available.
 
 ---
 
@@ -289,8 +290,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-
-**Made with ❤️ for PSX Stock Analysis**
 
 [Report Bug](https://github.com/yourusername/psx-research-agent/issues) • [Request Feature](https://github.com/yourusername/psx-research-agent/issues) • [Documentation](https://github.com/yourusername/psx-research-agent#readme)
 
