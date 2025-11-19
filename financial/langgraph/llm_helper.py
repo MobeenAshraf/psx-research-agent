@@ -1,7 +1,7 @@
 """LLM helper for shared LLM call logic."""
 
 import json
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 try:
     from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 except ImportError:
@@ -24,7 +24,7 @@ class LLMHelper:
         user_prompt_content: str,
         model: str,
         state_context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    ) -> Tuple[Dict[str, Any], Dict[str, int]]:
         """
         Call LLM with JSON response format, handling prompt creation, API call, and parsing.
         
@@ -35,7 +35,10 @@ class LLMHelper:
             state_context: Optional context dict for template formatting
             
         Returns:
-            Parsed JSON response as dictionary
+            Tuple of (parsed_json_response, token_usage) where token_usage contains:
+            - prompt_tokens: Number of tokens in the prompt
+            - completion_tokens: Number of tokens in the completion
+            - total_tokens: Total tokens used
             
         Raises:
             LLMAnalysisError: If API call or parsing fails
@@ -63,14 +66,15 @@ class LLMHelper:
                     role = "user"
                 messages.append({"role": role, "content": msg.content})
             
-            response = self.api_client.call(
+            response, token_usage = self.api_client.call(
                 messages=messages,
                 model=model,
                 response_format={"type": "json_object"}
             )
             
             try:
-                return self.json_parser.parse_response(response)
+                parsed_response = self.json_parser.parse_response(response)
+                return parsed_response, token_usage
             except Exception as parse_err:
                 error_details = f"Parse error: {str(parse_err)}\n"
                 error_details += f"Response length: {len(response)}\n"

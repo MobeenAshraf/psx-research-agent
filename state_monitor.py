@@ -77,7 +77,8 @@ async def stream_states(symbol: str, poll_interval: float = 1.5) -> AsyncIterato
                     'step': step_name,
                     'progress': progress,
                     'data': state_data,
-                    'timestamp': state_data.get('timestamp', '')
+                    'timestamp': state_data.get('timestamp', ''),
+                    'token_usage': state_data.get('token_usage')
                 }
                 
                 seen_states.add(step_name)
@@ -86,7 +87,8 @@ async def stream_states(symbol: str, poll_interval: float = 1.5) -> AsyncIterato
                     yield {
                         'type': 'complete',
                         'message': 'Analysis complete',
-                        'final_state': state_data
+                        'final_state': state_data,
+                        'token_usage': state_data.get('token_usage')
                     }
                     return
             except Exception as e:

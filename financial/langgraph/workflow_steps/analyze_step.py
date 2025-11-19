@@ -40,13 +40,30 @@ Calculated Metrics:
 
 Provide investor-focused analysis as structured JSON. Return ONLY valid JSON, no additional text."""
             
-            analysis_results = self.llm_helper.call_llm_with_json_response(
+            analysis_results, token_usage = self.llm_helper.call_llm_with_json_response(
                 system_prompt_content=system_prompt_content,
                 user_prompt_content=user_prompt_content,
                 model=ModelConfig.get_analysis_model()
             )
             
             state["analysis_results"] = analysis_results
+            
+            if state.get("token_usage") is None:
+                state["token_usage"] = {
+                    "steps": {},
+                    "cumulative": {
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": 0,
+                    }
+                }
+            
+            state["token_usage"]["steps"]["analyze"] = token_usage
+            
+            cumulative = state["token_usage"]["cumulative"]
+            cumulative["prompt_tokens"] += token_usage["prompt_tokens"]
+            cumulative["completion_tokens"] += token_usage["completion_tokens"]
+            cumulative["total_tokens"] += token_usage["total_tokens"]
             
         except Exception as e:
             self._handle_errors(state, e, "analysis_results", {}, "Analysis error: ")

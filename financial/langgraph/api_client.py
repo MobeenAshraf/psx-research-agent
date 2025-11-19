@@ -1,7 +1,7 @@
 """OpenRouter API client for LangGraph workflow."""
 
 import requests
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
 from financial.pdf_exceptions import LLMAnalysisError
 
 
@@ -20,8 +20,16 @@ class OpenRouterAPIClient:
         messages: List[Dict[str, str]],
         model: str,
         response_format: Optional[Dict[str, str]] = None
-    ) -> str:
-        """Call OpenRouter API."""
+    ) -> Tuple[str, Dict[str, int]]:
+        """
+        Call OpenRouter API.
+        
+        Returns:
+            Tuple of (content, token_usage) where token_usage contains:
+            - prompt_tokens: Number of tokens in the prompt
+            - completion_tokens: Number of tokens in the completion
+            - total_tokens: Total tokens used
+        """
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -50,7 +58,21 @@ class OpenRouterAPIClient:
             if "choices" not in result or not result["choices"]:
                 raise LLMAnalysisError("No response from OpenRouter API")
             
-            return result["choices"][0]["message"]["content"]
+            content = result["choices"][0]["message"]["content"]
+            
+            token_usage = {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+            }
+            
+            if "usage" in result:
+                usage = result["usage"]
+                token_usage["prompt_tokens"] = usage.get("prompt_tokens", 0)
+                token_usage["completion_tokens"] = usage.get("completion_tokens", 0)
+                token_usage["total_tokens"] = usage.get("total_tokens", 0)
+            
+            return content, token_usage
         except requests.RequestException as e:
             raise LLMAnalysisError(f"OpenRouter API error: {str(e)}")
         except (KeyError, IndexError) as e:

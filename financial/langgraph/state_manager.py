@@ -47,6 +47,7 @@ class StateManager:
             "analysis_results": state.get("analysis_results"),
             "final_report": state.get("final_report"),
             "errors": state.get("errors", []),
+            "token_usage": state.get("token_usage"),
         }
         
         if "pdf_text" in state:

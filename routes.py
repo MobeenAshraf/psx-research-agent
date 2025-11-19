@@ -218,12 +218,14 @@ def check_latest_report(symbol: str) -> Dict[str, Any]:
                 symbol_upper, statement_name
             )
             states = _get_existing_states(symbol_upper)
+            final_state = states.get("99_final", {})
             return {
                 "symbol": symbol_upper,
                 "status": "exists",
                 "statement_name": statement_name,
                 "result": cached_result,
                 "states": states,
+                "token_usage": final_state.get("token_usage"),
             }
 
         return {

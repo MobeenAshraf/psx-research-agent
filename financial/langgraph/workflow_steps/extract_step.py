@@ -51,7 +51,7 @@ Extract all financial data from the text above and return it as a valid JSON obj
 
 Return the JSON object now:"""
             
-            extracted_data = self.llm_helper.call_llm_with_json_response(
+            extracted_data, token_usage = self.llm_helper.call_llm_with_json_response(
                 system_prompt_content=system_prompt_content,
                 user_prompt_content=user_prompt_content,
                 model=ModelConfig.get_extraction_model(),
@@ -59,6 +59,23 @@ Return the JSON object now:"""
             )
             
             state["extracted_data"] = extracted_data
+            
+            if state.get("token_usage") is None:
+                state["token_usage"] = {
+                    "steps": {},
+                    "cumulative": {
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": 0,
+                    }
+                }
+            
+            state["token_usage"]["steps"]["extract"] = token_usage
+            
+            cumulative = state["token_usage"]["cumulative"]
+            cumulative["prompt_tokens"] += token_usage["prompt_tokens"]
+            cumulative["completion_tokens"] += token_usage["completion_tokens"]
+            cumulative["total_tokens"] += token_usage["total_tokens"]
             
         except Exception as e:
             self._handle_errors(state, e, "extracted_data", {}, "Extraction error: ")

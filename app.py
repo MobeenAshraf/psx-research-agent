@@ -219,7 +219,8 @@ async def get_financial_analysis_result(symbol: str):
             'symbol': symbol_upper,
             'status': 'complete',
             'final_report': final_state.get('final_report', ''),
-            'state': final_state
+            'state': final_state,
+            'token_usage': final_state.get('token_usage')
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading result: {str(e)}")

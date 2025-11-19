@@ -14,4 +14,5 @@ class AnalysisState(TypedDict):
     analysis_results: Optional[Dict[str, Any]]
     final_report: Optional[str]
     errors: List[str]
+    token_usage: Optional[Dict[str, Any]]
 

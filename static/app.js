@@ -222,7 +222,8 @@ function connectToStream(symbol) {
                     displayFinancialResults({
                         status: 'complete',
                         result: data.final_state.final_report,
-                        symbol: symbol
+                        symbol: symbol,
+                        token_usage: data.token_usage || data.final_state.token_usage
                     });
                 } else {
                     fetchFinalResult(symbol);
@@ -306,5 +307,71 @@ function displayFinancialResults(data) {
             : '';
         resultsContent.textContent += stateInfo;
     }
+    
+    const tokenUsage = data.token_usage || (data.final_state && data.final_state.token_usage) || (data.state && data.state.token_usage);
+    if (tokenUsage) {
+        displayTokenUsage(tokenUsage);
+    }
+}
+
+function displayTokenUsage(tokenUsage) {
+    const resultsSection = document.getElementById('resultsSection');
+    
+    let existingTokenUsage = document.getElementById('tokenUsageCard');
+    if (existingTokenUsage) {
+        existingTokenUsage.remove();
+    }
+    
+    const tokenUsageCard = document.createElement('div');
+    tokenUsageCard.id = 'tokenUsageCard';
+    tokenUsageCard.className = 'bg-gray-800 rounded-lg shadow-lg p-6 mb-4 fade-in border border-gray-700';
+    
+    const steps = tokenUsage.steps || {};
+    const cumulative = tokenUsage.cumulative || {};
+    
+    let html = '<h3 class="text-lg font-semibold text-gray-100 mb-4 flex items-center gap-2">';
+    html += '<svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>';
+    html += 'Token Usage</h3>';
+    
+    if (Object.keys(steps).length > 0) {
+        html += '<div class="mb-6">';
+        html += '<h4 class="text-sm font-semibold text-gray-300 mb-3">Per-Step Breakdown</h4>';
+        html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+        
+        const stepNames = {
+            'extract': 'Extract Step',
+            'analyze': 'Analyze Step'
+        };
+        
+        for (const [stepKey, stepData] of Object.entries(steps)) {
+            const stepName = stepNames[stepKey] || stepKey.charAt(0).toUpperCase() + stepKey.slice(1);
+            html += '<div class="bg-gray-700 rounded-lg p-4 border border-gray-600">';
+            html += `<div class="text-sm font-medium text-gray-200 mb-3">${stepName}</div>`;
+            html += '<div class="space-y-2">';
+            html += `<div class="flex justify-between items-center"><span class="text-xs text-gray-400">Prompt Tokens:</span><span class="text-sm font-semibold text-blue-400">${formatNumber(stepData.prompt_tokens || 0)}</span></div>`;
+            html += `<div class="flex justify-between items-center"><span class="text-xs text-gray-400">Completion Tokens:</span><span class="text-sm font-semibold text-green-400">${formatNumber(stepData.completion_tokens || 0)}</span></div>`;
+            html += `<div class="flex justify-between items-center pt-2 border-t border-gray-600"><span class="text-xs text-gray-300 font-medium">Total:</span><span class="text-sm font-bold text-gray-100">${formatNumber(stepData.total_tokens || 0)}</span></div>`;
+            html += '</div></div>';
+        }
+        
+        html += '</div></div>';
+    }
+    
+    if (cumulative.total_tokens > 0) {
+        html += '<div class="bg-gradient-to-r from-gray-700 to-gray-600 rounded-lg p-5 border-2 border-blue-500">';
+        html += '<h4 class="text-sm font-semibold text-gray-200 mb-4">Cumulative Totals</h4>';
+        html += '<div class="grid grid-cols-3 gap-4">';
+        html += '<div class="text-center"><div class="text-xs text-gray-400 mb-1">Prompt Tokens</div><div class="text-2xl font-bold text-blue-400">' + formatNumber(cumulative.prompt_tokens || 0) + '</div></div>';
+        html += '<div class="text-center"><div class="text-xs text-gray-400 mb-1">Completion Tokens</div><div class="text-2xl font-bold text-green-400">' + formatNumber(cumulative.completion_tokens || 0) + '</div></div>';
+        html += '<div class="text-center"><div class="text-xs text-gray-300 mb-1 font-medium">Total Tokens</div><div class="text-3xl font-bold text-gray-100">' + formatNumber(cumulative.total_tokens || 0) + '</div></div>';
+        html += '</div></div>';
+    }
+    
+    tokenUsageCard.innerHTML = html;
+    resultsSection.appendChild(tokenUsageCard);
+}
+
+function formatNumber(num) {
+    return num.toLocaleString('en-US');
 }
 

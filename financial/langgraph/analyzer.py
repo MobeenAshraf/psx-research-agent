@@ -97,6 +97,14 @@ class LangGraphAnalyzer:
             "analysis_results": None,
             "final_report": None,
             "errors": [],
+            "token_usage": {
+                "steps": {},
+                "cumulative": {
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                }
+            },
         }
         
         self.state_manager.save_state(initial_state, "00_initial")
