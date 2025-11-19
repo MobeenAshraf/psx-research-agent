@@ -1,11 +1,65 @@
+<div align="center">
+
 # PSX Research Agent
 
-A web application for analyzing PSX stocks: technical analysis and financial statement analysis.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.10--3.12-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
+
+A comprehensive web application for analyzing PSX stocks: technical analysis and financial statement analysis.
+
+[Features](#features) • [Installation](#installation) • [Documentation](#api-endpoints) • [License](#license)
+
+</div>
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Install uv](#install-uv)
+  - [Install Dependencies](#install-dependencies)
+- [Running](#running)
+- [API Endpoints](#api-endpoints)
+- [Configuration](#configuration)
+- [Technical Analysis](#technical-analysis)
+- [Financial Analysis](#financial-analysis)
+  - [LangGraph Workflow](#langgraph-workflow)
+- [Development](#development)
+- [Troubleshooting](#troubleshooting)
+- [Why uv?](#why-uv)
+- [License](#license)
+
+---
 
 ## Features
 
 1. **Technical Analysis** - Comprehensive technical indicators and signals
 2. **Financial Analysis** - Analysis of latest financial statements using LangGraph
+
+---
+
+## Screenshots
+
+### Financial Analysis
+
+![Financial Analysis](docs/imgs/financial.png)
+
+*Financial analysis workflow showing LangGraph-powered multi-step analysis*
+
+### Web Interface
+
+![Web Interface](docs/imgs/web-ui.png)
+
+*Main web interface for PSX stock analysis*
+
+> **Note**: Replace `docs/imgs/web-ui.png` with an actual screenshot of your web interface when available.
+
+---
 
 ## Project Structure
 
@@ -39,6 +93,8 @@ psx-research-agent/
 └── pyproject.toml           # Project dependencies
 ```
 
+---
+
 ## Installation
 
 ### Prerequisites
@@ -53,6 +109,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 Or with pip:
+
 ```bash
 pip install uv
 ```
@@ -66,6 +123,8 @@ uv sync
 ```
 
 This will install all dependencies defined in `pyproject.toml`.
+
+---
 
 ## Running
 
@@ -83,6 +142,8 @@ python app.py
 
 The web application will be available at `http://localhost:8000`
 
+---
+
 ## API Endpoints
 
 - `GET /` - Frontend page
@@ -94,6 +155,8 @@ The web application will be available at `http://localhost:8000`
 - `GET /api/financial-analysis/result/{symbol}` - Get final result
 - `GET /docs` - Interactive API documentation (Swagger UI)
 
+---
+
 ## Configuration
 
 ### Environment Variables
@@ -102,6 +165,8 @@ The web application will be available at `http://localhost:8000`
 # OpenRouter API (for financial analysis)
 export OPENROUTER_API_KEY="your-api-key"
 ```
+
+---
 
 ## Technical Analysis
 
@@ -113,6 +178,8 @@ The technical analysis module provides comprehensive indicators:
 - **Volume Indicators**: Volume Ratio, OBV, VWAP
 - **Support/Resistance**: Fibonacci Retracements
 - **Pattern Recognition**: Candlestick Patterns
+
+---
 
 ## Financial Analysis
 
@@ -153,6 +220,8 @@ The workflow maintains state between steps and provides real-time progress updat
 - State persistence allows debugging and recovery from failures
 - More flexible error handling and conditional routing
 
+---
+
 ## Development
 
 ### Code Structure
@@ -174,11 +243,14 @@ The workflow maintains state between steps and provides real-time progress updat
 2. Add calculations in `calculate_step.py`
 3. Update validation in `validate_step.py`
 
+---
+
 ## Troubleshooting
 
 ### "Module not found" errors
 
 Ensure dependencies are installed:
+
 ```bash
 uv sync
 ```
@@ -186,6 +258,7 @@ uv sync
 ### "OPENROUTER_API_KEY is required"
 
 Set the environment variable:
+
 ```bash
 export OPENROUTER_API_KEY="your-api-key"
 ```
@@ -193,9 +266,12 @@ export OPENROUTER_API_KEY="your-api-key"
 ### "Address already in use"
 
 Kill existing processes on port 8000:
+
 ```bash
 lsof -ti:8000 | xargs kill -9
 ```
+
+---
 
 ## Why uv?
 
@@ -203,3 +279,19 @@ lsof -ti:8000 | xargs kill -9
 - **Faster**: Installs packages much faster than pip
 - **Simpler workflow**: No more `source venv/bin/activate` commands
 - **Automatic management**: Creates and manages virtual environments for you
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Made with ❤️ for PSX Stock Analysis**
+
+[Report Bug](https://github.com/yourusername/psx-research-agent/issues) • [Request Feature](https://github.com/yourusername/psx-research-agent/issues) • [Documentation](https://github.com/yourusername/psx-research-agent#readme)
+
+</div>
