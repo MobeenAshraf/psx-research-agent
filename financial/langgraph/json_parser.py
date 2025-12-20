@@ -9,25 +9,12 @@ class JSONParser:
     
     @staticmethod
     def parse_response(response: str) -> Dict[str, Any]:
-        """
-        Parse JSON response from LLM, handling various formatting issues.
-        
-        Args:
-            response: Raw response string from LLM
-            
-        Returns:
-            Parsed JSON as dictionary
-            
-        Raises:
-            json.JSONDecodeError: If JSON cannot be parsed
-            ValueError: If no JSON object found
-        """
+        """Parse JSON response from LLM, handling formatting issues."""
         if not response or not response.strip():
             raise ValueError("Empty response received")
         
         original_response = response
         
-        # Step 1: Remove markdown code blocks if present
         response_clean = response.strip()
         if "```json" in response_clean:
             start = response_clean.find("```json") + 7
@@ -40,9 +27,20 @@ class JSONParser:
             if end > start:
                 response_clean = response_clean[start:end].strip()
         
-        # Step 2: Find JSON object boundaries
         start_idx = response_clean.find("{")
         end_idx = response_clean.rfind("}")
+        
+        # Check if response appears truncated (no closing brace)
+        if start_idx >= 0 and end_idx <= start_idx:
+            # Try to detect if we're in the middle of a value
+            last_comma = response_clean.rfind(",")
+            last_colon = response_clean.rfind(":")
+            if last_colon > last_comma and last_colon > start_idx:
+                # We're likely in the middle of a value - this is truncated
+                raise ValueError(
+                    f"Response appears truncated - no closing brace found. "
+                    f"Response ends with: {repr(response_clean[-100:])}"
+                )
         
         if start_idx < 0 or end_idx <= start_idx:
             # Attempt to auto-wrap key/value pairs into JSON
@@ -71,10 +69,8 @@ class JSONParser:
                 f"{repr(response_clean[:200])}"
             )
         
-        # Extract just the JSON part
         response_clean = response_clean[start_idx:end_idx + 1]
         
-        # Step 3: Aggressively clean whitespace
         if response_clean.startswith('\n') or response_clean.startswith('\r') or response_clean.startswith(' '):
             first_brace = response_clean.find('{')
             if first_brace > 0:
@@ -82,11 +78,17 @@ class JSONParser:
         
         response_clean = response_clean.rstrip()
         
-        # Step 4: Try parsing
         try:
             return json.loads(response_clean)
         except json.JSONDecodeError as json_err:
-            # Step 5: Try line-by-line extraction with proper brace counting
+            # Check if error is due to incomplete JSON (truncation)
+            if json_err.pos >= len(response_clean) - 10:
+                # Error near the end - likely truncation
+                raise ValueError(
+                    f"JSON appears truncated. Error at position {json_err.pos} of {len(response_clean)}. "
+                    f"Response ends with: {repr(response_clean[-200:])}"
+                ) from json_err
+            
             lines = original_response.split('\n')
             json_lines = []
             brace_count = 0

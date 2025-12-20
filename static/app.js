@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const stockInput = document.getElementById('stockInput');
     const technicalBtn = document.getElementById('technicalBtn');
     const financialBtn = document.getElementById('financialBtn');
+    const llmDecisionBtn = document.getElementById('llmDecisionBtn');
     
     stockInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     technicalBtn.addEventListener('click', handleTechnicalAnalysis);
     financialBtn.addEventListener('click', handleFinancialAnalysis);
+    llmDecisionBtn.addEventListener('click', handleLLMDecision);
 });
 
 function getSymbol() {
@@ -115,6 +117,9 @@ async function handleFinancialAnalysis() {
     const symbol = getSymbol();
     if (!symbol) return;
     
+    const extractionModel = document.getElementById('extractionModel').value;
+    const analysisModel = document.getElementById('analysisModel').value;
+    
     hideAllSections();
     showLoading('financialBtn', 'financialSpinner', 'financialBtnText');
     
@@ -124,7 +129,11 @@ async function handleFinancialAnalysis() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ symbol }),
+            body: JSON.stringify({ 
+                symbol,
+                extraction_model: extractionModel,
+                analysis_model: analysisModel
+            }),
         });
         
         if (!checkResponse.ok) {
@@ -144,7 +153,11 @@ async function handleFinancialAnalysis() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ symbol }),
+            body: JSON.stringify({ 
+                symbol,
+                extraction_model: extractionModel,
+                analysis_model: analysisModel
+            }),
         });
         
         if (!runResponse.ok) {
@@ -155,11 +168,131 @@ async function handleFinancialAnalysis() {
         hideLoading('financialBtn', 'financialSpinner', 'financialBtnText', 'Financial Analysis');
         
         showProgressSection();
-        connectToStream(symbol);
+        connectToStream(symbol, extractionModel, analysisModel);
     } catch (error) {
         showError(`Financial analysis failed: ${error.message}`);
         hideLoading('financialBtn', 'financialSpinner', 'financialBtnText', 'Financial Analysis');
     }
+}
+
+async function handleLLMDecision() {
+    const symbol = getSymbol();
+    if (!symbol) return;
+    
+    hideAllSections();
+    showLoading('llmDecisionBtn', 'llmDecisionSpinner', 'llmDecisionBtnText');
+    
+    try {
+        const extractionModel = document.getElementById('extractionModel').value;
+        const analysisModel = document.getElementById('analysisModel').value;
+        
+        const response = await fetch(`${API_BASE}/llm-decision`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                symbol,
+                extraction_model: extractionModel,
+                analysis_model: analysisModel,
+                decision_model: 'auto'
+            }),
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Decision generation failed');
+        }
+        
+        const data = await response.json();
+        displayLLMDecisionResults(data);
+    } catch (error) {
+        showError(`LLM Decision failed: ${error.message}`);
+    } finally {
+        hideLoading('llmDecisionBtn', 'llmDecisionSpinner', 'llmDecisionBtnText', 'LLM Decision');
+    }
+}
+
+function displayLLMDecisionResults(data) {
+    const resultsSection = document.getElementById('resultsSection');
+    const resultsTitle = document.getElementById('resultsTitle');
+    const resultsContent = document.getElementById('resultsContent');
+    
+    if (data.status !== 'success') {
+        showError(data.error || 'Decision generation failed');
+        return;
+    }
+    
+    const decision = data.decision || 'UNKNOWN';
+    const confidence = data.confidence || 0;
+    const summary = data.summary || '';
+    const reasons = data.reasons || [];
+    const riskNotes = data.risk_notes || [];
+    const dividendAnalysis = data.dividend_analysis || '';
+    const halalCompliance = data.halal_compliance || '';
+    
+    const decisionColor = decision === 'BUY' ? 'text-green-400' : 'text-red-400';
+    const decisionBg = decision === 'BUY' ? 'bg-green-900' : 'bg-red-900';
+    
+    let html = `<div class="mb-6 ${decisionBg} p-4 rounded-lg border-2 ${decision === 'BUY' ? 'border-green-500' : 'border-red-500'}">`;
+    html += `<h2 class="text-2xl font-bold ${decisionColor} mb-2">Decision: ${decision}</h2>`;
+    html += `<p class="text-gray-300 text-sm">Confidence: ${(confidence * 100).toFixed(1)}%</p>`;
+    html += `</div>`;
+    
+    if (summary) {
+        html += `<div class="mb-4">`;
+        html += `<h3 class="text-lg font-semibold text-gray-200 mb-2">Summary</h3>`;
+        html += `<p class="text-gray-300">${summary}</p>`;
+        html += `</div>`;
+    }
+    
+    if (reasons.length > 0) {
+        html += `<div class="mb-4">`;
+        html += `<h3 class="text-lg font-semibold text-gray-200 mb-2">Reasons</h3>`;
+        html += `<ul class="list-disc list-inside text-gray-300 space-y-1">`;
+        reasons.forEach(reason => {
+            html += `<li>${reason}</li>`;
+        });
+        html += `</ul>`;
+        html += `</div>`;
+    }
+    
+    if (riskNotes.length > 0) {
+        html += `<div class="mb-4">`;
+        html += `<h3 class="text-lg font-semibold text-yellow-400 mb-2">Risk Notes</h3>`;
+        html += `<ul class="list-disc list-inside text-gray-300 space-y-1">`;
+        riskNotes.forEach(note => {
+            html += `<li>${note}</li>`;
+        });
+        html += `</ul>`;
+        html += `</div>`;
+    }
+    
+    if (dividendAnalysis) {
+        html += `<div class="mb-4">`;
+        html += `<h3 class="text-lg font-semibold text-gray-200 mb-2">Dividend Analysis</h3>`;
+        html += `<p class="text-gray-300">${dividendAnalysis}</p>`;
+        html += `</div>`;
+    }
+    
+    if (halalCompliance) {
+        html += `<div class="mb-4">`;
+        html += `<h3 class="text-lg font-semibold text-gray-200 mb-2">Halal Compliance</h3>`;
+        html += `<p class="text-gray-300">${halalCompliance}</p>`;
+        html += `</div>`;
+    }
+    
+    if (data.token_usage) {
+        html += `<div class="mt-4 pt-4 border-t border-gray-700">`;
+        html += `<h3 class="text-sm font-semibold text-gray-400 mb-2">Token Usage</h3>`;
+        html += `<p class="text-xs text-gray-500">Prompt: ${data.token_usage.prompt_tokens || 0} | Completion: ${data.token_usage.completion_tokens || 0} | Total: ${data.token_usage.total_tokens || 0}</p>`;
+        html += `</div>`;
+    }
+    
+    resultsTitle.textContent = `LLM Decision for ${data.symbol}`;
+    resultsContent.innerHTML = html;
+    resultsSection.classList.remove('hidden');
+    resultsSection.classList.add('fade-in');
 }
 
 function showProgressSection() {
@@ -177,12 +310,16 @@ function showProgressSection() {
     stateUpdates.innerHTML = '';
 }
 
-function connectToStream(symbol) {
+function connectToStream(symbol, extractionModel, analysisModel) {
     if (currentEventSource) {
         currentEventSource.close();
     }
     
-    const eventSource = new EventSource(`${API_BASE}/financial-analysis/stream/${symbol}`);
+    const params = new URLSearchParams({
+        extraction_model: extractionModel || 'auto',
+        analysis_model: analysisModel || 'auto'
+    });
+    const eventSource = new EventSource(`${API_BASE}/financial-analysis/stream/${symbol}?${params.toString()}`);
     currentEventSource = eventSource;
     
     const progressBar = document.getElementById('progressBar');

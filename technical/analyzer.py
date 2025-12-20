@@ -118,28 +118,7 @@ class TechnicalAnalyzer:
         signals.extend(self._check_trend_signals(indicators))
         signals.extend(self._check_volume_signals(indicators))
         signals.extend(self._check_stochastic_signals(indicators))
-        return signals
-    
-    def identify_support_resistance(self, price_data: List[Dict]) -> Dict[str, float]:
-        df = pd.DataFrame(price_data)
-        if df.empty:
-            return {}
-        
-        window = 20
-        highs = df['high'].rolling(window, center=True).max()
-        lows = df['low'].rolling(window, center=True).min()
-        
-        result = {
-            'support': float(lows.tail(window).min()) if not lows.empty else None,
-            'resistance': float(highs.tail(window).max()) if not highs.empty else None,
-        }
-        
-        fib_data = self.fibonacci.calculate(price_data, period=60)
-        if fib_data:
-            fib_sr = self.fibonacci.get_support_resistance_levels(fib_data)
-            result.update(fib_sr)
-        
-        return result
+        return list(set(signals))
     
     def get_candlestick_patterns(self, price_data: List[Dict]) -> List[str]:
         return self.candlestick.detect_patterns(price_data)

@@ -30,16 +30,6 @@ T = TypeVar('T')
 
 @dataclass
 class SerializableDataclass:
-    def to_dict(self) -> Dict[str, Any]:
-        result = {}
-        for field in fields(self):
-            value = getattr(self, field.name)
-            if isinstance(value, datetime):
-                result[field.name] = value.isoformat()
-            else:
-                result[field.name] = value
-        return result
-    
     @classmethod
     def from_dict(cls: Type[T], data: Dict[str, Any]) -> T:
         kwargs = {}

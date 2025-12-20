@@ -46,7 +46,6 @@ class FormatStep(BaseWorkflowStep):
         return state
     
     def _format_company_info(self, extracted: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format company information section."""
         report_lines.append("COMPANY INFORMATION:")
         report_lines.append(f"- Company Name: {extracted.get('company_name', 'N/A')}")
         report_lines.append(f"- Fiscal Year: {extracted.get('fiscal_year', 'N/A')}")
@@ -54,7 +53,6 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append("")
     
     def _format_growth_metrics(self, calculated: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format growth metrics section."""
         report_lines.append("GROWTH METRICS:")
         revenue_growth = calculated.get('revenue_growth_pct')
         if revenue_growth is not None:
@@ -70,7 +68,6 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append("")
     
     def _format_investment_analysis(self, extracted: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format investment analysis section."""
         inv_analysis = analysis.get("investment_analysis", {})
         report_lines.append("INVESTMENT ANALYSIS:")
         report_lines.append(f"- Capital Expenditures: {extracted.get('capital_expenditures', 'N/A')}")
@@ -80,7 +77,6 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append("")
     
     def _format_dividend_analysis(self, extracted: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format dividend analysis section."""
         div_analysis = analysis.get("dividend_analysis", {})
         report_lines.append("DIVIDEND ANALYSIS:")
         report_lines.append(f"- Dividends Paid: {extracted.get('dividends_paid', 'N/A')}")
@@ -104,7 +100,6 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append("")
     
     def _format_valuation_metrics(self, extracted: Dict[str, Any], calculated: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format valuation metrics section."""
         val_metrics = analysis.get("valuation_metrics", {})
         report_lines.append("VALUATION METRICS:")
         report_lines.append(f"- P/E Ratio: {val_metrics.get('pe_ratio', 'N/A')}")
@@ -127,7 +122,6 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append("")
     
     def _format_financial_health(self, calculated: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format financial health section."""
         report_lines.append("FINANCIAL HEALTH:")
         working_capital = calculated.get('working_capital')
         if working_capital is not None:
@@ -167,7 +161,6 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append("")
     
     def _format_initiatives(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format new initiatives section."""
         new_initiatives = analysis.get("new_initiatives", [])
         if new_initiatives:
             report_lines.append("NEW INITIATIVES:")
@@ -176,7 +169,6 @@ class FormatStep(BaseWorkflowStep):
             report_lines.append("")
     
     def _format_summary(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format investor summary section."""
         summary = analysis.get("investor_summary", "")
         if summary:
             report_lines.append("INVESTOR SUMMARY:")
@@ -184,7 +176,6 @@ class FormatStep(BaseWorkflowStep):
             report_lines.append("")
     
     def _format_red_flags(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format red flags section."""
         red_flags = analysis.get("red_flags", [])
         if red_flags:
             report_lines.append("RED FLAGS:")
@@ -193,7 +184,6 @@ class FormatStep(BaseWorkflowStep):
             report_lines.append("")
     
     def _format_investor_statements(self, extracted: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format investor statements section."""
         investor_statements = extracted.get("investor_statements", [])
         if investor_statements and isinstance(investor_statements, list) and investor_statements:
             report_lines.append("KEY INVESTOR STATEMENTS:")
@@ -203,7 +193,6 @@ class FormatStep(BaseWorkflowStep):
             report_lines.append("")
     
     def _format_investment_growth_areas(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format investment growth areas section."""
         growth_areas = analysis.get("investment_growth_areas", [])
         if growth_areas and isinstance(growth_areas, list) and growth_areas:
             report_lines.append("INVESTMENT & GROWTH AREAS:")
@@ -213,7 +202,6 @@ class FormatStep(BaseWorkflowStep):
             report_lines.append("")
     
     def _format_holding_focus_areas(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format holding company focus areas section."""
         company_type = analysis.get("company_type")
         if company_type not in ["holding", "mixed"]:
             return
@@ -227,7 +215,6 @@ class FormatStep(BaseWorkflowStep):
             report_lines.append("")
     
     def _format_loss_causing_areas(self, extracted: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        """Format loss causing areas section."""
         loss_areas = analysis.get("loss_causing_areas", [])
         if loss_areas and isinstance(loss_areas, list) and loss_areas:
             report_lines.append("LOSS-CAUSING AREAS:")
