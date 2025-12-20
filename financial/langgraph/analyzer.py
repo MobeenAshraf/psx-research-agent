@@ -1,6 +1,6 @@
 """Main LangGraph analyzer orchestrator."""
 
-from typing import Optional
+from typing import Optional, Dict, Any
 from langgraph.graph import StateGraph, END
 from financial.pdf_exceptions import LLMAnalysisError
 from financial.langgraph.state import AnalysisState
@@ -68,27 +68,37 @@ class LangGraphAnalyzer:
         pdf_text: str,
         stock_price: Optional[float] = None,
         currency: str = "",
-        symbol: Optional[str] = None
+        symbol: Optional[str] = None,
+        pdf_path: Optional[str] = None,
+        extraction_model: Optional[str] = "auto",
+        analysis_model: Optional[str] = "auto",
+        user_profile: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Run the complete analysis workflow.
         
         Args:
-            pdf_text: Extracted PDF text content
+            pdf_text: Extracted PDF text content (can be empty if pdf_path is provided)
             stock_price: Current stock price (optional)
             currency: Currency symbol (optional)
             symbol: Stock symbol (optional, used for state saving)
+            pdf_path: Path to PDF file for multimodal processing (optional, used when text extraction fails)
+            extraction_model: Model preference for extraction step (default: "auto")
+            analysis_model: Model preference for analysis step (default: "auto")
+            user_profile: Optional user profile dict with keys like age, risk_tolerance, investment_style, etc.
             
         Returns:
             Final formatted report as string
         """
-        if not pdf_text or not pdf_text.strip():
-            raise LLMAnalysisError("No PDF text content provided for analysis")
+        if not pdf_path and (not pdf_text or not pdf_text.strip()):
+            raise LLMAnalysisError("No PDF text content or PDF path provided for analysis")
         
         self.state_manager.setup_state_dir(symbol)
         
         initial_state: AnalysisState = {
-            "pdf_text": pdf_text,
+            "pdf_text": pdf_text or "",
+            "pdf_path": pdf_path,
+            "pdf_base64": None,
             "stock_price": stock_price,
             "currency": currency,
             "extracted_data": None,
@@ -97,6 +107,8 @@ class LangGraphAnalyzer:
             "analysis_results": None,
             "final_report": None,
             "errors": [],
+            "extraction_model": extraction_model,
+            "analysis_model": analysis_model,
             "token_usage": {
                 "steps": {},
                 "cumulative": {
@@ -105,6 +117,7 @@ class LangGraphAnalyzer:
                     "total_tokens": 0,
                 }
             },
+            "user_profile": user_profile,
         }
         
         self.state_manager.save_state(initial_state, "00_initial")

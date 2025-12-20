@@ -44,6 +44,18 @@ class JSONParser:
         start_idx = response_clean.find("{")
         end_idx = response_clean.rfind("}")
         
+        # Check if response appears truncated (no closing brace)
+        if start_idx >= 0 and end_idx <= start_idx:
+            # Try to detect if we're in the middle of a value
+            last_comma = response_clean.rfind(",")
+            last_colon = response_clean.rfind(":")
+            if last_colon > last_comma and last_colon > start_idx:
+                # We're likely in the middle of a value - this is truncated
+                raise ValueError(
+                    f"Response appears truncated - no closing brace found. "
+                    f"Response ends with: {repr(response_clean[-100:])}"
+                )
+        
         if start_idx < 0 or end_idx <= start_idx:
             # Attempt to auto-wrap key/value pairs into JSON
             candidate = []
@@ -86,6 +98,14 @@ class JSONParser:
         try:
             return json.loads(response_clean)
         except json.JSONDecodeError as json_err:
+            # Check if error is due to incomplete JSON (truncation)
+            if json_err.pos >= len(response_clean) - 10:
+                # Error near the end - likely truncation
+                raise ValueError(
+                    f"JSON appears truncated. Error at position {json_err.pos} of {len(response_clean)}. "
+                    f"Response ends with: {repr(response_clean[-200:])}"
+                ) from json_err
+            
             # Step 5: Try line-by-line extraction with proper brace counting
             lines = original_response.split('\n')
             json_lines = []

@@ -118,7 +118,7 @@ class TechnicalAnalyzer:
         signals.extend(self._check_trend_signals(indicators))
         signals.extend(self._check_volume_signals(indicators))
         signals.extend(self._check_stochastic_signals(indicators))
-        return signals
+        return list(set(signals))
     
     def identify_support_resistance(self, price_data: List[Dict]) -> Dict[str, float]:
         df = pd.DataFrame(price_data)

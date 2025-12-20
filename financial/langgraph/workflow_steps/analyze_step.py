@@ -1,11 +1,14 @@
 """Analyze step for LangGraph workflow."""
 
 import json
+import logging
 from financial.langgraph.state import AnalysisState
 from financial.langgraph.workflow_steps.base_step import BaseWorkflowStep
 from financial.langgraph.prompt_manager import PromptManager
 from financial.langgraph.llm_helper import LLMHelper
 from financial.config.model_config import ModelConfig
+
+_logger = logging.getLogger(__name__)
 
 
 class AnalyzeStep(BaseWorkflowStep):
@@ -19,8 +22,9 @@ class AnalyzeStep(BaseWorkflowStep):
     def execute(self, state: AnalysisState) -> AnalysisState:
         """Execute analysis step."""
         try:
-            system_prompt_content = self.prompt_manager.load_system_prompt()
-            analysis_prompt_content = self.prompt_manager.load_analysis_prompt()
+            user_profile = state.get("user_profile")
+            system_prompt_content = self.prompt_manager.load_system_prompt(user_profile=user_profile)
+            analysis_prompt_content = self.prompt_manager.load_analysis_prompt(user_profile=user_profile)
             
             extracted = state.get("extracted_data", {})
             calculated = state.get("calculated_metrics", {})
@@ -62,10 +66,15 @@ Calculated Metrics:
 
 Provide investor-focused analysis as structured JSON. Return ONLY valid JSON, no additional text."""
             
+            user_analysis_model = state.get("analysis_model", "auto")
+            analysis_model = ModelConfig.get_analysis_model(user_analysis_model)
+            
+            _logger.info(f"[ANALYZE STEP] User selected: {user_analysis_model}, Using model: {analysis_model}")
+            
             analysis_results, token_usage = self.llm_helper.call_llm_with_json_response(
                 system_prompt_content=system_prompt_content,
                 user_prompt_content=user_prompt_content,
-                model=ModelConfig.get_analysis_model()
+                model=analysis_model
             )
             
             state["analysis_results"] = analysis_results
