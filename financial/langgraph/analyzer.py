@@ -14,7 +14,7 @@ from financial.langgraph.workflow_steps.calculate_step import CalculateStep
 from financial.langgraph.workflow_steps.validate_step import ValidateStep
 from financial.langgraph.workflow_steps.analyze_step import AnalyzeStep
 from financial.langgraph.workflow_steps.format_step import FormatStep
-from financial.financial_metrics_validator import FinancialMetricsValidator
+from financial.validators.financial_validator import FinancialMetricsValidator
 import os
 
 

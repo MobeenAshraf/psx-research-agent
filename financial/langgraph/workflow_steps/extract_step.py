@@ -7,7 +7,7 @@ from financial.langgraph.workflow_steps.base_step import BaseWorkflowStep
 from financial.langgraph.prompt_manager import PromptManager
 from financial.langgraph.llm_helper import LLMHelper
 from financial.config.model_config import ModelConfig
-from financial.pdf_exceptions import LLMAnalysisError
+from financial.langgraph.workflow_steps.extractors.pdf_extractor import PDFExtractor
 
 _logger = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ class ExtractStep(BaseWorkflowStep):
         super().__init__(state_manager)
         self.prompt_manager = prompt_manager
         self.llm_helper = llm_helper
+        self.pdf_extractor = PDFExtractor(llm_helper)
     
     def execute(self, state: AnalysisState) -> AnalysisState:
         """Execute extraction step."""
@@ -47,7 +48,7 @@ class ExtractStep(BaseWorkflowStep):
                 else:
                     _logger.info(f"PDF text insufficient, falling back to multimodal PDF extraction")
                 
-                extracted_data, token_usage = self._extract_with_pdf(
+                extracted_data, token_usage = self.pdf_extractor.extract_with_pdf(
                     pdf_path,
                     system_prompt_content,
                     extraction_prompt_content,
@@ -124,84 +125,4 @@ Return the JSON object now:"""
         
         self._save_state(state, "01_extract")
         return state
-    
-    def _extract_with_pdf(
-        self,
-        pdf_path: str,
-        system_prompt_content: str,
-        extraction_prompt_content: str,
-        stock_price_str: str,
-        preferred_model: Optional[str] = None
-    ) -> tuple:
-        """
-        Extract financial data from PDF using multimodal model.
-        
-        Args:
-            pdf_path: Path to PDF file
-            system_prompt_content: System prompt content
-            extraction_prompt_content: Extraction prompt content
-            stock_price_str: Stock price string to append to prompt
-            preferred_model: Preferred model to use (if None, tries all Gemini models)
-            
-        Returns:
-            Tuple of (extracted_data, token_usage)
-        """
-        user_prompt_content = f"""{extraction_prompt_content}{stock_price_str}
-
-**YOUR TASK:**
-Extract all financial data from the PDF document and return it as a valid JSON object matching the required schema.
-
-**CRITICAL REQUIREMENTS:**
-1. Return ONLY valid JSON - no markdown code blocks, no explanations, no additional text
-2. Use numbers (not strings) for all monetary values
-3. Use null for missing values (never use 0 or empty string as placeholder)
-4. Search ALL sections: Income Statement, Balance Sheet, Cash Flow Statement, Notes
-5. Extract exact values as stated in the document - do not estimate or calculate unless explicitly instructed
-6. Read the PDF carefully - look for tables, financial statements, and numerical data
-
-Return the JSON object now:"""
-        
-        if preferred_model and ModelConfig.is_multimodal_model(preferred_model):
-            try:
-                _logger.info(f"Using user-selected Gemini model: {preferred_model}")
-                extracted_data, token_usage = self.llm_helper.call_llm_with_pdf(
-                    pdf_path=pdf_path,
-                    system_prompt_content=system_prompt_content,
-                    user_prompt_content=user_prompt_content,
-                    model=preferred_model,
-                    state_context={}
-                )
-                return extracted_data, token_usage
-            except LLMAnalysisError as e:
-                _logger.warning(f"User-selected model {preferred_model} failed: {str(e)}")
-        
-        last_error = None
-        for model in ModelConfig.GEMINI_MODELS:
-            try:
-                _logger.info(f"Attempting PDF extraction with model: {model}")
-                extracted_data, token_usage = self.llm_helper.call_llm_with_pdf(
-                    pdf_path=pdf_path,
-                    system_prompt_content=system_prompt_content,
-                    user_prompt_content=user_prompt_content,
-                    model=model,
-                    state_context={}
-                )
-                _logger.info(f"Successfully extracted data using model: {model}")
-                return extracted_data, token_usage
-            except LLMAnalysisError as e:
-                error_str = str(e).lower()
-                if "429" in error_str or "quota" in error_str:
-                    _logger.warning(f"Quota exceeded for {model}, trying next model...")
-                    last_error = e
-                    continue
-                else:
-                    _logger.error(f"Error with {model}: {str(e)}")
-                    last_error = e
-                    continue
-        
-        if last_error:
-            raise LLMAnalysisError(
-                f"All Gemini models failed for PDF extraction. Last error: {str(last_error)}"
-            )
-        raise LLMAnalysisError("No Gemini models available for PDF extraction")
 

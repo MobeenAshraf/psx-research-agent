@@ -2,6 +2,7 @@
 
 from financial.langgraph.state import AnalysisState
 from financial.langgraph.workflow_steps.base_step import BaseWorkflowStep
+from financial.langgraph.utils.data_extractor import DataExtractor
 
 
 class CalculateStep(BaseWorkflowStep):
@@ -65,11 +66,7 @@ class CalculateStep(BaseWorkflowStep):
             calculated["pb_ratio"] = stock_price / book_value
         
         market_cap = calculated.get("market_cap")
-        revenue_data = extracted.get("revenue")
-        if isinstance(revenue_data, dict):
-            revenue = revenue_data.get("current")
-        else:
-            revenue = revenue_data
+        revenue = DataExtractor.get_revenue(extracted)
         
         if market_cap and revenue and revenue > 0:
             calculated["ps_ratio"] = market_cap / revenue
@@ -123,11 +120,7 @@ class CalculateStep(BaseWorkflowStep):
             calculated["working_capital"] = current_assets - current_liabilities
         
         operating_income = extracted.get("operating_income")
-        revenue_data = extracted.get("revenue")
-        if isinstance(revenue_data, dict):
-            revenue = revenue_data.get("current")
-        else:
-            revenue = revenue_data
+        revenue = DataExtractor.get_revenue(extracted)
         
         if operating_income and revenue and revenue > 0:
             calculated["operating_margin"] = (operating_income / revenue) * 100

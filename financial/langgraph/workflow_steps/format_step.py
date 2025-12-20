@@ -45,6 +45,34 @@ class FormatStep(BaseWorkflowStep):
         self._save_state(state, "05_format")
         return state
     
+    def _format_metric(
+        self, 
+        report_lines: List[str], 
+        label: str, 
+        value: Any, 
+        format_str: str = "{:.2f}", 
+        suffix: str = ""
+    ) -> None:
+        """Format a metric with N/A fallback."""
+        if value is not None:
+            report_lines.append(f"- {label}: {format_str.format(value)}{suffix}")
+        else:
+            report_lines.append(f"- {label}: N/A")
+    
+    def _format_list_section(
+        self, 
+        report_lines: List[str], 
+        title: str, 
+        items: List[str]
+    ) -> None:
+        """Format a list section with validation."""
+        if items and isinstance(items, list) and items:
+            report_lines.append(f"{title}:")
+            for item in items:
+                if item and isinstance(item, str) and item.strip():
+                    report_lines.append(f"- {item}")
+            report_lines.append("")
+    
     def _format_company_info(self, extracted: Dict[str, Any], report_lines: List[str]) -> None:
         report_lines.append("COMPANY INFORMATION:")
         report_lines.append(f"- Company Name: {extracted.get('company_name', 'N/A')}")
@@ -54,17 +82,8 @@ class FormatStep(BaseWorkflowStep):
     
     def _format_growth_metrics(self, calculated: Dict[str, Any], report_lines: List[str]) -> None:
         report_lines.append("GROWTH METRICS:")
-        revenue_growth = calculated.get('revenue_growth_pct')
-        if revenue_growth is not None:
-            report_lines.append(f"- Revenue Growth: {revenue_growth:.2f}%")
-        else:
-            report_lines.append("- Revenue Growth: N/A")
-        
-        net_income_growth = calculated.get('net_income_growth_pct')
-        if net_income_growth is not None:
-            report_lines.append(f"- Net Income Growth: {net_income_growth:.2f}%")
-        else:
-            report_lines.append("- Net Income Growth: N/A")
+        self._format_metric(report_lines, "Revenue Growth", calculated.get('revenue_growth_pct'), suffix="%")
+        self._format_metric(report_lines, "Net Income Growth", calculated.get('net_income_growth_pct'), suffix="%")
         report_lines.append("")
     
     def _format_investment_analysis(self, extracted: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
@@ -85,12 +104,9 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append(f"- Strategy: {div_analysis.get('strategy', 'N/A')}")
         
         dividend_statements = div_analysis.get("dividend_statements", [])
-        if dividend_statements and isinstance(dividend_statements, list):
+        if dividend_statements:
             report_lines.append("")
-            report_lines.append("Dividend Policy Statements:")
-            for stmt in dividend_statements:
-                if stmt and isinstance(stmt, str) and stmt.strip():
-                    report_lines.append(f"- {stmt}")
+            self._format_list_section(report_lines, "Dividend Policy Statements", dividend_statements)
         
         dividend_explanation = div_analysis.get("dividend_explanation")
         if dividend_explanation and isinstance(dividend_explanation, str) and dividend_explanation.strip():
@@ -105,17 +121,10 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append(f"- P/E Ratio: {val_metrics.get('pe_ratio', 'N/A')}")
         
         book_value = extracted.get("book_value_per_share") or calculated.get("book_value_per_share")
-        if book_value is not None:
-            report_lines.append(f"- Book Value per Share: {book_value:.2f}")
-        else:
-            report_lines.append("- Book Value per Share: N/A")
+        self._format_metric(report_lines, "Book Value per Share", book_value)
         
         report_lines.append(f"- P/B Ratio: {val_metrics.get('pb_ratio', 'N/A')}")
-        ps_ratio = calculated.get('ps_ratio')
-        if ps_ratio is not None:
-            report_lines.append(f"- P/S Ratio: {ps_ratio:.2f}")
-        else:
-            report_lines.append("- P/S Ratio: N/A")
+        self._format_metric(report_lines, "P/S Ratio", calculated.get('ps_ratio'))
         report_lines.append(f"- EPS: {extracted.get('eps', 'N/A')}")
         report_lines.append(f"- EV/EBITDA: {val_metrics.get('ev_ebitda', 'N/A')}")
         report_lines.append(f"- FCF Yield: {val_metrics.get('fcf_yield', 'N/A')}%")
@@ -123,50 +132,18 @@ class FormatStep(BaseWorkflowStep):
     
     def _format_financial_health(self, calculated: Dict[str, Any], report_lines: List[str]) -> None:
         report_lines.append("FINANCIAL HEALTH:")
-        working_capital = calculated.get('working_capital')
-        if working_capital is not None:
-            report_lines.append(f"- Working Capital: {working_capital:,.0f}")
-        else:
-            report_lines.append("- Working Capital: N/A")
-        
-        cash_per_share = calculated.get('cash_per_share')
-        if cash_per_share is not None:
-            report_lines.append(f"- Cash per Share: {cash_per_share:.2f}")
-        else:
-            report_lines.append("- Cash per Share: N/A")
-        
-        debt_to_assets = calculated.get('debt_to_assets')
-        if debt_to_assets is not None:
-            report_lines.append(f"- Debt-to-Assets Ratio: {debt_to_assets:.3f}")
-        else:
-            report_lines.append("- Debt-to-Assets Ratio: N/A")
-        
-        quick_ratio = calculated.get('quick_ratio')
-        if quick_ratio is not None:
-            report_lines.append(f"- Quick Ratio: {quick_ratio:.2f}")
-        else:
-            report_lines.append("- Quick Ratio: N/A")
-        
-        gross_margin = calculated.get('gross_margin_pct')
-        if gross_margin is not None:
-            report_lines.append(f"- Gross Margin: {gross_margin:.2f}%")
-        else:
-            report_lines.append("- Gross Margin: N/A")
-        
-        interest_coverage = calculated.get('interest_coverage')
-        if interest_coverage is not None:
-            report_lines.append(f"- Interest Coverage: {interest_coverage:.2f}x")
-        else:
-            report_lines.append("- Interest Coverage: N/A")
+        self._format_metric(report_lines, "Working Capital", calculated.get('working_capital'), "{:,.0f}")
+        self._format_metric(report_lines, "Cash per Share", calculated.get('cash_per_share'))
+        self._format_metric(report_lines, "Debt-to-Assets Ratio", calculated.get('debt_to_assets'), "{:.3f}")
+        self._format_metric(report_lines, "Quick Ratio", calculated.get('quick_ratio'))
+        self._format_metric(report_lines, "Gross Margin", calculated.get('gross_margin_pct'), suffix="%")
+        self._format_metric(report_lines, "Interest Coverage", calculated.get('interest_coverage'), suffix="x")
         report_lines.append("")
     
     def _format_initiatives(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
         new_initiatives = analysis.get("new_initiatives", [])
         if new_initiatives:
-            report_lines.append("NEW INITIATIVES:")
-            for initiative in new_initiatives:
-                report_lines.append(f"- {initiative}")
-            report_lines.append("")
+            self._format_list_section(report_lines, "NEW INITIATIVES", new_initiatives)
     
     def _format_summary(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
         summary = analysis.get("investor_summary", "")
@@ -178,28 +155,17 @@ class FormatStep(BaseWorkflowStep):
     def _format_red_flags(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
         red_flags = analysis.get("red_flags", [])
         if red_flags:
-            report_lines.append("RED FLAGS:")
-            for flag in red_flags:
-                report_lines.append(f"- {flag}")
-            report_lines.append("")
+            self._format_list_section(report_lines, "RED FLAGS", red_flags)
     
     def _format_investor_statements(self, extracted: Dict[str, Any], report_lines: List[str]) -> None:
         investor_statements = extracted.get("investor_statements", [])
-        if investor_statements and isinstance(investor_statements, list) and investor_statements:
-            report_lines.append("KEY INVESTOR STATEMENTS:")
-            for stmt in investor_statements:
-                if stmt and isinstance(stmt, str) and stmt.strip():
-                    report_lines.append(f"- {stmt}")
-            report_lines.append("")
+        if investor_statements:
+            self._format_list_section(report_lines, "KEY INVESTOR STATEMENTS", investor_statements)
     
     def _format_investment_growth_areas(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
         growth_areas = analysis.get("investment_growth_areas", [])
-        if growth_areas and isinstance(growth_areas, list) and growth_areas:
-            report_lines.append("INVESTMENT & GROWTH AREAS:")
-            for area in growth_areas:
-                if area and isinstance(area, str) and area.strip():
-                    report_lines.append(f"- {area}")
-            report_lines.append("")
+        if growth_areas:
+            self._format_list_section(report_lines, "INVESTMENT & GROWTH AREAS", growth_areas)
     
     def _format_holding_focus_areas(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
         company_type = analysis.get("company_type")
@@ -207,19 +173,11 @@ class FormatStep(BaseWorkflowStep):
             return
         
         focus_areas = analysis.get("holding_focus_areas", [])
-        if focus_areas and isinstance(focus_areas, list) and focus_areas:
-            report_lines.append("HOLDING COMPANY FOCUS AREAS:")
-            for area in focus_areas:
-                if area and isinstance(area, str) and area.strip():
-                    report_lines.append(f"- {area}")
-            report_lines.append("")
+        if focus_areas:
+            self._format_list_section(report_lines, "HOLDING COMPANY FOCUS AREAS", focus_areas)
     
     def _format_loss_causing_areas(self, extracted: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
         loss_areas = analysis.get("loss_causing_areas", [])
-        if loss_areas and isinstance(loss_areas, list) and loss_areas:
-            report_lines.append("LOSS-CAUSING AREAS:")
-            for area in loss_areas:
-                if area and isinstance(area, str) and area.strip():
-                    report_lines.append(f"- {area}")
-            report_lines.append("")
+        if loss_areas:
+            self._format_list_section(report_lines, "LOSS-CAUSING AREAS", loss_areas)
 

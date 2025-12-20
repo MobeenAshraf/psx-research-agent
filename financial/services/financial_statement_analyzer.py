@@ -8,7 +8,6 @@ from financial.pdf_exceptions import (
     PDFDownloadError,
     PDFExtractionError,
 )
-from financial.pdfplumber_extractor import PDFPlumberExtractor
 from financial.services.financial_service import FinancialService
 from financial.services.pdf_download_service import PDFDownloadService
 from financial.services.statement_name_generator import StatementNameGenerator
@@ -25,14 +24,12 @@ class FinancialStatementAnalyzerService:
         self,
         financial_service: Optional[FinancialService] = None,
         pdf_download_service: Optional[PDFDownloadService] = None,
-        pdf_extractor: Optional[PDFPlumberExtractor] = None,
         llm_client: Optional[LangGraphAnalyzer] = None,
         result_repository: Optional[FileResultRepository] = None,
         stock_price_service: Optional[Any] = None,
     ):
         self.financial_service = financial_service or FinancialService()
         self.pdf_download_service = pdf_download_service or PDFDownloadService()
-        self.pdf_extractor = pdf_extractor or PDFPlumberExtractor()
         self.llm_client = llm_client or LangGraphAnalyzer()
         self.result_repository = result_repository or FileResultRepository()
         self.stock_price_service = stock_price_service
@@ -99,7 +96,7 @@ class FinancialStatementAnalyzerService:
                 "statement_name": statement_name,
                 "result": result,
             }
-        except (PDFDownloadError, PDFExtractionError, LLMAnalysisError) as exc:
+        except (PDFDownloadError, LLMAnalysisError) as exc:
             return {"symbol": symbol, "status": "error", "error": str(exc)}
 
     def _process_pdf(
@@ -116,34 +113,11 @@ class FinancialStatementAnalyzerService:
             report.report_url, report.symbol
         )
         
-        pdf_text = ""
-        use_multimodal = False
-        
         extraction_model_actual = ModelConfig.get_extraction_model(extraction_model)
-        is_multimodal = ModelConfig.is_multimodal_model(extraction_model_actual)
-        
-        if is_multimodal:
-            _logger.info(
-                f"User selected Gemini model ({extraction_model_actual}) for {report.symbol}. "
-                "Using multimodal PDF processing directly."
-            )
-            use_multimodal = True
-            pdf_text = ""
-        else:
-            try:
-                pdf_text = self.pdf_extractor.extract_text(pdf_path)
-                _logger.info(f"Text extraction successful for {report.symbol}: {len(pdf_text)} characters")
-            except PDFExtractionError as e:
-                _logger.warning(f"Text extraction failed for {report.symbol}: {str(e)}")
-                pdf_text = ""
-            
-            if not pdf_text or len(pdf_text.strip()) < 100:
-                _logger.info(
-                    f"PDF extraction returned insufficient text ({len(pdf_text)} chars) for {report.symbol}. "
-                    "Falling back to multimodal PDF processing."
-                )
-                use_multimodal = True
-                pdf_text = ""
+        _logger.info(
+            f"Using multimodal PDF processing for {report.symbol} "
+            f"with model {extraction_model_actual}"
+        )
         
         stock_price = pre_fetched_price
         if stock_price is None and self.stock_price_service:
@@ -152,33 +126,16 @@ class FinancialStatementAnalyzerService:
             except Exception:
                 stock_price = None
 
-        if use_multimodal:
-            currency = ""
-            _logger.info(f"Using multimodal PDF processing for {report.symbol}")
-            try:
-                return self.llm_client.analyze(
-                    pdf_text=pdf_text,
-                    stock_price=stock_price,
-                    currency=currency,
-                    symbol=report.symbol,
-                    pdf_path=pdf_path,
-                    extraction_model=extraction_model,
-                    analysis_model=analysis_model,
-                    user_profile=user_profile,
-                )
-            except LLMAnalysisError:
-                raise
-        else:
-            currency = self._detect_currency(pdf_text)
-            return self.llm_client.analyze(
-                pdf_text=pdf_text,
-                stock_price=stock_price,
-                currency=currency,
-                symbol=report.symbol,
-                extraction_model=extraction_model,
-                analysis_model=analysis_model,
-                user_profile=user_profile,
-            )
+        return self.llm_client.analyze(
+            pdf_text="",
+            stock_price=stock_price,
+            currency="",
+            symbol=report.symbol,
+            pdf_path=pdf_path,
+            extraction_model=extraction_model,
+            analysis_model=analysis_model,
+            user_profile=user_profile,
+        )
 
     @staticmethod
     def _detect_currency(pdf_text: str) -> str:

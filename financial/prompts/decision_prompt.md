@@ -13,6 +13,7 @@ Review the provided user profile, technical analysis, and financial analysis for
 5. **Dividend Analysis**: Evaluate dividend yield, payout ratio, and sustainability
 6. **Technical Signals**: Consider technical indicators and momentum
 7. **Financial Health**: Assess valuation, profitability, and growth prospects
+8. **Index Membership & Weightage**: Evaluate inclusion in KSE100, KMI30, MZNETF and weightage percentages. High weightage indicates institutional confidence and market validation - explicitly call this out in reasoning.
 
 ## Critical Constraints
 
@@ -41,17 +42,30 @@ You must respond with a JSON object matching the exact structure defined below. 
 ### Financial Analysis Summary
 {FINANCIAL_ANALYSIS_SUMMARY_PLACEHOLDER}
 
+### Index Membership Data
+{INDEX_MEMBERSHIP_PLACEHOLDER}
+
 ## Instructions
 
-1. Analyze all three data sources comprehensively
+1. Analyze all data sources comprehensively (user profile, technical analysis, financial analysis, and index membership)
 2. Make a clear BUY or DO_NOT_BUY decision
 3. Provide confidence level (0.0 to 1.0) based on data quality and alignment
 4. Write a concise 1-2 sentence summary
-5. List specific reasons supporting your decision (technical + financial)
+5. List specific reasons supporting your decision (technical + financial + index membership)
 6. Note any risks or concerns
 7. Analyze dividend prospects in context of user's dividend income goals or future divident expectation.
 8. Verify and state halal compliance status
 9. Compare stock against its sector and if or how govt polciies impact business
+10. **Explicitly evaluate index membership and weightage**:
+    - **High weightage is a strong positive signal**: If a stock has high weightage in an index/ETF, it means institutional investors and the market recognize there's something valuable in that stock. This is not random - it reflects fundamental strength, market cap, liquidity, and institutional confidence. **Explicitly mention this in your reasoning when weightage is significant.**
+    - **Weightage interpretation**: 
+      - Top 10% weightage = Very strong institutional confidence
+      - Top 25% weightage = Strong market recognition
+      - Lower weightage but included = Still positive, indicates quality
+      - Not included = Neutral, but may indicate smaller market cap or less institutional interest
+    - **Explicitly call out in reasons**: When a stock has notable weightage, add to reasons: "Stock has X% weightage in [index name], indicating strong institutional confidence and market validation of the company's fundamentals. **If it's at the top of ETF/index weightage, there's something in that stock** - this is institutional validation, not random."
+    - **Use to support decisions**: High weightage can support BUY decisions when fundamentals align. Low/no weightage doesn't necessarily mean DO_NOT_BUY, but should be noted if fundamentals are strong yet stock is excluded.
+    - **Critical framing**: Emphasize that high weightage = market/institutional validation = "there's something in that stock". This is a structural signal that validates the stock's quality and importance in the market.
 
 Return your decision now as a valid JSON object.
 

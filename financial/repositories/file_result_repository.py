@@ -3,17 +3,10 @@
 import re
 from pathlib import Path
 from typing import Optional
+from utils import find_repo_root
 
 
-def _find_repo_root() -> Path:
-    current = Path(__file__).resolve()
-    for parent in current.parents:
-        if (parent / "pyproject.toml").exists():
-            return parent
-    return Path.cwd()
-
-
-PROJECT_ROOT = _find_repo_root()
+PROJECT_ROOT = find_repo_root()
 DEFAULT_RESULTS_DIR = PROJECT_ROOT / "data" / "results"
 
 

@@ -2,7 +2,7 @@
 
 from financial.langgraph.state import AnalysisState
 from financial.langgraph.workflow_steps.base_step import BaseWorkflowStep
-from financial.financial_metrics_validator import FinancialMetricsValidator
+from financial.validators.financial_validator import FinancialMetricsValidator
 
 
 class ValidateStep(BaseWorkflowStep):
