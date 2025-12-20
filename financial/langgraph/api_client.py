@@ -23,15 +23,7 @@ class OpenRouterAPIClient:
         model: str,
         response_format: Optional[Dict[str, str]] = None
     ) -> Tuple[str, Dict[str, int]]:
-        """
-        Call OpenRouter API.
-        
-        Returns:
-            Tuple of (content, token_usage) where token_usage contains:
-            - prompt_tokens: Number of tokens in the prompt
-            - completion_tokens: Number of tokens in the completion
-            - total_tokens: Total tokens used
-        """
+        """Call OpenRouter API. Returns (content, token_usage)."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -87,24 +79,7 @@ class OpenRouterAPIClient:
         model: str,
         response_format: Optional[Dict[str, str]] = None
     ) -> Tuple[str, Dict[str, int]]:
-        """
-        Call OpenRouter API with PDF file upload.
-        
-        Args:
-            pdf_path: Path to PDF file
-            messages: List of message dictionaries (will be modified to include PDF)
-            model: Model name (should be Gemini model via OpenRouter, e.g., google/gemini-3-pro-preview)
-            response_format: Optional response format dict (e.g., {"type": "json_object"})
-            
-        Returns:
-            Tuple of (content, token_usage) where token_usage contains:
-            - prompt_tokens: Number of tokens in the prompt
-            - completion_tokens: Number of tokens in the completion
-            - total_tokens: Total tokens used
-            
-        Raises:
-            LLMAnalysisError: If API call fails or PDF cannot be read
-        """
+        """Call OpenRouter API with PDF. Returns (content, token_usage)."""
         try:
             pdf_file = Path(pdf_path)
             if not pdf_file.exists():

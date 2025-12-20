@@ -2,12 +2,10 @@
 
 import json
 import os
-import shutil
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
-from fastapi import HTTPException
 from price_repository import WebPriceRepository
 from technical.analyzer import TechnicalAnalyzer
 from financial.analyzers import FinancialAnalyzer
@@ -22,7 +20,6 @@ from financial.services import (
     StatementNameGenerator,
 )
 from financial.pdfplumber_extractor import PDFPlumberExtractor
-from state_monitor import stream_states, get_current_states
 from financial.config.user_profile_loader import UserProfileLoader
 from financial.config.model_config import ModelConfig
 from financial.langgraph.decision_llm_helper import DecisionLLMHelper
@@ -310,7 +307,11 @@ def check_latest_report(
                 extraction_model=normalized_extraction,
                 analysis_model=normalized_analysis
             )
-            states = _get_existing_states(symbol_upper)
+            states = _get_existing_states(
+                symbol_upper,
+                extraction_model=normalized_extraction,
+                analysis_model=normalized_analysis
+            )
             final_state = states.get("99_final", {})
             return {
                 "symbol": symbol_upper,
@@ -363,9 +364,36 @@ def run_financial_analysis(
         return {"symbol": symbol.upper(), "status": "error", "error": str(exc)}
 
 
-def _get_existing_states(symbol: str) -> Dict[str, Any]:
-    """Get existing state files for a symbol."""
-    states_dir = Path("data/results") / symbol.upper() / "states"
+def _generate_model_key(
+    extraction_model: Optional[str] = None, analysis_model: Optional[str] = None
+) -> str:
+    """Generate model key for directory naming (same logic as FileResultRepository)."""
+    import re
+    extraction = extraction_model or "default"
+    analysis = analysis_model or "default"
+    
+    model_key = f"{extraction}_{analysis}"
+    model_key = model_key.replace("/", "_")
+    model_key = re.sub(r'[^a-zA-Z0-9_-]', '_', model_key)
+    model_key = re.sub(r'_+', '_', model_key)
+    model_key = model_key.strip('_')
+    
+    return model_key
+
+
+def _get_existing_states(
+    symbol: str,
+    extraction_model: Optional[str] = None,
+    analysis_model: Optional[str] = None
+) -> Dict[str, Any]:
+    """Get existing state files for a symbol and model combination."""
+    base_dir = Path("data/results") / symbol.upper()
+    
+    if extraction_model or analysis_model:
+        model_key = _generate_model_key(extraction_model, analysis_model)
+        states_dir = base_dir / model_key / "states"
+    else:
+        states_dir = base_dir / "states"
     
     if not states_dir.exists():
         return {}
@@ -448,8 +476,14 @@ def get_llm_decision(
                 "error": "Financial analysis not found. Please run financial analysis first."
             }
         
-        # Get final report from states
-        states = _get_existing_states(symbol_upper)
+        # Get final report from states (use normalized models to match the cached result)
+        normalized_extraction = ModelConfig.normalize_model_name(extraction_model, is_extraction=True)
+        normalized_analysis = ModelConfig.normalize_model_name(analysis_model, is_extraction=False)
+        states = _get_existing_states(
+            symbol_upper,
+            extraction_model=normalized_extraction,
+            analysis_model=normalized_analysis
+        )
         final_state = states.get("99_final", {})
         financial_report = final_state.get("final_report", "")
         

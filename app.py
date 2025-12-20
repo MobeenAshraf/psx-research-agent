@@ -2,12 +2,13 @@
 
 import json
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse, HTMLResponse, FileResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 from pathlib import Path
 from routes import get_technical_analysis, check_latest_report, run_financial_analysis, get_llm_decision
+from financial.config.model_config import ModelConfig
 from state_monitor import stream_states, get_current_states
 
 
@@ -21,7 +22,6 @@ app = FastAPI(
 static_dir = Path("static")
 if static_dir.exists():
     from fastapi.staticfiles import StaticFiles
-    from fastapi.responses import Response
     
     class NoCacheStaticFiles(StaticFiles):
         """Static files with no-cache headers for development."""
@@ -154,19 +154,40 @@ async def run_financial_analysis_route(request: FinancialAnalysisRequest):
 
 
 @app.get("/api/financial-analysis/stream/{symbol}")
-async def stream_financial_analysis(symbol: str):
+async def stream_financial_analysis(
+    symbol: str,
+    extraction_model: Optional[str] = None,
+    analysis_model: Optional[str] = None
+):
     """
     Stream financial analysis state updates via Server-Sent Events.
     
     Args:
         symbol: Stock symbol
+        extraction_model: Optional extraction model (for model-specific directory)
+        analysis_model: Optional analysis model (for model-specific directory)
         
     Returns:
         SSE stream of state updates
     """
+    # Normalize model names to match directory structure
+    # Always normalize (including "auto") to match how directories are created
+    normalized_extraction = ModelConfig.normalize_model_name(
+        extraction_model or "auto", 
+        is_extraction=True
+    )
+    normalized_analysis = ModelConfig.normalize_model_name(
+        analysis_model or "auto", 
+        is_extraction=False
+    )
+    
     async def event_generator():
         try:
-            async for state_update in stream_states(symbol):
+            async for state_update in stream_states(
+                symbol, 
+                extraction_model=normalized_extraction, 
+                analysis_model=normalized_analysis
+            ):
                 data = json.dumps(state_update)
                 yield f"data: {data}\n\n"
                 
@@ -216,8 +237,10 @@ async def get_financial_analysis_result(symbol: str):
     Returns:
         Final analysis report
     """
+    from state_monitor import find_states_directory
+    
     symbol_upper = symbol.upper()
-    states_dir = Path("data/results") / symbol_upper / "states"
+    states_dir = find_states_directory(symbol_upper)
     final_state_file = states_dir / "99_final_state.json"
     
     if not final_state_file.exists():

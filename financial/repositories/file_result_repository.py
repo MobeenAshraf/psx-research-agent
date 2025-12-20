@@ -27,16 +27,6 @@ class FileResultRepository:
     def _generate_model_key(
         self, extraction_model: Optional[str] = None, analysis_model: Optional[str] = None
     ) -> str:
-        """
-        Generate a sanitized cache key from model combination.
-        
-        Args:
-            extraction_model: Extraction model name
-            analysis_model: Analysis model name
-            
-        Returns:
-            Sanitized model key safe for filesystem paths
-        """
         extraction = extraction_model or "default"
         analysis = analysis_model or "default"
         

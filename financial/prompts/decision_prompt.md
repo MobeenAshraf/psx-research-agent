@@ -49,8 +49,9 @@ You must respond with a JSON object matching the exact structure defined below. 
 4. Write a concise 1-2 sentence summary
 5. List specific reasons supporting your decision (technical + financial)
 6. Note any risks or concerns
-7. Analyze dividend prospects in context of user's dividend income goals
+7. Analyze dividend prospects in context of user's dividend income goals or future divident expectation.
 8. Verify and state halal compliance status
+9. Compare stock against its sector and if or how govt polciies impact business
 
 Return your decision now as a valid JSON object.
 

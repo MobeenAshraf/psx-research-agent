@@ -168,7 +168,7 @@ async function handleFinancialAnalysis() {
         hideLoading('financialBtn', 'financialSpinner', 'financialBtnText', 'Financial Analysis');
         
         showProgressSection();
-        connectToStream(symbol);
+        connectToStream(symbol, extractionModel, analysisModel);
     } catch (error) {
         showError(`Financial analysis failed: ${error.message}`);
         hideLoading('financialBtn', 'financialSpinner', 'financialBtnText', 'Financial Analysis');
@@ -310,12 +310,16 @@ function showProgressSection() {
     stateUpdates.innerHTML = '';
 }
 
-function connectToStream(symbol) {
+function connectToStream(symbol, extractionModel, analysisModel) {
     if (currentEventSource) {
         currentEventSource.close();
     }
     
-    const eventSource = new EventSource(`${API_BASE}/financial-analysis/stream/${symbol}`);
+    const params = new URLSearchParams({
+        extraction_model: extractionModel || 'auto',
+        analysis_model: analysisModel || 'auto'
+    });
+    const eventSource = new EventSource(`${API_BASE}/financial-analysis/stream/${symbol}?${params.toString()}`);
     currentEventSource = eventSource;
     
     const progressBar = document.getElementById('progressBar');

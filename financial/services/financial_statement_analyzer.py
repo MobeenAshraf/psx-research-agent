@@ -166,17 +166,8 @@ class FinancialStatementAnalyzerService:
                     analysis_model=analysis_model,
                     user_profile=user_profile,
                 )
-            except LLMAnalysisError as e:
-                error_str = str(e).lower()
-                if "quota" in error_str or "429" in error_str:
-                    _logger.warning(
-                        f"Multimodal PDF processing failed due to quota/API limits for {report.symbol}. "
-                        "Falling back to OCR extractor."
-                    )
-                    return self._fallback_to_ocr(pdf_path, stock_price, report.symbol, extraction_model, analysis_model, user_profile)
-                else:
-                    _logger.error(f"Multimodal PDF processing failed for {report.symbol}: {str(e)}")
-                    raise
+            except LLMAnalysisError:
+                raise
         else:
             currency = self._detect_currency(pdf_text)
             return self.llm_client.analyze(
@@ -187,64 +178,6 @@ class FinancialStatementAnalyzerService:
                 extraction_model=extraction_model,
                 analysis_model=analysis_model,
                 user_profile=user_profile,
-            )
-    
-    def _fallback_to_ocr(
-        self,
-        pdf_path: str,
-        stock_price: Optional[float],
-        symbol: str,
-        extraction_model: Optional[str] = "auto",
-        analysis_model: Optional[str] = "auto",
-        user_profile: Optional[Dict[str, Any]] = None
-    ) -> str:
-        """
-        Fallback to OCR extraction when multimodal PDF processing fails.
-        
-        Args:
-            pdf_path: Path to PDF file
-            stock_price: Current stock price
-            symbol: Stock symbol
-            extraction_model: Extraction model preference
-            analysis_model: Analysis model preference
-            
-        Returns:
-            Analysis result string
-            
-        Raises:
-            PDFExtractionError: If OCR extraction also fails
-        """
-        try:
-            from financial.pdfplumber_ocr_extractor import PDFPlumberOCRExtractor
-            ocr_extractor = PDFPlumberOCRExtractor(use_ocr=True)
-            _logger.info(f"Attempting OCR extraction for {symbol}")
-            pdf_text = ocr_extractor.extract_text(pdf_path)
-            
-            if not pdf_text or len(pdf_text.strip()) < 100:
-                raise PDFExtractionError(
-                    f"OCR extraction also failed for {symbol}. "
-                    f"Extracted only {len(pdf_text)} characters."
-                )
-            
-            currency = self._detect_currency(pdf_text)
-            _logger.info(f"OCR extraction successful for {symbol}: {len(pdf_text)} characters")
-            return self.llm_client.analyze(
-                pdf_text=pdf_text,
-                stock_price=stock_price,
-                currency=currency,
-                symbol=symbol,
-                extraction_model=extraction_model,
-                analysis_model=analysis_model,
-                user_profile=user_profile,
-            )
-        except ImportError:
-            raise PDFExtractionError(
-                f"OCR libraries not available. Cannot process image-based PDF for {symbol}. "
-                "Install with: pip install pdf2image pytesseract"
-            )
-        except Exception as e:
-            raise PDFExtractionError(
-                f"OCR extraction failed for {symbol}: {str(e)}"
             )
 
     @staticmethod

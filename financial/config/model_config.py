@@ -40,11 +40,6 @@ class ModelConfig:
         return model in cls.GEMINI_MODELS
     
     @classmethod
-    def is_gemini_model(cls, model: str) -> bool:
-        """Check if model is a Gemini model (deprecated, use is_multimodal_model)."""
-        return cls.is_multimodal_model(model)
-    
-    @classmethod
     def get_extraction_model(cls, user_model: Optional[str] = None) -> str:
         """Get model for data extraction step."""
         if user_model and user_model != "auto":

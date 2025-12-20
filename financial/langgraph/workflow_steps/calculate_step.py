@@ -27,7 +27,7 @@ class CalculateStep(BaseWorkflowStep):
             self._calculate_share_metrics(extracted, calculated, stock_price)
             self._calculate_valuation_metrics(extracted, calculated, stock_price)
             self._calculate_growth_metrics(extracted, calculated)
-            self._calculate_health_metrics(extracted, calculated, stock_price)
+            self._calculate_health_metrics(extracted, calculated)
             
             state["calculated_metrics"] = calculated
             
@@ -99,7 +99,7 @@ class CalculateStep(BaseWorkflowStep):
         if net_income and net_income_previous and net_income_previous > 0:
             calculated["net_income_growth_pct"] = ((net_income - net_income_previous) / net_income_previous) * 100
     
-    def _calculate_health_metrics(self, extracted: dict, calculated: dict, stock_price: float) -> None:
+    def _calculate_health_metrics(self, extracted: dict, calculated: dict) -> None:
         """Calculate financial health metrics."""
         net_income = extracted.get("net_income")
         shareholders_equity = extracted.get("shareholders_equity")

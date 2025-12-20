@@ -175,13 +175,8 @@ Return the JSON object now:"""
             except LLMAnalysisError as e:
                 _logger.warning(f"User-selected model {preferred_model} failed: {str(e)}")
         
-        gemini_models = [
-            "google/gemini-3-pro-preview",
-            "google/gemini-3-flash-preview",
-        ]
-        
         last_error = None
-        for model in gemini_models:
+        for model in ModelConfig.GEMINI_MODELS:
             try:
                 _logger.info(f"Attempting PDF extraction with model: {model}")
                 extracted_data, token_usage = self.llm_helper.call_llm_with_pdf(

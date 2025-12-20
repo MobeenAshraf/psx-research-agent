@@ -25,24 +25,7 @@ class LLMHelper:
         model: str,
         state_context: Optional[Dict[str, Any]] = None
     ) -> Tuple[Dict[str, Any], Dict[str, int]]:
-        """
-        Call LLM with JSON response format, handling prompt creation, API call, and parsing.
-        
-        Args:
-            system_prompt_content: System prompt content
-            user_prompt_content: User prompt content (can contain template variables)
-            model: Model name to use
-            state_context: Optional context dict for template formatting
-            
-        Returns:
-            Tuple of (parsed_json_response, token_usage) where token_usage contains:
-            - prompt_tokens: Number of tokens in the prompt
-            - completion_tokens: Number of tokens in the completion
-            - total_tokens: Total tokens used
-            
-        Raises:
-            LLMAnalysisError: If API call or parsing fails
-        """
+        """Call LLM and return (parsed_response, token_usage). Raises LLMAnalysisError on failure."""
         response = None
         try:
             system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_content)
@@ -107,25 +90,7 @@ class LLMHelper:
         model: str,
         state_context: Optional[Dict[str, Any]] = None
     ) -> Tuple[Dict[str, Any], Dict[str, int]]:
-        """
-        Call LLM with PDF file upload and JSON response format.
-        
-        Args:
-            pdf_path: Path to PDF file
-            system_prompt_content: System prompt content
-            user_prompt_content: User prompt content (can contain template variables)
-            model: Model name (should be Gemini model via OpenRouter, e.g., google/gemini-3-pro-preview)
-            state_context: Optional context dict for template formatting
-            
-        Returns:
-            Tuple of (parsed_json_response, token_usage) where token_usage contains:
-            - prompt_tokens: Number of tokens in the prompt
-            - completion_tokens: Number of tokens in the completion
-            - total_tokens: Total tokens used
-            
-        Raises:
-            LLMAnalysisError: If API call or parsing fails
-        """
+        """Call LLM with PDF and return (parsed_response, token_usage). Raises LLMAnalysisError on failure."""
         response = None
         try:
             system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_content)

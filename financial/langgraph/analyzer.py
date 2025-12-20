@@ -93,7 +93,7 @@ class LangGraphAnalyzer:
         if not pdf_path and (not pdf_text or not pdf_text.strip()):
             raise LLMAnalysisError("No PDF text content or PDF path provided for analysis")
         
-        self.state_manager.setup_state_dir(symbol)
+        self.state_manager.setup_state_dir(symbol, extraction_model, analysis_model)
         
         initial_state: AnalysisState = {
             "pdf_text": pdf_text or "",

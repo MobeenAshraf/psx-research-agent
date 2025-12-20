@@ -18,23 +18,7 @@ class DecisionLLMHelper:
         user_prompt: str,
         model: str
     ) -> Tuple[Dict[str, Any], Dict[str, int]]:
-        """
-        Call LLM for decision-making with JSON response format.
-        
-        Args:
-            system_prompt: System prompt content
-            user_prompt: User prompt content
-            model: Model name to use
-            
-        Returns:
-            Tuple of (parsed_json_response, token_usage) where token_usage contains:
-            - prompt_tokens: Number of tokens in the prompt
-            - completion_tokens: Number of tokens in the completion
-            - total_tokens: Total tokens used
-            
-        Raises:
-            LLMAnalysisError: If API call or parsing fails
-        """
+        """Call LLM for decision. Returns (parsed_response, token_usage)."""
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
