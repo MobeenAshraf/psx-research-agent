@@ -42,3 +42,6 @@ packages/cli/credentials.json
 .cursorrules
 
 data
+
+# Local todos
+todo/

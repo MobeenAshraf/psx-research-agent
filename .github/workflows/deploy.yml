@@ -1,0 +1,104 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual triggers
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  SERVICE_NAME: psx-research-agent
+  REGION: asia-south1
+  IMAGE_NAME: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/psx-research-agent/psx-research-agent
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME:$GITHUB_SHA -t $IMAGE_NAME:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push $IMAGE_NAME:$GITHUB_SHA
+          docker push $IMAGE_NAME:latest
+
+      - name: Clean up old images
+        run: |
+          # Keep only the latest 3 images (latest tag + current SHA + one backup)
+          # This ensures we stay within the 500MB free tier limit
+          echo "Checking for old images to clean up..."
+          
+          # Get all image tags sorted by creation time (newest first) and save to temp file
+          gcloud artifacts docker images list \
+            $IMAGE_NAME \
+            --format="value(package)" \
+            --sort-by=~create_time > /tmp/all_images.txt 2>/dev/null || touch /tmp/all_images.txt
+          
+          IMAGE_COUNT=$(wc -l < /tmp/all_images.txt | tr -d ' ')
+          
+          if [ "$IMAGE_COUNT" -eq 0 ]; then
+            echo "No images found (first deployment)"
+            exit 0
+          fi
+          
+          echo "Total images: $IMAGE_COUNT"
+          
+          # If we have more than 3 images, delete the old ones
+          if [ "$IMAGE_COUNT" -gt 3 ]; then
+            DELETE_COUNT=$((IMAGE_COUNT - 3))
+            echo "Deleting $DELETE_COUNT old image(s)..."
+            
+            # Read lines starting from line 4 (skip first 3)
+            tail -n +4 /tmp/all_images.txt | while IFS= read -r image; do
+              if [ -n "$image" ]; then
+                echo "Deleting: $image"
+                gcloud artifacts docker images delete "$image" --delete-tags --quiet || true
+              fi
+            done
+            
+            echo "✅ Cleanup complete. Kept 3 most recent images."
+          else
+            echo "✅ No cleanup needed. Only $IMAGE_COUNT image(s) stored."
+          fi
+          
+          rm -f /tmp/all_images.txt
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $SERVICE_NAME \
+            --image $IMAGE_NAME:$GITHUB_SHA \
+            --platform managed \
+            --region $REGION \
+            --allow-unauthenticated \
+            --set-secrets OPENROUTER_API_KEY=openrouter-api-key:latest \
+            --memory 2Gi \
+            --cpu 2 \
+            --timeout 3600 \
+            --max-instances 10 \
+            --min-instances 0 \
+            --port 8080
+
