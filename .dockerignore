@@ -31,4 +31,5 @@ todo/
 docs/
 *.md
 !README.md
+deploy-local.sh
 

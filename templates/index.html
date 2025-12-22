@@ -58,6 +58,25 @@
         .progress-bar {
             transition: width 0.5s ease-in-out;
         }
+        details[open] summary ~ * {
+            animation: slideDown 0.3s ease-out;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        details summary {
+            list-style: none;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -77,34 +96,6 @@
                         class="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         autocomplete="off"
                     />
-                </div>
-                
-                <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Model Selection (Financial Analysis)</label>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs text-gray-600 mb-1">Extraction Model</label>
-                            <select id="extractionModel" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="openai/gpt-4o-mini" selected>GPT-4o Mini (Text-based)</option>
-                                <option value="openai/gpt-4o">GPT-4o (Text-based)</option>
-                                <option value="google/gemini-3-pro-preview">Gemini 3 Pro (Multimodal)</option>
-                                <option value="google/gemini-3-flash-preview">Gemini 3 Flash (Multimodal)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-600 mb-1">Analysis Model</label>
-                            <select id="analysisModel" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="openai/gpt-4o" selected>GPT-4o</option>
-                                <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-                                <option value="google/gemini-3-pro-preview">Gemini 3 Pro</option>
-                                <option value="google/gemini-3-flash-preview">Gemini 3 Flash</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2">
-                        <strong>Note:</strong> Gemini models use multimodal PDF processing (direct PDF reading). 
-                        GPT models use text extraction first.
-                    </p>
                 </div>
                 
                 <div class="flex gap-4 justify-center flex-wrap">
@@ -132,7 +123,7 @@
                     
                     <button
                         id="llmDecisionBtn"
-                        class="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        class="hidden px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                         <span id="llmDecisionBtnText">LLM Decision</span>
                         <svg id="llmDecisionSpinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -141,6 +132,44 @@
                         </svg>
                     </button>
                 </div>
+                
+                <details class="mt-6 group">
+                    <summary class="cursor-pointer flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span class="text-sm font-medium text-green-800">Financial Analysis Options</span>
+                        </div>
+                        <svg class="w-5 h-5 text-green-600 transition-transform duration-300 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </summary>
+                    <div class="mt-3 p-4 bg-white border border-green-200 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Model Selection</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Extraction Model</label>
+                                <select id="extractionModel" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+                                    <option value="openai/gpt-4o-mini">GPT-4o Mini (Text-based)</option>
+                                    <option value="openai/gpt-4o">GPT-4o (Text-based)</option>
+                                    <option value="google/gemini-3-flash-preview" selected>Gemini 3 Flash (Multimodal)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Analysis Model</label>
+                                <select id="analysisModel" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all">
+                                    <option value="openai/gpt-4o" selected>GPT-4o</option>
+                                    <option value="google/gemini-3-flash-preview">Gemini 3 Flash</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
+                            <strong>Note:</strong> Gemini models use multimodal PDF processing (direct PDF reading). 
+                            GPT models use text extraction first.
+                        </p>
+                    </div>
+                </details>
             </div>
         </div>
 

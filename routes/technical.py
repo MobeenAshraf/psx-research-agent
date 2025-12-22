@@ -2,7 +2,7 @@
 
 from typing import Dict, Any, List
 import logging
-from technical.data.price_repository import WebPriceRepository
+from technical.price_repository import WebPriceRepository
 from technical.analyzer import TechnicalAnalyzer
 from technical.recommendation_engine import RecommendationEngine
 from models.stock_analysis import StockAnalysis

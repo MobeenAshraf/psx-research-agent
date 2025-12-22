@@ -29,6 +29,7 @@ A comprehensive web application for analyzing PSX stocks: technical analysis and
 - [Technical Analysis](#technical-analysis)
 - [Financial Analysis](#financial-analysis)
   - [LangGraph Workflow](#langgraph-workflow)
+- [LLM Decision](#llm-decision)
 - [Development](#development)
 - [Troubleshooting](#troubleshooting)
 - [Why uv?](#why-uv)
@@ -40,6 +41,7 @@ A comprehensive web application for analyzing PSX stocks: technical analysis and
 
 1. **Technical Analysis** - Comprehensive technical indicators and signals
 2. **Financial Analysis** - Analysis of latest financial statements using LangGraph
+3. **LLM Decision** - AI-powered investment decisions combining user profile, technical analysis, and financial analysis
 
 ---
 
@@ -148,12 +150,14 @@ The web application will be available at `http://localhost:8000`
 ## API Endpoints
 
 - `GET /` - Frontend page
+- `GET /health` - Health check endpoint for Cloud Run
 - `POST /api/technical-analysis` - Perform technical analysis
 - `POST /api/financial-analysis/check` - Check if analysis exists
 - `POST /api/financial-analysis/run` - Start financial analysis
 - `GET /api/financial-analysis/stream/{symbol}` - Stream analysis progress (SSE)
 - `GET /api/financial-analysis/status/{symbol}` - Get analysis status
 - `GET /api/financial-analysis/result/{symbol}` - Get final result
+- `POST /api/llm-decision` - Get LLM investment decision (combines user profile, technical, and financial analysis)
 - `GET /docs` - Interactive API documentation (Swagger UI)
 
 ---
@@ -220,6 +224,28 @@ The workflow maintains state between steps and provides real-time progress updat
 - Better handling of multi-step processes where deterministic calculations are needed between LLM calls
 - State persistence allows debugging and recovery from failures
 - More flexible error handling and conditional routing
+
+---
+
+## LLM Decision
+
+The LLM Decision feature combines multiple data sources to provide AI-powered investment recommendations:
+
+- **User Profile** - Personalized investment preferences and risk tolerance
+- **Technical Analysis** - Real-time technical indicators and signals
+- **Financial Analysis** - Latest financial statement analysis
+- **Index Membership** - Stock exchange index information
+
+The decision endpoint uses an LLM to synthesize all this information and provide:
+
+- Investment decision (Buy/Hold/Sell)
+- Confidence score
+- Detailed reasoning
+- Risk notes
+- Dividend analysis
+- Halal compliance check
+
+**Prerequisites**: Both technical and financial analysis must be completed before requesting an LLM decision.
 
 ---
 

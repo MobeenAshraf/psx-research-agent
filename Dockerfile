@@ -12,19 +12,15 @@ RUN apt-get update && \
 COPY pyproject.toml ./
 
 # Install Python dependencies using pip (simple and reliable)
+# Removed: pdfplumber, openai, langchain, langchain-community, numpy (unused)
 RUN pip install --no-cache-dir \
     fastapi>=0.100.0 \
     "uvicorn[standard]>=0.23.0" \
     requests>=2.31.0 \
     beautifulsoup4>=4.12.0 \
     pandas>=1.5.0 \
-    numpy>=1.23.0 \
-    pdfplumber>=0.9.0 \
-    langchain>=1.0.0 \
     langchain-core>=1.0.0 \
-    langchain-community>=0.2.0 \
     langgraph>=1.0.0 \
-    openai>=1.0.0 \
     python-dotenv>=1.0.0
 
 # Copy application code
@@ -32,6 +28,9 @@ COPY . .
 
 # Create data directories
 RUN mkdir -p data/financial_statements data/results
+
+# Set PYTHONPATH so Python can find the modules
+ENV PYTHONPATH=/app
 
 EXPOSE 8080
 

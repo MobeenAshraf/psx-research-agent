@@ -1,6 +1,7 @@
 """FastAPI application for PSX Stock Analysis Frontend."""
 
 import json
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -17,6 +18,12 @@ app = FastAPI(
     description="API for technical and financial analysis of PSX stocks",
     version="1.0.0"
 )
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Cloud Run."""
+    return {"status": "healthy"}
 
 
 static_dir = Path("static")
@@ -292,6 +299,5 @@ async def llm_decision(request: LLMDecisionRequest):
 
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8080)
 

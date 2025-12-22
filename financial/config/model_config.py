@@ -13,7 +13,7 @@ class ModelConfig:
     # Default extraction model - fast, cheap, good for structured JSON extraction
     DEFAULT_EXTRACTION_MODEL: str = os.getenv(
         'EXTRACTION_MODEL',
-        'openai/gpt-4o-mini'
+        'google/gemini-3-flash-preview'
     )
     
     # Default analysis model - better reasoning for qualitative assessment

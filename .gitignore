@@ -45,3 +45,4 @@ data
 
 # Local todos
 todo/
+deploy-local.sh

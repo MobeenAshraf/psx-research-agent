@@ -2,10 +2,11 @@
 
 import json
 from typing import Dict, Any, Optional, Tuple
-try:
-    from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
-except ImportError:
-    from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+)
 from financial.pdf_exceptions import LLMAnalysisError
 from financial.langgraph.json_parser import JSONParser
 from financial.langgraph.api_client import OpenRouterAPIClient

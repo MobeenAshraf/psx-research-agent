@@ -3,7 +3,7 @@
 from typing import Dict, Any, Optional
 import requests
 from bs4 import BeautifulSoup
-from technical.data.price_repository import WebPriceRepository
+from technical.price_repository import WebPriceRepository
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "

@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
-from technical.data.price_repository import WebPriceRepository
+from technical.price_repository import WebPriceRepository
 from financial.langgraph.analyzer import LangGraphAnalyzer
 from financial.repositories import FileResultRepository
 from financial.services import (
