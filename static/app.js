@@ -689,7 +689,7 @@ function displayTokenUsage(tokenUsage) {
     
     const tokenUsageCard = document.createElement('div');
     tokenUsageCard.id = 'tokenUsageCard';
-    tokenUsageCard.className = 'bg-gray-800 rounded-lg shadow-lg p-6 mb-4 fade-in border border-gray-700';
+    tokenUsageCard.className = 'hidden bg-gray-800 rounded-lg shadow-lg p-6 mb-4 fade-in border border-gray-700';
     
     const steps = tokenUsage.steps || {};
     const cumulative = tokenUsage.cumulative || {};
