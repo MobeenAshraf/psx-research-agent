@@ -16,6 +16,7 @@ from financial.services import (
     StatementNameGenerator,
 )
 from financial.config.model_config import ModelConfig
+from financial.config.cost_calculator import calculate_cost
 
 
 _executor = ThreadPoolExecutor(max_workers=2)
@@ -77,13 +78,37 @@ def check_latest_report(
                 analysis_model=normalized_analysis
             )
             final_state = states.get("99_final", {})
+            token_usage = final_state.get("token_usage")
+            
+            extraction_cost = 0.0
+            analysis_cost = 0.0
+            total_cost = 0.0
+            
+            if token_usage:
+                steps = token_usage.get("steps", {})
+                extract_step = steps.get("extract", {})
+                analyze_step = steps.get("analyze", {})
+                
+                if extract_step:
+                    extract_model = extract_step.get("model", normalized_extraction)
+                    extraction_cost = calculate_cost(extract_step, extract_model)
+                
+                if analyze_step:
+                    analyze_model = analyze_step.get("model", normalized_analysis)
+                    analysis_cost = calculate_cost(analyze_step, analyze_model)
+                
+                total_cost = extraction_cost + analysis_cost
+            
             return {
                 "symbol": symbol_upper,
                 "status": "exists",
                 "statement_name": statement_name,
                 "result": cached_result,
                 "states": states,
-                "token_usage": final_state.get("token_usage"),
+                "token_usage": token_usage,
+                "extraction_cost": extraction_cost,
+                "analysis_cost": analysis_cost,
+                "total_cost": total_cost,
             }
 
         return {

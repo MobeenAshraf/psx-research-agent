@@ -89,7 +89,9 @@ Provide investor-focused analysis as structured JSON. Return ONLY valid JSON, no
                     }
                 }
             
-            state["token_usage"]["steps"]["analyze"] = token_usage
+            token_usage_with_model = dict(token_usage)
+            token_usage_with_model["model"] = analysis_model
+            state["token_usage"]["steps"]["analyze"] = token_usage_with_model
             
             cumulative = state["token_usage"]["cumulative"]
             cumulative["prompt_tokens"] += token_usage["prompt_tokens"]

@@ -1,16 +1,22 @@
 """FastAPI application for PSX Stock Analysis Frontend."""
 
 import json
+import time
+import asyncio
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
 from pydantic import BaseModel
 from typing import Optional
 from pathlib import Path
+from starlette.middleware.base import BaseHTTPMiddleware
 from routes import get_technical_analysis, check_latest_report, run_financial_analysis, get_llm_decision
 from financial.config.model_config import ModelConfig
 from state_monitor import stream_states, get_current_states
+from utils import log_api_request
+from financial.config.cost_calculator import calculate_cost
 
 
 app = FastAPI(
@@ -18,6 +24,87 @@ app = FastAPI(
     description="API for technical and financial analysis of PSX stocks",
     version="1.0.0"
 )
+
+
+class AnalyticsMiddleware(BaseHTTPMiddleware):
+    """Middleware to track API usage for analytics (non-blocking, minimal overhead)."""
+    
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        endpoint = request.url.path
+        
+        response = await call_next(request)
+        
+        duration_ms = (time.time() - start_time) * 1000
+        
+        if endpoint.startswith("/api/"):
+            error = None
+            if response.status_code >= 400:
+                error = f"HTTP {response.status_code}"
+            
+            extraction_tokens = None
+            analysis_tokens = None
+            extraction_price = None
+            analysis_price = None
+            total_cost = None
+            token_usage_data = None
+            
+            if response.status_code == 200 and (
+                endpoint == "/api/financial-analysis/check" or 
+                endpoint.startswith("/api/financial-analysis/result/")
+            ):
+                try:
+                    body = b""
+                    async for chunk in response.body_iterator:
+                        body += chunk
+                    
+                    if body:
+                        response_data = json.loads(body.decode())
+                        token_usage_data = response_data.get("token_usage")
+                        
+                        if token_usage_data:
+                            steps = token_usage_data.get("steps", {})
+                            extract_step = steps.get("extract", {})
+                            analyze_step = steps.get("analyze", {})
+                            
+                            if extract_step:
+                                extraction_tokens = extract_step.get("total_tokens")
+                                extraction_price = response_data.get("extraction_cost")
+                            
+                            if analyze_step:
+                                analysis_tokens = analyze_step.get("total_tokens")
+                                analysis_price = response_data.get("analysis_cost")
+                            
+                            total_cost = response_data.get("total_cost")
+                    
+                    return Response(
+                        content=body,
+                        status_code=response.status_code,
+                        headers=dict(response.headers),
+                        media_type=response.media_type
+                    )
+                except (json.JSONDecodeError, KeyError, Exception):
+                    pass
+            
+            asyncio.create_task(log_api_request(
+                endpoint=endpoint,
+                method=request.method,
+                status_code=response.status_code,
+                duration_ms=duration_ms,
+                request_data={},
+                error=error,
+                token_usage=token_usage_data,
+                extraction_tokens=extraction_tokens,
+                analysis_tokens=analysis_tokens,
+                extraction_price=extraction_price,
+                analysis_price=analysis_price,
+                total_cost=total_cost
+            ))
+        
+        return response
+
+
+app.add_middleware(AnalyticsMiddleware)
 
 
 @app.get("/health")
@@ -260,12 +347,35 @@ async def get_financial_analysis_result(symbol: str):
         with open(final_state_file, 'r', encoding='utf-8') as f:
             final_state = json.load(f)
         
+        token_usage = final_state.get('token_usage')
+        extraction_cost = 0.0
+        analysis_cost = 0.0
+        total_cost = 0.0
+        
+        if token_usage:
+            steps = token_usage.get("steps", {})
+            extract_step = steps.get("extract", {})
+            analyze_step = steps.get("analyze", {})
+            
+            if extract_step:
+                extract_model = extract_step.get("model", "auto")
+                extraction_cost = calculate_cost(extract_step, extract_model)
+            
+            if analyze_step:
+                analyze_model = analyze_step.get("model", "auto")
+                analysis_cost = calculate_cost(analyze_step, analyze_model)
+            
+            total_cost = extraction_cost + analysis_cost
+        
         return {
             'symbol': symbol_upper,
             'status': 'complete',
             'final_report': final_state.get('final_report', ''),
             'state': final_state,
-            'token_usage': final_state.get('token_usage')
+            'token_usage': token_usage,
+            'extraction_cost': extraction_cost,
+            'analysis_cost': analysis_cost,
+            'total_cost': total_cost
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading result: {str(e)}")
@@ -296,6 +406,23 @@ async def llm_decision(request: LLMDecisionRequest):
         )
     
     return result
+
+
+@app.get("/api/analytics/summary")
+async def get_analytics_summary(days: int = 7):
+    """
+    Get analytics summary for API usage.
+    
+    Args:
+        days: Number of days to summarize (default: 7)
+        
+    Returns:
+        Analytics summary with request counts, endpoints, errors, etc.
+    """
+    from utils import get_analytics_summary
+    
+    summary = get_analytics_summary(days=days)
+    return summary
 
 
 if __name__ == "__main__":

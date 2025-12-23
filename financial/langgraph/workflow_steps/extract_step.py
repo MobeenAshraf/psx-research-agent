@@ -113,7 +113,9 @@ Return the JSON object now:"""
                     }
                 }
             
-            state["token_usage"]["steps"]["extract"] = token_usage
+            token_usage_with_model = dict(token_usage)
+            token_usage_with_model["model"] = extraction_model
+            state["token_usage"]["steps"]["extract"] = token_usage_with_model
             
             cumulative = state["token_usage"]["cumulative"]
             cumulative["prompt_tokens"] += token_usage["prompt_tokens"]

@@ -2,6 +2,82 @@ const API_BASE = '/api';
 
 let currentEventSource = null;
 
+function trackEvent(eventName, eventParams = {}) {
+    if (typeof gtag !== 'undefined') {
+        gtag('event', eventName, eventParams);
+    }
+}
+
+const MODEL_PRICING = {
+    "google/gemini-3-flash-preview": {
+        prompt_tokens_per_million: 0.075,
+        completion_tokens_per_million: 0.30
+    },
+    "google/gemini-3-pro-preview": {
+        prompt_tokens_per_million: 0.625,
+        completion_tokens_per_million: 1.875
+    },
+    "openai/gpt-4o": {
+        prompt_tokens_per_million: 2.50,
+        completion_tokens_per_million: 10.00
+    },
+    "openai/gpt-4o-mini": {
+        prompt_tokens_per_million: 0.15,
+        completion_tokens_per_million: 0.60
+    }
+};
+
+function calculateCost(tokenUsage, modelName) {
+    if (!tokenUsage || !modelName) {
+        return 0.0;
+    }
+    
+    const pricing = MODEL_PRICING[modelName];
+    if (!pricing) {
+        return 0.0;
+    }
+    
+    const promptTokens = tokenUsage.prompt_tokens || 0;
+    const completionTokens = tokenUsage.completion_tokens || 0;
+    
+    const promptCost = (promptTokens / 1000000) * pricing.prompt_tokens_per_million;
+    const completionCost = (completionTokens / 1000000) * pricing.completion_tokens_per_million;
+    
+    return round(promptCost + completionCost, 6);
+}
+
+function round(value, decimals) {
+    return Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
+}
+
+function calculateCosts(tokenUsage, extractionModel, analysisModel) {
+    if (!tokenUsage || !tokenUsage.steps) {
+        return {
+            extraction_cost: 0.0,
+            analysis_cost: 0.0,
+            total_cost: 0.0
+        };
+    }
+    
+    const extractStep = tokenUsage.steps.extract || {};
+    const analyzeStep = tokenUsage.steps.analyze || {};
+    
+    const extractModel = extractStep.model || extractionModel;
+    const analyzeModel = analyzeStep.model || analysisModel;
+    
+    const extractionCost = calculateCost(extractStep, extractModel);
+    const analysisCost = calculateCost(analyzeStep, analyzeModel);
+    const totalCost = extractionCost + analysisCost;
+    
+    return {
+        extraction_cost: extractionCost,
+        analysis_cost: analysisCost,
+        total_cost: totalCost,
+        extracting_token: extractStep.total_tokens || 0,
+        analysis_token: analyzeStep.total_tokens || 0
+    };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const stockInput = document.getElementById('stockInput');
     const technicalBtn = document.getElementById('technicalBtn');
@@ -10,8 +86,29 @@ document.addEventListener('DOMContentLoaded', () => {
     
     stockInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
+            const symbol = stockInput.value.trim().toUpperCase();
+            if (symbol) {
+                trackEvent('stock_symbol_entered', {
+                    stock_symbol: symbol,
+                    method: 'enter_key'
+                });
+            }
             technicalBtn.click();
         }
+    });
+    
+    document.getElementById('extractionModel').addEventListener('change', (e) => {
+        trackEvent('model_selected', {
+            model_type: 'extraction',
+            model_name: e.target.value
+        });
+    });
+    
+    document.getElementById('analysisModel').addEventListener('change', (e) => {
+        trackEvent('model_selected', {
+            model_type: 'analysis',
+            model_name: e.target.value
+        });
     });
     
     technicalBtn.addEventListener('click', handleTechnicalAnalysis);
@@ -70,8 +167,15 @@ async function handleTechnicalAnalysis() {
     const symbol = getSymbol();
     if (!symbol) return;
     
+    trackEvent('analysis_started', {
+        analysis_type: 'technical',
+        stock_symbol: symbol
+    });
+    
     hideAllSections();
     showLoading('technicalBtn', 'technicalSpinner', 'technicalBtnText');
+    
+    const startTime = Date.now();
     
     try {
         const response = await fetch(`${API_BASE}/technical-analysis`, {
@@ -88,8 +192,26 @@ async function handleTechnicalAnalysis() {
         }
         
         const data = await response.json();
+        const duration = Date.now() - startTime;
+        
+        trackEvent('analysis_completed', {
+            analysis_type: 'technical',
+            stock_symbol: symbol,
+            duration_ms: duration,
+            success: true
+        });
+        
         displayTechnicalResults(data);
     } catch (error) {
+        const duration = Date.now() - startTime;
+        
+        trackEvent('analysis_error', {
+            analysis_type: 'technical',
+            stock_symbol: symbol,
+            duration_ms: duration,
+            error_message: error.message
+        });
+        
         showError(`Technical analysis failed: ${error.message}`);
     } finally {
         hideLoading('technicalBtn', 'technicalSpinner', 'technicalBtnText', 'Technical Analysis');
@@ -120,8 +242,17 @@ async function handleFinancialAnalysis() {
     const extractionModel = document.getElementById('extractionModel').value;
     const analysisModel = document.getElementById('analysisModel').value;
     
+    trackEvent('analysis_started', {
+        analysis_type: 'financial',
+        stock_symbol: symbol,
+        extraction_model: extractionModel,
+        analysis_model: analysisModel
+    });
+    
     hideAllSections();
     showLoading('financialBtn', 'financialSpinner', 'financialBtnText');
+    
+    const startTime = Date.now();
     
     try {
         const checkResponse = await fetch(`${API_BASE}/financial-analysis/check`, {
@@ -143,6 +274,25 @@ async function handleFinancialAnalysis() {
         const checkData = await checkResponse.json();
         
         if (checkData.status === 'exists') {
+            const duration = Date.now() - startTime;
+            
+            const costs = calculateCosts(checkData.token_usage, extractionModel, analysisModel);
+            
+            trackEvent('analysis_completed', {
+                analysis_type: 'financial',
+                stock_symbol: symbol,
+                extraction_model: extractionModel,
+                analysis_model: analysisModel,
+                duration_ms: duration,
+                success: true,
+                cached: true,
+                extracting_token: costs.extracting_token,
+                analysis_token: costs.analysis_token,
+                extraction_price: costs.extraction_cost,
+                analysis_price: costs.analysis_cost,
+                cost: costs.total_cost
+            });
+            
             hideLoading('financialBtn', 'financialSpinner', 'financialBtnText', 'Financial Analysis');
             displayFinancialResults(checkData);
             return;
@@ -170,6 +320,17 @@ async function handleFinancialAnalysis() {
         showProgressSection();
         connectToStream(symbol, extractionModel, analysisModel);
     } catch (error) {
+        const duration = Date.now() - startTime;
+        
+        trackEvent('analysis_error', {
+            analysis_type: 'financial',
+            stock_symbol: symbol,
+            extraction_model: extractionModel,
+            analysis_model: analysisModel,
+            duration_ms: duration,
+            error_message: error.message
+        });
+        
         showError(`Financial analysis failed: ${error.message}`);
         hideLoading('financialBtn', 'financialSpinner', 'financialBtnText', 'Financial Analysis');
     }
@@ -179,12 +340,22 @@ async function handleLLMDecision() {
     const symbol = getSymbol();
     if (!symbol) return;
     
+    const extractionModel = document.getElementById('extractionModel').value;
+    const analysisModel = document.getElementById('analysisModel').value;
+    
+    trackEvent('analysis_started', {
+        analysis_type: 'llm_decision',
+        stock_symbol: symbol,
+        extraction_model: extractionModel,
+        analysis_model: analysisModel
+    });
+    
     hideAllSections();
     showLoading('llmDecisionBtn', 'llmDecisionSpinner', 'llmDecisionBtnText');
     
+    const startTime = Date.now();
+    
     try {
-        const extractionModel = document.getElementById('extractionModel').value;
-        const analysisModel = document.getElementById('analysisModel').value;
         
         const response = await fetch(`${API_BASE}/llm-decision`, {
             method: 'POST',
@@ -205,8 +376,41 @@ async function handleLLMDecision() {
         }
         
         const data = await response.json();
+        const duration = Date.now() - startTime;
+        
+        let decisionCost = 0.0;
+        if (data.token_usage && data.cost !== undefined) {
+            decisionCost = data.cost;
+        } else if (data.token_usage) {
+            const decisionModel = 'openai/gpt-4o';
+            decisionCost = calculateCost(data.token_usage, decisionModel);
+        }
+        
+        trackEvent('analysis_completed', {
+            analysis_type: 'llm_decision',
+            stock_symbol: symbol,
+            extraction_model: extractionModel,
+            analysis_model: analysisModel,
+            duration_ms: duration,
+            success: true,
+            decision: data.decision || 'UNKNOWN',
+            confidence: data.confidence || 0,
+            cost: decisionCost
+        });
+        
         displayLLMDecisionResults(data);
     } catch (error) {
+        const duration = Date.now() - startTime;
+        
+        trackEvent('analysis_error', {
+            analysis_type: 'llm_decision',
+            stock_symbol: symbol,
+            extraction_model: extractionModel,
+            analysis_model: analysisModel,
+            duration_ms: duration,
+            error_message: error.message
+        });
+        
         showError(`LLM Decision failed: ${error.message}`);
     } finally {
         hideLoading('llmDecisionBtn', 'llmDecisionSpinner', 'llmDecisionBtnText', 'LLM Decision');
@@ -355,12 +559,28 @@ function connectToStream(symbol, extractionModel, analysisModel) {
                 progressPercent.textContent = '100%';
                 progressStep.textContent = 'Complete!';
                 
+                const tokenUsage = data.token_usage || (data.final_state && data.final_state.token_usage);
+                const costs = calculateCosts(tokenUsage, extractionModel, analysisModel);
+                
+                trackEvent('analysis_completed', {
+                    analysis_type: 'financial',
+                    stock_symbol: symbol,
+                    extraction_model: extractionModel,
+                    analysis_model: analysisModel,
+                    success: true,
+                    extracting_token: costs.extracting_token,
+                    analysis_token: costs.analysis_token,
+                    extraction_price: costs.extraction_cost,
+                    analysis_price: costs.analysis_cost,
+                    cost: costs.total_cost
+                });
+                
                 if (data.final_state && data.final_state.final_report) {
                     displayFinancialResults({
                         status: 'complete',
                         result: data.final_state.final_report,
                         symbol: symbol,
-                        token_usage: data.token_usage || data.final_state.token_usage
+                        token_usage: tokenUsage
                     });
                 } else {
                     fetchFinalResult(symbol);
@@ -369,6 +589,14 @@ function connectToStream(symbol, extractionModel, analysisModel) {
                 eventSource.close();
                 currentEventSource = null;
             } else if (data.type === 'error') {
+                trackEvent('analysis_error', {
+                    analysis_type: 'financial',
+                    stock_symbol: symbol,
+                    extraction_model: extractionModel,
+                    analysis_model: analysisModel,
+                    error_message: data.error || 'Unknown error'
+                });
+                
                 showError(`Analysis error: ${data.error || 'Unknown error'}`);
                 eventSource.close();
                 currentEventSource = null;

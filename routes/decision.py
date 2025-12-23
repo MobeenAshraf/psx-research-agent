@@ -7,6 +7,7 @@ from pathlib import Path
 
 from financial.config.user_profile_loader import UserProfileLoader
 from financial.config.model_config import ModelConfig
+from financial.config.cost_calculator import calculate_cost
 from financial.langgraph.decision_llm_helper import DecisionLLMHelper
 from financial.langgraph.api_client import OpenRouterAPIClient
 from financial.services.index_membership_service import get_index_service
@@ -168,6 +169,10 @@ Reasoning: {json.dumps(technical_analysis.get('reasoning', []), indent=2)}
             model=decision_model_actual
         )
         
+        decision_cost = 0.0
+        if token_usage:
+            decision_cost = calculate_cost(token_usage, decision_model_actual)
+        
         return {
             "symbol": symbol_upper,
             "status": "success",
@@ -179,7 +184,8 @@ Reasoning: {json.dumps(technical_analysis.get('reasoning', []), indent=2)}
             "dividend_analysis": decision_result.get("dividend_analysis"),
             "halal_compliance": decision_result.get("halal_compliance"),
             "raw_response": json.dumps(decision_result, indent=2),
-            "token_usage": token_usage
+            "token_usage": token_usage,
+            "cost": decision_cost
         }
         
     except Exception as exc:
