@@ -3,8 +3,17 @@ const API_BASE = '/api';
 let currentEventSource = null;
 
 function trackEvent(eventName, eventParams = {}) {
-    if (typeof gtag !== 'undefined') {
-        gtag('event', eventName, eventParams);
+    try {
+        if (typeof gtag !== 'undefined') {
+            gtag('event', eventName, eventParams);
+        } else if (window.dataLayer) {
+            window.dataLayer.push({
+                'event': eventName,
+                ...eventParams
+            });
+        }
+    } catch (error) {
+        console.error('[GA4] Error tracking event:', error);
     }
 }
 
