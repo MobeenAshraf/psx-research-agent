@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict, Any
 from pathlib import Path
 from starlette.middleware.base import BaseHTTPMiddleware
 from routes import get_technical_analysis, check_latest_report, run_financial_analysis, get_llm_decision
@@ -167,6 +167,7 @@ class LLMDecisionRequest(BaseModel):
     extraction_model: Optional[str] = "auto"
     analysis_model: Optional[str] = "auto"
     decision_model: Optional[str] = "auto"
+    user_profile: Optional[Dict[str, Any]] = None
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -409,7 +410,8 @@ async def llm_decision(request: LLMDecisionRequest):
         request.symbol,
         extraction_model=request.extraction_model,
         analysis_model=request.analysis_model,
-        decision_model=request.decision_model
+        decision_model=request.decision_model,
+        user_profile=request.user_profile
     )
     
     if result.get('status') == 'error':
@@ -419,6 +421,49 @@ async def llm_decision(request: LLMDecisionRequest):
         )
     
     return result
+
+
+@app.get("/api/user-profile/defaults")
+async def get_default_user_profile():
+    """
+    Get the default user profile.
+    
+    Returns:
+        Default user profile from data/user_profile.json
+    """
+    from financial.config.user_profile_loader import UserProfileLoader
+    
+    try:
+        profile = UserProfileLoader.load_profile()
+        return {"status": "success", "profile": profile}
+    except FileNotFoundError:
+        return {
+            "status": "success",
+            "profile": {
+                "age": 30,
+                "objectives": {
+                    "primary_goal": "Grow a halal stock portfolio as a core part of FIRE.",
+                    "quarterly_dividend_income_target_pkr": 50000,
+                    "time_horizon_years": 3,
+                    "treat_as_emergency_fund": False
+                },
+                "constraints": {
+                    "halal_only": True,
+                    "leverage_allowed": False,
+                    "derivatives_allowed": False
+                },
+                "current_portfolio": {
+                    "symbols": [],
+                    "past_holdings": [],
+                    "watchlist": []
+                },
+                "risk_profile": {
+                    "risk_tolerance": "moderate",
+                    "focus": "Stable, growing dividend income in halal stocks.",
+                    "preference_for_dividends": "high"
+                }
+            }
+        }
 
 
 @app.get("/api/analytics/summary")

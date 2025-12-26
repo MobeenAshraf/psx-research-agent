@@ -19,7 +19,8 @@ def get_llm_decision(
     symbol: str,
     extraction_model: Optional[str] = "auto",
     analysis_model: Optional[str] = "auto",
-    decision_model: Optional[str] = "auto"
+    decision_model: Optional[str] = "auto",
+    user_profile: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
     Get LLM decision combining user profile, technical analysis, and financial analysis.
@@ -29,6 +30,7 @@ def get_llm_decision(
         extraction_model: Model for extraction (used to find cached financial analysis)
         analysis_model: Model for analysis (used to find cached financial analysis)
         decision_model: Model for decision-making
+        user_profile: Optional user profile from frontend (falls back to file if not provided)
         
     Returns:
         Dictionary with decision, confidence, reasoning, etc.
@@ -36,15 +38,20 @@ def get_llm_decision(
     try:
         symbol_upper = symbol.upper()
         
-        # Load user profile
-        try:
-            user_profile = UserProfileLoader.load_profile()
-        except (FileNotFoundError, ValueError) as e:
-            return {
-                "symbol": symbol_upper,
-                "status": "error",
-                "error": f"Failed to load user profile: {str(e)}"
-            }
+        # Use provided profile or load from file
+        if user_profile:
+            profile = user_profile
+        else:
+            try:
+                profile = UserProfileLoader.load_profile()
+            except (FileNotFoundError, ValueError) as e:
+                return {
+                    "symbol": symbol_upper,
+                    "status": "error",
+                    "error": f"Failed to load user profile: {str(e)}"
+                }
+        
+        user_profile = profile
         
         # Get technical analysis
         try:

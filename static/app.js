@@ -1,6 +1,32 @@
 const API_BASE = '/api';
+const USER_PROFILE_KEY = 'psx_user_profile';
 
 let currentEventSource = null;
+
+const DEFAULT_PROFILE = {
+    age: 30,
+    objectives: {
+        primary_goal: "Grow a halal stock portfolio as a core part of FIRE (financial independence, retire early).",
+        quarterly_dividend_income_target_pkr: 50000,
+        time_horizon_years: 3,
+        treat_as_emergency_fund: false
+    },
+    constraints: {
+        halal_only: true,
+        leverage_allowed: false,
+        derivatives_allowed: false
+    },
+    current_portfolio: {
+        symbols: [],
+        past_holdings: [],
+        watchlist: []
+    },
+    risk_profile: {
+        risk_tolerance: "moderate",
+        focus: "Stable, growing dividend income and/or long-term capital appreciation in halal stocks.",
+        preference_for_dividends: "high"
+    }
+};
 
 function trackEvent(eventName, eventParams = {}) {
     try {
@@ -123,7 +149,254 @@ document.addEventListener('DOMContentLoaded', () => {
     technicalBtn.addEventListener('click', handleTechnicalAnalysis);
     financialBtn.addEventListener('click', handleFinancialAnalysis);
     llmDecisionBtn.addEventListener('click', handleLLMDecision);
+    
+    initializeProfileModal();
+    updateClearButtonVisibility();
 });
+
+function hasCustomProfile() {
+    return localStorage.getItem(USER_PROFILE_KEY) !== null;
+}
+
+function updateClearButtonVisibility() {
+    const clearBtn = document.getElementById('clearProfileBtn');
+    if (clearBtn) {
+        if (hasCustomProfile()) {
+            clearBtn.classList.remove('hidden');
+        } else {
+            clearBtn.classList.add('hidden');
+        }
+    }
+}
+
+function loadUserProfile() {
+    const stored = localStorage.getItem(USER_PROFILE_KEY);
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch {
+            return { ...DEFAULT_PROFILE };
+        }
+    }
+    return { ...DEFAULT_PROFILE };
+}
+
+function saveUserProfile(profile) {
+    localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
+    updateClearButtonVisibility();
+}
+
+function clearUserProfile() {
+    localStorage.removeItem(USER_PROFILE_KEY);
+    updateClearButtonVisibility();
+    populateFormFromProfile(DEFAULT_PROFILE);
+}
+
+function getUserProfile() {
+    return loadUserProfile();
+}
+
+function parseSymbolList(str) {
+    if (!str || !str.trim()) return [];
+    return str.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
+}
+
+function formatSymbolList(arr) {
+    if (!arr || !Array.isArray(arr)) return '';
+    return arr.join(', ');
+}
+
+function getFormProfile() {
+    const goalSelect = document.getElementById('profile-goal');
+    const emergencyToggle = document.getElementById('toggle-emergency');
+    const halalToggle = document.getElementById('toggle-halal');
+    const leverageToggle = document.getElementById('toggle-leverage');
+    const derivativesToggle = document.getElementById('toggle-derivatives');
+    
+    return {
+        age: parseInt(document.getElementById('profile-age').value) || 30,
+        objectives: {
+            primary_goal: goalSelect.value,
+            quarterly_dividend_income_target_pkr: parseInt(document.getElementById('profile-dividend-target').value) || 50000,
+            time_horizon_years: parseInt(document.getElementById('profile-time-horizon').value) || 3,
+            treat_as_emergency_fund: emergencyToggle.dataset.value === 'true'
+        },
+        constraints: {
+            halal_only: halalToggle.dataset.value === 'true',
+            leverage_allowed: leverageToggle.dataset.value === 'true',
+            derivatives_allowed: derivativesToggle.dataset.value === 'true'
+        },
+        current_portfolio: {
+            symbols: parseSymbolList(document.getElementById('profile-symbols').value),
+            past_holdings: parseSymbolList(document.getElementById('profile-past-holdings').value),
+            watchlist: parseSymbolList(document.getElementById('profile-watchlist').value)
+        },
+        risk_profile: {
+            risk_tolerance: document.getElementById('profile-risk-tolerance').value,
+            focus: document.getElementById('profile-focus').value,
+            preference_for_dividends: document.getElementById('profile-dividend-pref').value
+        }
+    };
+}
+
+function populateFormFromProfile(profile) {
+    document.getElementById('profile-age').value = profile.age || 30;
+    
+    const goalSelect = document.getElementById('profile-goal');
+    const goalValue = profile.objectives?.primary_goal || DEFAULT_PROFILE.objectives.primary_goal;
+    for (let i = 0; i < goalSelect.options.length; i++) {
+        if (goalSelect.options[i].value === goalValue) {
+            goalSelect.selectedIndex = i;
+            break;
+        }
+    }
+    
+    document.getElementById('profile-dividend-target').value = profile.objectives?.quarterly_dividend_income_target_pkr || 50000;
+    
+    const timeHorizon = profile.objectives?.time_horizon_years || 3;
+    document.getElementById('profile-time-horizon').value = timeHorizon;
+    document.getElementById('time-horizon-value').textContent = timeHorizon;
+    
+    setToggleState('toggle-emergency', profile.objectives?.treat_as_emergency_fund || false);
+    setToggleState('toggle-halal', profile.constraints?.halal_only !== false);
+    setToggleState('toggle-leverage', profile.constraints?.leverage_allowed || false);
+    setToggleState('toggle-derivatives', profile.constraints?.derivatives_allowed || false);
+    
+    document.getElementById('profile-symbols').value = formatSymbolList(profile.current_portfolio?.symbols);
+    document.getElementById('profile-past-holdings').value = formatSymbolList(profile.current_portfolio?.past_holdings);
+    document.getElementById('profile-watchlist').value = formatSymbolList(profile.current_portfolio?.watchlist);
+    
+    const riskSelect = document.getElementById('profile-risk-tolerance');
+    riskSelect.value = profile.risk_profile?.risk_tolerance || 'moderate';
+    
+    document.getElementById('profile-focus').value = profile.risk_profile?.focus || DEFAULT_PROFILE.risk_profile.focus;
+    
+    const divPrefSelect = document.getElementById('profile-dividend-pref');
+    divPrefSelect.value = profile.risk_profile?.preference_for_dividends || 'high';
+}
+
+function setToggleState(toggleId, isActive) {
+    const toggle = document.getElementById(toggleId);
+    if (toggle) {
+        toggle.dataset.value = isActive ? 'true' : 'false';
+        if (isActive) {
+            toggle.classList.add('active');
+        } else {
+            toggle.classList.remove('active');
+        }
+    }
+}
+
+function initializeProfileModal() {
+    const modal = document.getElementById('profileModal');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelProfileBtn = document.getElementById('cancelProfileBtn');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    const clearProfileBtn = document.getElementById('clearProfileBtn');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const timeHorizonSlider = document.getElementById('profile-time-horizon');
+    const timeHorizonValue = document.getElementById('time-horizon-value');
+    
+    settingsBtn.addEventListener('click', openProfileModal);
+    closeModalBtn.addEventListener('click', closeProfileModal);
+    cancelProfileBtn.addEventListener('click', closeProfileModal);
+    modalBackdrop.addEventListener('click', closeProfileModal);
+    
+    saveProfileBtn.addEventListener('click', () => {
+        const profile = getFormProfile();
+        saveUserProfile(profile);
+        
+        const checkmark = document.getElementById('saveCheckmark');
+        const btnText = saveProfileBtn.querySelector('span');
+        checkmark.classList.remove('hidden');
+        btnText.textContent = 'Saved!';
+        saveProfileBtn.classList.add('save-success');
+        
+        setTimeout(() => {
+            checkmark.classList.add('hidden');
+            btnText.textContent = 'Save Profile';
+            saveProfileBtn.classList.remove('save-success');
+            closeProfileModal();
+        }, 1000);
+        
+        trackEvent('profile_saved', { has_custom_profile: true });
+    });
+    
+    clearProfileBtn.addEventListener('click', () => {
+        if (confirm('Reset your investor profile to defaults?')) {
+            clearUserProfile();
+            trackEvent('profile_cleared');
+        }
+    });
+    
+    timeHorizonSlider.addEventListener('input', (e) => {
+        timeHorizonValue.textContent = e.target.value;
+    });
+    
+    document.querySelectorAll('.toggle-switch').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const isActive = toggle.dataset.value === 'true';
+            setToggleState(toggle.id, !isActive);
+        });
+    });
+    
+    document.querySelectorAll('.profile-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            
+            document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        });
+    });
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeProfileModal();
+        }
+    });
+}
+
+function openProfileModal() {
+    const modal = document.getElementById('profileModal');
+    const modalContent = modal.querySelector('.modal-content');
+    const backdrop = document.getElementById('modalBackdrop');
+    
+    const profile = loadUserProfile();
+    populateFormFromProfile(profile);
+    
+    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.profile-tab[data-tab="objectives"]').classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-objectives').classList.add('active');
+    
+    modal.classList.remove('hidden');
+    backdrop.classList.remove('closing');
+    modalContent.classList.remove('closing');
+    
+    document.body.style.overflow = 'hidden';
+    
+    trackEvent('profile_modal_opened');
+}
+
+function closeProfileModal() {
+    const modal = document.getElementById('profileModal');
+    const modalContent = modal.querySelector('.modal-content');
+    const backdrop = document.getElementById('modalBackdrop');
+    
+    backdrop.classList.add('closing');
+    modalContent.classList.add('closing');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }, 150);
+}
 
 function getSymbol() {
     const input = document.getElementById('stockInput');
@@ -351,12 +624,14 @@ async function handleLLMDecision() {
     
     const extractionModel = document.getElementById('extractionModel').value;
     const analysisModel = document.getElementById('analysisModel').value;
+    const userProfile = getUserProfile();
     
     trackEvent('analysis_started', {
         analysis_type: 'llm_decision',
         stock_symbol: symbol,
         extraction_model: extractionModel,
-        analysis_model: analysisModel
+        analysis_model: analysisModel,
+        has_custom_profile: hasCustomProfile()
     });
     
     hideAllSections();
@@ -365,7 +640,6 @@ async function handleLLMDecision() {
     const startTime = Date.now();
     
     try {
-        
         const response = await fetch(`${API_BASE}/llm-decision`, {
             method: 'POST',
             headers: {
@@ -375,7 +649,8 @@ async function handleLLMDecision() {
                 symbol,
                 extraction_model: extractionModel,
                 analysis_model: analysisModel,
-                decision_model: 'auto'
+                decision_model: 'auto',
+                user_profile: userProfile
             }),
         });
         

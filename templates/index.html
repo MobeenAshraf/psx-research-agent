@@ -77,6 +77,188 @@
         details summary {
             list-style: none;
         }
+        
+        /* Profile Modal Animations */
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes modalFadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        @keyframes modalSlideOut {
+            from { opacity: 1; transform: scale(1) translateY(0); }
+            to { opacity: 0; transform: scale(0.95) translateY(-10px); }
+        }
+        .modal-backdrop {
+            animation: modalFadeIn 0.2s ease-out forwards;
+        }
+        .modal-backdrop.closing {
+            animation: modalFadeOut 0.15s ease-in forwards;
+        }
+        .modal-content {
+            animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .modal-content.closing {
+            animation: modalSlideOut 0.15s ease-in forwards;
+        }
+        
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #a855f7 0%, #6366f1 50%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Custom toggle switch */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: #374151;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+        }
+        .toggle-switch.active::after {
+            left: 25px;
+        }
+        
+        /* Custom range slider */
+        .range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #a855f7, #6366f1, #3b82f6);
+            outline: none;
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 3px rgba(139, 92, 246, 0.2);
+            transition: all 0.2s ease;
+        }
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 0 4px rgba(139, 92, 246, 0.3);
+        }
+        .range-slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+        
+        /* Tab styles */
+        .profile-tab {
+            position: relative;
+            padding: 0.75rem 1rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .profile-tab:hover {
+            color: #d1d5db;
+        }
+        .profile-tab.active {
+            color: white;
+        }
+        .profile-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #a855f7, #6366f1);
+            border-radius: 1px;
+        }
+        
+        /* Tab content animation */
+        .tab-content {
+            display: none;
+            animation: tabFadeIn 0.2s ease-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes tabFadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Settings button pulse */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 0.4; }
+            100% { transform: scale(0.9); opacity: 0.8; }
+        }
+        .settings-btn::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .settings-btn:hover::before {
+            opacity: 1;
+            animation: pulse-ring 1.5s ease-in-out infinite;
+        }
+        
+        /* Custom select styling */
+        .custom-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+            padding-right: 2.5rem;
+        }
+        
+        /* Success animation for save button */
+        @keyframes successPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .save-success {
+            animation: successPop 0.3s ease-out;
+        }
     </style>
     <!-- Google tag (gtag.js) -->
 <script>
@@ -93,7 +275,27 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <div class="text-center mb-12">
+        <div class="text-center mb-12 relative">
+            <!-- Settings and Clear buttons -->
+            <div class="absolute right-0 top-0 flex items-center gap-2">
+                <button
+                    id="clearProfileBtn"
+                    class="hidden px-3 py-1.5 text-xs font-medium text-red-400 border border-red-400/30 rounded-lg hover:bg-red-500/10 hover:border-red-400/50 transition-all duration-200"
+                    title="Reset to defaults"
+                >
+                    Reset Profile
+                </button>
+                <button
+                    id="settingsBtn"
+                    class="settings-btn relative w-10 h-10 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center hover:shadow-lg transition-all duration-300 group"
+                    title="Investor Profile Settings"
+                >
+                    <svg class="w-5 h-5 text-gray-600 group-hover:text-purple-600 transition-colors duration-200 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </button>
+            </div>
             <h1 class="text-4xl font-light text-gray-800 mb-2">PSX Stock Analysis</h1>
             <p class="text-gray-600">Enter a stock symbol to analyze</p>
         </div>
@@ -136,7 +338,7 @@
                     
                     <button
                         id="llmDecisionBtn"
-                        class="hidden px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        class="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 active:from-purple-800 active:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-purple-500/25"
                     >
                         <span id="llmDecisionBtnText">LLM Decision</span>
                         <svg id="llmDecisionSpinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -214,6 +416,197 @@
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                     </svg>
                     <p class="text-red-800 font-medium" id="errorMessage"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="hidden fixed inset-0 z-50">
+        <!-- Backdrop -->
+        <div class="modal-backdrop absolute inset-0 bg-black/60 backdrop-blur-sm" id="modalBackdrop"></div>
+        
+        <!-- Modal Content -->
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="modal-content relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 shadow-2xl shadow-purple-500/10">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
+                    <h2 class="text-xl font-semibold gradient-text flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Investor Profile
+                    </h2>
+                    <button id="closeModalBtn" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors duration-200">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="flex border-b border-gray-700/50 px-6">
+                    <button class="profile-tab active" data-tab="objectives">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                            Objectives
+                        </span>
+                    </button>
+                    <button class="profile-tab" data-tab="constraints">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                            Constraints
+                        </span>
+                    </button>
+                    <button class="profile-tab" data-tab="portfolio">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            Portfolio
+                        </span>
+                    </button>
+                    <button class="profile-tab" data-tab="risk">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Risk
+                        </span>
+                    </button>
+                </div>
+                
+                <!-- Content -->
+                <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                    <!-- Objectives Tab -->
+                    <div id="tab-objectives" class="tab-content active space-y-5">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Age</label>
+                            <input type="number" id="profile-age" min="18" max="100" value="30"
+                                class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Primary Goal</label>
+                            <select id="profile-goal" class="custom-select w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all appearance-none cursor-pointer">
+                                <option value="Grow a halal stock portfolio as a core part of FIRE (financial independence, retire early).">FIRE (Financial Independence)</option>
+                                <option value="Build long-term wealth through halal investments.">Long-term Wealth Building</option>
+                                <option value="Generate stable dividend income for retirement.">Retirement Income</option>
+                                <option value="Generate regular passive income through dividends.">Passive Dividend Income</option>
+                                <option value="Capital preservation with modest growth.">Capital Preservation</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Quarterly Dividend Target (PKR)</label>
+                            <input type="number" id="profile-dividend-target" min="0" step="10000" value="50000"
+                                class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
+                                Time Horizon: <span id="time-horizon-value" class="text-purple-400 font-semibold">3</span> years
+                            </label>
+                            <input type="range" id="profile-time-horizon" min="1" max="10" value="3" class="range-slider">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>1 year</span>
+                                <span>10 years</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg">
+                            <div>
+                                <label class="text-sm font-medium text-gray-200">Treat as Emergency Fund</label>
+                                <p class="text-xs text-gray-500 mt-0.5">May need to liquidate on short notice</p>
+                            </div>
+                            <div id="toggle-emergency" class="toggle-switch" data-value="false"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Constraints Tab -->
+                    <div id="tab-constraints" class="tab-content space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg">
+                            <div>
+                                <label class="text-sm font-medium text-gray-200">Halal Only</label>
+                                <p class="text-xs text-gray-500 mt-0.5">Invest only in Shariah-compliant stocks</p>
+                            </div>
+                            <div id="toggle-halal" class="toggle-switch active" data-value="true"></div>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg">
+                            <div>
+                                <label class="text-sm font-medium text-gray-200">Leverage Allowed</label>
+                                <p class="text-xs text-gray-500 mt-0.5">Allow margin trading and borrowed funds</p>
+                            </div>
+                            <div id="toggle-leverage" class="toggle-switch" data-value="false"></div>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg">
+                            <div>
+                                <label class="text-sm font-medium text-gray-200">Derivatives Allowed</label>
+                                <p class="text-xs text-gray-500 mt-0.5">Allow options, futures, and other derivatives</p>
+                            </div>
+                            <div id="toggle-derivatives" class="toggle-switch" data-value="false"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Portfolio Tab -->
+                    <div id="tab-portfolio" class="tab-content space-y-5">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Current Holdings</label>
+                            <input type="text" id="profile-symbols" placeholder="e.g., EFERT, SYS, INDU"
+                                class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all">
+                            <p class="text-xs text-gray-500 mt-1">Comma-separated stock symbols</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Past Holdings</label>
+                            <input type="text" id="profile-past-holdings" placeholder="e.g., UPFL, LUCK"
+                                class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all">
+                            <p class="text-xs text-gray-500 mt-1">Previously owned stocks</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Watchlist</label>
+                            <input type="text" id="profile-watchlist" placeholder="e.g., LUCK, OGDC"
+                                class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all">
+                            <p class="text-xs text-gray-500 mt-1">Stocks you're considering</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Risk Tab -->
+                    <div id="tab-risk" class="tab-content space-y-5">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Risk Tolerance</label>
+                            <select id="profile-risk-tolerance" class="custom-select w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all appearance-none cursor-pointer">
+                                <option value="conservative">Conservative - Prioritize capital preservation</option>
+                                <option value="moderate" selected>Moderate - Balance growth and stability</option>
+                                <option value="aggressive">Aggressive - Maximize growth potential</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Investment Focus</label>
+                            <textarea id="profile-focus" rows="3" placeholder="Describe your investment focus..."
+                                class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all resize-none">Stable, growing dividend income and/or long-term capital appreciation in halal stocks.</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Dividend Preference</label>
+                            <select id="profile-dividend-pref" class="custom-select w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all appearance-none cursor-pointer">
+                                <option value="low">Low - Focus on growth over dividends</option>
+                                <option value="medium">Medium - Balanced dividend and growth</option>
+                                <option value="high" selected>High - Prioritize dividend income</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-700/50 bg-gray-800/30">
+                    <button id="cancelProfileBtn" class="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="saveProfileBtn" class="px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all flex items-center gap-2">
+                        <span>Save Profile</span>
+                        <svg id="saveCheckmark" class="hidden w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
