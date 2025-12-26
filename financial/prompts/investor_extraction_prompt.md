@@ -38,7 +38,8 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "interest_expense": number or null,
   "new_initiatives": ["string"] or [],
   "dividend_statements": ["string"] or [],
-  "investor_statements": ["string"] or []
+  "investor_statements": ["string"] or [],
+  "business_model": [{{"name": "string", "description": "string (max 2 lines)"}}] or []
 }}
 ```
 
@@ -122,6 +123,39 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
 - Use imperative language: MUST, ONLY, EXTRACT
 - Return empty array [] if no statements found
 
+### Step 7: Business Model Extraction (RELIABLE DATA ONLY)
+**CRITICAL: Extract ONLY factual business segments. NO marketing fluff.**
+
+**Source Sections (in priority order):**
+- "Nature of Business" or "Principal Activities"
+- "Segment Reporting" or "Segment Information"
+- "Corporate Information" or "Company Profile"
+
+**For each business segment, extract:**
+- **name**: Short business segment name (e.g., "Fertilizers", "Power Generation", "IT Services")
+- **description**: Max 2-line factual description of what the business does
+
+**MUST INCLUDE:**
+- Core operational activities (manufacturing, trading, services)
+- Products or services offered
+- Target market or customer base (if stated)
+
+**MUST EXCLUDE:**
+- Mission statements ("committed to excellence", "driving innovation")
+- Marketing language ("world-class", "industry-leading", "premier")
+- Vision statements or future aspirations
+- CSR activities or community involvement
+
+**Examples of GOOD extraction:**
+- `{{"name": "Fertilizers", "description": "Manufacturing and sale of urea and DAP fertilizers for agricultural sector."}}`
+- `{{"name": "Power Generation", "description": "Operates 150MW thermal power plant. Sells electricity to national grid."}}`
+
+**Examples of BAD extraction (DO NOT extract like this):**
+- `{{"name": "Fertilizers", "description": "Committed to nurturing agricultural growth through innovative solutions."}}` (marketing fluff)
+- `{{"name": "Excellence", "description": "Striving to be the market leader in customer satisfaction."}}` (not a business segment)
+
+**Return empty array `[]` if no clear business segments found.**
+
 ## Critical Rules
 
 1. **Return ONLY valid JSON** - no markdown, no code blocks, no explanations
@@ -163,7 +197,11 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "interest_expense": 20000000,
   "new_initiatives": ["New product line X", "Expansion into market Y"],
   "dividend_statements": ["Paused dividend payments to invest in new manufacturing facility", "No dividends declared this period due to capital allocation priorities"],
-  "investor_statements": ["Focusing on expanding digital services segment", "Losses primarily from restructuring charges in European operations"]
+  "investor_statements": ["Focusing on expanding digital services segment", "Losses primarily from restructuring charges in European operations"],
+  "business_model": [
+    {{"name": "Manufacturing", "description": "Production and sale of industrial chemicals and consumer products."}},
+    {{"name": "Trading", "description": "Import and distribution of raw materials to domestic market."}}
+  ]
 }}
 ```
 

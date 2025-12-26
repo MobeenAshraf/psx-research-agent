@@ -1,5 +1,6 @@
 """Shared financial service for fetching company reports from PSX."""
 
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -7,6 +8,12 @@ import requests
 from bs4 import BeautifulSoup
 
 from models.financial_data import FinancialData
+from financial.services.stock_page_service import (
+    StockPageService,
+    get_stock_page_service,
+)
+
+_logger = logging.getLogger(__name__)
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -18,10 +25,15 @@ BASE_REPORTS_URL = "https://dps.psx.com.pk/company/reports"
 class FinancialService:
     """Fetch and parse financial statements directly from PSX."""
 
-    def __init__(self, base_url: str = BASE_REPORTS_URL):
+    def __init__(
+        self,
+        base_url: str = BASE_REPORTS_URL,
+        stock_page_service: Optional[StockPageService] = None,
+    ):
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
+        self._stock_page_service = stock_page_service
 
     def fetch_company_reports(self, symbol: str) -> List[Dict[str, Any]]:
         """Fetch available reports for a company symbol."""
@@ -70,22 +82,75 @@ class FinancialService:
         reports.sort(key=lambda item: item["posting_date"] or datetime.min, reverse=True)
         return reports
 
+    @property
+    def stock_page_service(self) -> StockPageService:
+        """Lazy-load stock page service."""
+        if self._stock_page_service is None:
+            self._stock_page_service = get_stock_page_service()
+        return self._stock_page_service
+
     def get_latest_report(self, symbol: str) -> Optional[FinancialData]:
-        """Return the newest report as FinancialData or None."""
-        reports = self.fetch_company_reports(symbol)
+        """Return the newest report as FinancialData with stock page data if available."""
+        symbol_upper = symbol.upper()
+
+        reports = self.fetch_company_reports(symbol_upper)
         if not reports:
             return None
 
         latest = reports[0]
         posting_date = latest["posting_date"] or datetime.now()
 
-        return FinancialData(
-            symbol=symbol.upper(),
+        financial_data = FinancialData(
+            symbol=symbol_upper,
             report_type=latest["type"],
             period_ended=latest["period_ended"],
             posting_date=posting_date,
             report_url=latest["url"],
         )
+
+        self._enrich_with_stock_page_data(financial_data)
+
+        return financial_data
+
+    def _enrich_with_stock_page_data(self, financial_data: FinancialData) -> None:
+        """Enrich FinancialData with validated stock page data if available."""
+        try:
+            stock_page_data = self.stock_page_service.fetch_stock_financials(
+                financial_data.symbol
+            )
+
+            if stock_page_data is None or not stock_page_data.is_valid:
+                _logger.info(
+                    f"Stock page data not available or invalid for "
+                    f"{financial_data.symbol}, using PDF-only analysis"
+                )
+                return
+
+            financial_data.annual_financials = stock_page_data.annual_data
+            financial_data.quarterly_financials = stock_page_data.quarterly_data
+            financial_data.ratios = stock_page_data.ratios
+            financial_data.stock_page_data_valid = True
+
+            latest_annual = self.stock_page_service.get_latest_annual_data(
+                stock_page_data
+            )
+            if latest_annual and latest_annual.get("metrics"):
+                metrics = latest_annual["metrics"]
+                if metrics.get("eps") is not None:
+                    financial_data.eps = metrics["eps"]
+
+            _logger.info(
+                f"Enriched {financial_data.symbol} with stock page data: "
+                f"{len(stock_page_data.annual_data)} years annual, "
+                f"{len(stock_page_data.quarterly_data)} quarters, "
+                f"{len(stock_page_data.ratios)} years ratios"
+            )
+
+        except Exception as exc:
+            _logger.warning(
+                f"Failed to enrich with stock page data for "
+                f"{financial_data.symbol}: {exc}"
+            )
 
     @staticmethod
     def _parse_posting_date(raw: str) -> Optional[datetime]:

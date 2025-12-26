@@ -55,14 +55,16 @@ class AnalyzeStep(BaseWorkflowStep):
                 if investor_statements:
                     statements_context += f"investor_statements: {json.dumps(investor_statements, indent=2)}\n"
                 statements_context += "\n**You MUST incorporate these statements into your analysis.**"
-            
+
+            stock_page_context = self._build_stock_page_context_string(state)
+
             user_prompt_content = f"""{analysis_prompt_content}
 
 Extracted Data:
 {extracted_json_str}
 
 Calculated Metrics:
-{calculated_json_str}{statements_context}
+{calculated_json_str}{statements_context}{stock_page_context}
 
 Provide investor-focused analysis as structured JSON. Return ONLY valid JSON, no additional text."""
             
@@ -103,4 +105,62 @@ Provide investor-focused analysis as structured JSON. Return ONLY valid JSON, no
         
         self._save_state(state, "04_analyze")
         return state
+
+    def _build_stock_page_context_string(self, state: AnalysisState) -> str:
+        """Build context string from stock page data for LLM prompt."""
+        stock_page_context = state.get("stock_page_context")
+        if not stock_page_context:
+            return ""
+
+        context_parts = ["\n\n**PSX Stock Page Financial Data (Capital Stake):**"]
+
+        annual = stock_page_context.get("annual_financials", {})
+        if annual:
+            context_parts.append("\n**Annual Financials (000's):**")
+            years = sorted(annual.keys(), reverse=True)
+            for year in years[:4]:
+                metrics = annual[year]
+                metrics_str = ", ".join(
+                    f"{k}: {v:,.0f}" if v is not None else f"{k}: N/A"
+                    for k, v in metrics.items()
+                )
+                context_parts.append(f"  {year}: {metrics_str}")
+
+        quarterly = stock_page_context.get("quarterly_financials", {})
+        if quarterly:
+            context_parts.append("\n**Quarterly Financials (000's):**")
+            periods = sorted(quarterly.keys(), reverse=True)
+            for period in periods[:4]:
+                metrics = quarterly[period]
+                metrics_str = ", ".join(
+                    f"{k}: {v:,.0f}" if v is not None else f"{k}: N/A"
+                    for k, v in metrics.items()
+                )
+                context_parts.append(f"  {period}: {metrics_str}")
+
+        ratios = stock_page_context.get("ratios", {})
+        if ratios:
+            context_parts.append("\n**Financial Ratios (%):**")
+            ratio_labels = {
+                "peg": "PEG (Price/Earnings to Growth)",
+                "eps_growth": "EPS Growth",
+                "net_profit_margin": "Net Profit Margin",
+                "gross_profit_margin": "Gross Profit Margin",
+            }
+            years = sorted(ratios.keys(), reverse=True)
+            for year in years[:4]:
+                year_ratios = ratios[year]
+                ratios_str = ", ".join(
+                    f"{ratio_labels.get(k, k)}: {v:.2f}"
+                    if v is not None
+                    else f"{ratio_labels.get(k, k)}: N/A"
+                    for k, v in year_ratios.items()
+                )
+                context_parts.append(f"  {year}: {ratios_str}")
+
+        context_parts.append(
+            "\n**Use this validated data as primary reference for financial analysis.**"
+        )
+
+        return "\n".join(context_parts)
 

@@ -24,6 +24,7 @@ class FormatStep(BaseWorkflowStep):
             
             report_lines = []
             self._format_company_info(extracted, report_lines)
+            self._format_business_model(extracted, report_lines)
             self._format_investor_statements(extracted, report_lines)
             self._format_investment_growth_areas(analysis, report_lines)
             self._format_holding_focus_areas(analysis, report_lines)
@@ -78,6 +79,17 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append(f"- Company Name: {extracted.get('company_name', 'N/A')}")
         report_lines.append(f"- Fiscal Year: {extracted.get('fiscal_year', 'N/A')}")
         report_lines.append(f"- Currency: {extracted.get('currency', 'N/A')}")
+        report_lines.append("")
+    
+    def _format_business_model(self, extracted: Dict[str, Any], report_lines: List[str]) -> None:
+        business_model = extracted.get("business_model", [])
+        if not business_model or not isinstance(business_model, list):
+            return
+        
+        report_lines.append("BUSINESS MODEL:")
+        for segment in business_model:
+            if isinstance(segment, dict) and segment.get("name") and segment.get("description"):
+                report_lines.append(f"- {segment['name']}: {segment['description']}")
         report_lines.append("")
     
     def _format_growth_metrics(self, calculated: Dict[str, Any], report_lines: List[str]) -> None:

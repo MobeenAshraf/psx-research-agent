@@ -72,29 +72,31 @@ class LangGraphAnalyzer:
         pdf_path: Optional[str] = None,
         extraction_model: Optional[str] = "auto",
         analysis_model: Optional[str] = "auto",
-        user_profile: Optional[Dict[str, Any]] = None
+        user_profile: Optional[Dict[str, Any]] = None,
+        stock_page_context: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Run the complete analysis workflow.
-        
+
         Args:
             pdf_text: Extracted PDF text content (can be empty if pdf_path is provided)
             stock_price: Current stock price (optional)
             currency: Currency symbol (optional)
             symbol: Stock symbol (optional, used for state saving)
-            pdf_path: Path to PDF file for multimodal processing (optional, used when text extraction fails)
+            pdf_path: Path to PDF file for multimodal processing (optional)
             extraction_model: Model preference for extraction step (default: "auto")
             analysis_model: Model preference for analysis step (default: "auto")
-            user_profile: Optional user profile dict with keys like age, risk_tolerance, investment_style, etc.
-            
+            user_profile: Optional user profile dict
+            stock_page_context: Optional stock page financial data (annual, quarterly, ratios)
+
         Returns:
             Final formatted report as string
         """
         if not pdf_path and (not pdf_text or not pdf_text.strip()):
             raise LLMAnalysisError("No PDF text content or PDF path provided for analysis")
-        
+
         self.state_manager.setup_state_dir(symbol, extraction_model, analysis_model)
-        
+
         initial_state: AnalysisState = {
             "pdf_text": pdf_text or "",
             "pdf_path": pdf_path,
@@ -118,6 +120,7 @@ class LangGraphAnalyzer:
                 }
             },
             "user_profile": user_profile,
+            "stock_page_context": stock_page_context,
         }
         
         self.state_manager.save_state(initial_state, "00_initial")

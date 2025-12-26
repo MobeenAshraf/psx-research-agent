@@ -1,13 +1,17 @@
 """Technical analysis routes."""
 
-from typing import Dict, Any, List
 import logging
-from technical.price_repository import WebPriceRepository
-from technical.analyzer import TechnicalAnalyzer
-from technical.recommendation_engine import RecommendationEngine
-from models.stock_analysis import StockAnalysis
-from routes.helpers import normalize_indicators, format_detailed_analysis
+from typing import Any, Dict, List, Optional
+
 from financial.services.index_membership_service import get_index_service
+from financial.services.stock_page_service import get_stock_page_service
+from models.stock_analysis import StockAnalysis
+from routes.helpers import format_detailed_analysis, normalize_indicators
+from technical.analyzer import TechnicalAnalyzer
+from technical.price_repository import WebPriceRepository
+from technical.recommendation_engine import RecommendationEngine
+
+_logger = logging.getLogger(__name__)
 
 
 def get_technical_analysis(symbol: str) -> Dict[str, Any]:
@@ -70,9 +74,64 @@ def _generate_all_signals(technical_analyzer, indicators, historical):
     return signals, candlestick_patterns
 
 
-def _get_financial_metrics(symbol_upper):
-    """Get financial metrics if available."""
-    return {}
+def _get_financial_metrics(symbol_upper: str) -> Dict[str, Any]:
+    """Get financial metrics from stock page data if available and valid."""
+    metrics: Dict[str, Any] = {}
+
+    try:
+        stock_page_service = get_stock_page_service()
+        stock_page_data = stock_page_service.fetch_stock_financials(symbol_upper)
+
+        if stock_page_data is None or not stock_page_data.is_valid:
+            _logger.info(
+                f"Stock page data not available or invalid for {symbol_upper}"
+            )
+            return metrics
+
+        latest_annual = stock_page_service.get_latest_annual_data(stock_page_data)
+        if latest_annual:
+            annual_metrics = latest_annual.get("metrics", {})
+            annual_ratios = latest_annual.get("ratios", {})
+
+            if annual_metrics.get("eps") is not None:
+                metrics["eps"] = annual_metrics["eps"]
+            if annual_metrics.get("sales") is not None:
+                metrics["sales"] = annual_metrics["sales"]
+            if annual_metrics.get("profit_after_tax") is not None:
+                metrics["profit_after_tax"] = annual_metrics["profit_after_tax"]
+
+            if annual_ratios.get("net_profit_margin") is not None:
+                metrics["net_profit_margin"] = annual_ratios["net_profit_margin"]
+            if annual_ratios.get("eps_growth") is not None:
+                metrics["eps_growth"] = annual_ratios["eps_growth"]
+            if annual_ratios.get("peg") is not None:
+                metrics["peg"] = annual_ratios["peg"]
+            if annual_ratios.get("gross_profit_margin") is not None:
+                metrics["gross_profit_margin"] = annual_ratios["gross_profit_margin"]
+
+            metrics["annual_year"] = latest_annual.get("year")
+
+        latest_quarterly = stock_page_service.get_latest_quarterly_data(stock_page_data)
+        if latest_quarterly:
+            quarterly_metrics = latest_quarterly.get("metrics", {})
+
+            if quarterly_metrics.get("eps") is not None:
+                metrics["quarterly_eps"] = quarterly_metrics["eps"]
+            if quarterly_metrics.get("sales") is not None:
+                metrics["quarterly_sales"] = quarterly_metrics["sales"]
+            if quarterly_metrics.get("profit_after_tax") is not None:
+                metrics["quarterly_profit"] = quarterly_metrics["profit_after_tax"]
+
+            metrics["quarterly_period"] = latest_quarterly.get("period")
+
+        metrics["stock_page_data_valid"] = True
+
+        _logger.info(f"Fetched financial metrics for {symbol_upper}: {list(metrics.keys())}")
+
+    except Exception as exc:
+        _logger.warning(f"Failed to fetch financial metrics for {symbol_upper}: {exc}")
+
+    return metrics
 
 
 def _consolidate_semantic_duplicates(signals: List[str]) -> List[str]:

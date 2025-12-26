@@ -108,23 +108,25 @@ class FinancialStatementAnalyzerService:
         user_profile: Optional[Dict[str, Any]] = None
     ) -> str:
         from financial.config.model_config import ModelConfig
-        
+
         pdf_path = self.pdf_download_service.download_pdf(
             report.report_url, report.symbol
         )
-        
+
         extraction_model_actual = ModelConfig.get_extraction_model(extraction_model)
         _logger.info(
             f"Using multimodal PDF processing for {report.symbol} "
             f"with model {extraction_model_actual}"
         )
-        
+
         stock_price = pre_fetched_price
         if stock_price is None and self.stock_price_service:
             try:
                 stock_price = self.stock_price_service.get_current_price(report.symbol)
             except Exception:
                 stock_price = None
+
+        stock_page_context = self._build_stock_page_context(report)
 
         return self.llm_client.analyze(
             pdf_text="",
@@ -135,7 +137,35 @@ class FinancialStatementAnalyzerService:
             extraction_model=extraction_model,
             analysis_model=analysis_model,
             user_profile=user_profile,
+            stock_page_context=stock_page_context,
         )
+
+    def _build_stock_page_context(self, report) -> Optional[Dict[str, Any]]:
+        """Build context from stock page data for LLM analysis."""
+        if not report.stock_page_data_valid:
+            return None
+
+        context: Dict[str, Any] = {}
+
+        if report.annual_financials:
+            context["annual_financials"] = report.annual_financials
+
+        if report.quarterly_financials:
+            context["quarterly_financials"] = report.quarterly_financials
+
+        if report.ratios:
+            context["ratios"] = report.ratios
+
+        if not context:
+            return None
+
+        _logger.info(
+            f"Built stock page context for {report.symbol}: "
+            f"{len(report.annual_financials)} years annual, "
+            f"{len(report.quarterly_financials)} quarters"
+        )
+
+        return context
 
     @staticmethod
     def _detect_currency(pdf_text: str) -> str:

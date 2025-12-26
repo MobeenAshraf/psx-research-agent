@@ -101,6 +101,15 @@ Return the JSON object now:"""
                 investor_statements = []
             extracted_data["investor_statements"] = investor_statements
             
+            business_model = extracted_data.get("business_model")
+            if not isinstance(business_model, list):
+                business_model = []
+            business_model = [
+                item for item in business_model
+                if isinstance(item, dict) and item.get("name") and item.get("description")
+            ]
+            extracted_data["business_model"] = business_model
+            
             state["extracted_data"] = extracted_data
             
             if state.get("token_usage") is None:

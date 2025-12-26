@@ -20,4 +20,5 @@ class AnalysisState(TypedDict, total=False):
     analysis_model: Optional[str]
     token_usage: Optional[Dict[str, Any]]
     user_profile: Optional[Dict[str, Any]]
+    stock_page_context: Optional[Dict[str, Any]]
 

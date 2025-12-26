@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Dict, Any
 from datetime import datetime
 from .base import SerializableDataclass, parse_datetime
@@ -18,7 +18,15 @@ class FinancialData(SerializableDataclass):
     new_investments: Optional[str] = None
     major_losses: Optional[str] = None
     report_url: Optional[str] = None
-    
+    annual_financials: Dict[str, Dict[str, Optional[float]]] = field(
+        default_factory=dict
+    )
+    quarterly_financials: Dict[str, Dict[str, Optional[float]]] = field(
+        default_factory=dict
+    )
+    ratios: Dict[str, Dict[str, Optional[float]]] = field(default_factory=dict)
+    stock_page_data_valid: bool = False
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'FinancialData':
         posting_date = parse_datetime(data.get('posting_date'))
@@ -34,6 +42,10 @@ class FinancialData(SerializableDataclass):
             dividend_policy_changed=bool(data.get('dividend_policy_changed', False)),
             new_investments=data.get('new_investments'),
             major_losses=data.get('major_losses'),
-            report_url=data.get('report_url')
+            report_url=data.get('report_url'),
+            annual_financials=data.get('annual_financials', {}),
+            quarterly_financials=data.get('quarterly_financials', {}),
+            ratios=data.get('ratios', {}),
+            stock_page_data_valid=data.get('stock_page_data_valid', False),
         )
 
