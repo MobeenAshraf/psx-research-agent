@@ -36,6 +36,12 @@
    - If holding company: extract focus areas (subsidiaries, investments, strategic focus)
    - Identify any loss-making areas/segments/expenses (even if company is profitable overall)
 
+7. **Where does income come from? (Income Composition)**
+   - Analyze segment_data from extracted_data to show revenue and operating income per segment
+   - Calculate percentage contribution of each segment to total revenue and total operating income
+   - Analyze other_income_breakdown to show what portion of net income comes from non-operating sources
+   - **CRITICAL: Use ONLY data from segment_data and other_income_breakdown - do NOT fabricate or estimate**
+
 ## Output Format
 
 Return structured JSON:
@@ -67,6 +73,28 @@ Return structured JSON:
     "pb_ratio": number,
     "ev_ebitda": number,
     "fcf_yield": number
+  }},
+  "income_composition": {{
+    "segments": [
+      {{
+        "name": "string",
+        "revenue": number,
+        "revenue_pct": number,
+        "operating_income": number or null,
+        "income_pct": number or null
+      }}
+    ],
+    "other_income": {{
+      "total": number or null,
+      "pct_of_net_income": number or null,
+      "breakdown": [
+        {{
+          "item": "string",
+          "value": number,
+          "pct_of_net_income": number
+        }}
+      ]
+    }}
   }},
   "investor_summary": "2-3 line summary of everything important for investors",
   "red_flags": ["string"],
@@ -101,4 +129,17 @@ Return structured JSON:
 4. **Investment/Growth Areas**
    - Extract 1-2 line summaries from investor_statements and analysis
    - Focus on concrete investment priorities and growth initiatives
+
+5. **Income Composition (from segment_data and other_income_breakdown)**
+   - **DATA INTEGRITY:** Use ONLY values from extracted segment_data and other_income_breakdown
+   - If segment_data is empty `[]`, set income_composition.segments to empty `[]`
+   - If other_income_breakdown is empty `[]`, set income_composition.other_income.breakdown to empty `[]`
+   - **DO NOT fabricate or estimate segment or income breakdown data**
+   
+   **Percentage Calculations (only if data available):**
+   - `revenue_pct` = (segment revenue / total revenue from extracted_data) * 100
+   - `income_pct` = (segment operating_income / total operating_income from extracted_data) * 100
+   - `pct_of_net_income` = (other income item value / net_income from extracted_data) * 100
+   - `other_income.total` = sum of all items in other_income_breakdown
+   - `other_income.pct_of_net_income` = (total other income / net_income) * 100
 

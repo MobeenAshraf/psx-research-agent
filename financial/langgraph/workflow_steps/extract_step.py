@@ -110,6 +110,24 @@ Return the JSON object now:"""
             ]
             extracted_data["business_model"] = business_model
             
+            segment_data = extracted_data.get("segment_data")
+            if not isinstance(segment_data, list):
+                segment_data = []
+            segment_data = [
+                item for item in segment_data
+                if isinstance(item, dict) and item.get("name")
+            ]
+            extracted_data["segment_data"] = segment_data
+            
+            other_income_breakdown = extracted_data.get("other_income_breakdown")
+            if not isinstance(other_income_breakdown, list):
+                other_income_breakdown = []
+            other_income_breakdown = [
+                item for item in other_income_breakdown
+                if isinstance(item, dict) and item.get("item") and item.get("value") is not None
+            ]
+            extracted_data["other_income_breakdown"] = other_income_breakdown
+            
             state["extracted_data"] = extracted_data
             
             if state.get("token_usage") is None:

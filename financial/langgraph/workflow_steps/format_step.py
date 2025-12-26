@@ -25,6 +25,8 @@ class FormatStep(BaseWorkflowStep):
             report_lines = []
             self._format_company_info(extracted, report_lines)
             self._format_business_model(extracted, report_lines)
+            self._format_segment_performance(analysis, report_lines)
+            self._format_income_composition(analysis, report_lines)
             self._format_investor_statements(extracted, report_lines)
             self._format_investment_growth_areas(analysis, report_lines)
             self._format_holding_focus_areas(analysis, report_lines)
@@ -192,4 +194,73 @@ class FormatStep(BaseWorkflowStep):
         loss_areas = analysis.get("loss_causing_areas", [])
         if loss_areas:
             self._format_list_section(report_lines, "LOSS-CAUSING AREAS", loss_areas)
+    
+    def _format_segment_performance(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
+        """Format segment-wise revenue and operating income with percentages."""
+        income_composition = analysis.get("income_composition", {})
+        segments = income_composition.get("segments", [])
+        
+        report_lines.append("SEGMENT PERFORMANCE:")
+        
+        if not segments or not isinstance(segments, list) or len(segments) == 0:
+            report_lines.append("- Not available in report")
+            report_lines.append("")
+            return
+        
+        for segment in segments:
+            if not isinstance(segment, dict) or not segment.get("name"):
+                continue
+            
+            name = segment.get("name", "Unknown")
+            revenue = segment.get("revenue")
+            revenue_pct = segment.get("revenue_pct")
+            operating_income = segment.get("operating_income")
+            income_pct = segment.get("income_pct")
+            
+            revenue_str = f"{revenue:,.0f}" if revenue is not None else "N/A"
+            revenue_pct_str = f"({revenue_pct:.1f}%)" if revenue_pct is not None else ""
+            income_str = f"{operating_income:,.0f}" if operating_income is not None else "N/A"
+            income_pct_str = f"({income_pct:.1f}%)" if income_pct is not None else ""
+            
+            report_lines.append(
+                f"- {name}: Revenue {revenue_str} {revenue_pct_str} | "
+                f"Operating Income {income_str} {income_pct_str}"
+            )
+        
+        report_lines.append("")
+    
+    def _format_income_composition(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:
+        """Format other income breakdown with percentages of net income."""
+        income_composition = analysis.get("income_composition", {})
+        other_income = income_composition.get("other_income", {})
+        breakdown = other_income.get("breakdown", [])
+        
+        report_lines.append("INCOME COMPOSITION (Other Income):")
+        
+        if not breakdown or not isinstance(breakdown, list) or len(breakdown) == 0:
+            report_lines.append("- Breakdown not itemized in report")
+            report_lines.append("")
+            return
+        
+        total = other_income.get("total")
+        total_pct = other_income.get("pct_of_net_income")
+        
+        if total is not None:
+            total_pct_str = f"({total_pct:.1f}% of Net Income)" if total_pct is not None else ""
+            report_lines.append(f"- Total Other Income: {total:,.0f} {total_pct_str}")
+        
+        for item in breakdown:
+            if not isinstance(item, dict) or not item.get("item"):
+                continue
+            
+            item_name = item.get("item", "Unknown")
+            value = item.get("value")
+            pct = item.get("pct_of_net_income")
+            
+            value_str = f"{value:,.0f}" if value is not None else "N/A"
+            pct_str = f"({pct:.1f}% of Net Income)" if pct is not None else ""
+            
+            report_lines.append(f"  - {item_name}: {value_str} {pct_str}")
+        
+        report_lines.append("")
 

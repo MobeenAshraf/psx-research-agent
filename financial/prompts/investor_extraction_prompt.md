@@ -39,7 +39,9 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "new_initiatives": ["string"] or [],
   "dividend_statements": ["string"] or [],
   "investor_statements": ["string"] or [],
-  "business_model": [{{"name": "string", "description": "string (max 2 lines)"}}] or []
+  "business_model": [{{"name": "string", "description": "string (max 2 lines)"}}] or [],
+  "segment_data": [{{"name": "string", "revenue": number or null, "operating_income": number or null}}] or [],
+  "other_income_breakdown": [{{"item": "string", "value": number}}] or []
 }}
 ```
 
@@ -156,6 +158,65 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
 
 **Return empty array `[]` if no clear business segments found.**
 
+### Step 8: Segment Financial Data (ONLY IF EXPLICITLY AVAILABLE)
+**CRITICAL: Extract segment-wise revenue and operating income ONLY if explicitly stated.**
+
+**Source Sections:**
+- "Segment Information" or "Segment Reporting" in Notes to Financial Statements
+- "Operating Segments" section
+
+**For each segment, extract:**
+- **name**: Same segment name as in `business_model` (e.g., "Fertilizers", "Power Generation")
+- **revenue**: Segment revenue/sales (number or null)
+- **operating_income**: Segment operating profit/income (number or null)
+
+**DATA INTEGRITY WARNING:**
+- ONLY extract if segment-wise financials are EXPLICITLY stated in the document
+- If only total revenue exists without segment breakdown, return `[]`
+- Do NOT estimate, allocate, or prorate total revenue across segments
+- Do NOT calculate segment values from percentages mentioned in narrative text
+- Wrong data is worse than missing data
+
+**Examples of GOOD extraction:**
+- `{{"name": "Fertilizers", "revenue": 15234000000, "operating_income": 2456000000}}`
+- `{{"name": "Power", "revenue": 6123000000, "operating_income": null}}` (income not stated)
+
+**Return empty array `[]` if segment-wise financials are not explicitly stated.**
+
+### Step 9: Other Income Breakdown (ONLY IF ITEMIZED)
+**CRITICAL: Extract itemized "Other Income" ONLY if breakdown is explicitly provided.**
+
+**Source Sections:**
+- "Other Income" note in Notes to Financial Statements
+- Detailed breakdown in Income Statement notes
+- "Other Operating Income" or "Non-Operating Income" sections
+
+**Common items to look for:**
+- Interest Income (from bank deposits, investments, loans)
+- Dividend Income (from investments in other companies)
+- Gain on Sale of Assets (property, equipment, investments)
+- Scrap Sales (manufacturing waste)
+- Exchange Gains (currency fluctuations)
+- Rental Income
+- Government Grants
+
+**For each item, extract:**
+- **item**: Name of the income item (e.g., "Interest Income", "Dividend Income")
+- **value**: Amount in the same currency as other financials
+
+**DATA INTEGRITY WARNING:**
+- ONLY extract if "Other Income" is ITEMIZED in the notes
+- If only a single "Other Income" line exists without breakdown, return `[]`
+- Do NOT guess the composition of "Other Income"
+- Do NOT assume "Other Income" equals "Interest Income"
+- Wrong data is worse than missing data
+
+**Examples of GOOD extraction:**
+- `{{"item": "Interest Income", "value": 543000000}}`
+- `{{"item": "Gain on Sale of Fixed Assets", "value": 115000000}}`
+
+**Return empty array `[]` if Other Income is not itemized in the document.**
+
 ## Critical Rules
 
 1. **Return ONLY valid JSON** - no markdown, no code blocks, no explanations
@@ -201,6 +262,15 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "business_model": [
     {{"name": "Manufacturing", "description": "Production and sale of industrial chemicals and consumer products."}},
     {{"name": "Trading", "description": "Import and distribution of raw materials to domestic market."}}
+  ],
+  "segment_data": [
+    {{"name": "Manufacturing", "revenue": 800000000, "operating_income": 120000000}},
+    {{"name": "Trading", "revenue": 200000000, "operating_income": 30000000}}
+  ],
+  "other_income_breakdown": [
+    {{"item": "Interest Income", "value": 15000000}},
+    {{"item": "Dividend Income", "value": 5000000}},
+    {{"item": "Gain on Sale of Assets", "value": 3000000}}
   ]
 }}
 ```
