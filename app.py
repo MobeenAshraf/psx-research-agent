@@ -5,10 +5,11 @@ import time
 import asyncio
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from pathlib import Path
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -23,6 +24,18 @@ app = FastAPI(
     title="PSX Stock Analysis API",
     description="API for technical and financial analysis of PSX stocks",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "https://psx-research-agent-421423162806.asia-southeast1.run.app",
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
 )
 
 
@@ -138,11 +151,11 @@ if static_dir.exists():
 
 
 class TechnicalAnalysisRequest(BaseModel):
-    symbol: str
+    symbol: str = Field(..., min_length=1, max_length=10)
 
 
 class FinancialAnalysisRequest(BaseModel):
-    symbol: str
+    symbol: str = Field(..., min_length=1, max_length=10)
     pdf_text: Optional[str] = None
     pdf_url: Optional[str] = None
     extraction_model: Optional[str] = "auto"
@@ -150,7 +163,7 @@ class FinancialAnalysisRequest(BaseModel):
 
 
 class LLMDecisionRequest(BaseModel):
-    symbol: str
+    symbol: str = Field(..., min_length=1, max_length=10)
     extraction_model: Optional[str] = "auto"
     analysis_model: Optional[str] = "auto"
     decision_model: Optional[str] = "auto"
