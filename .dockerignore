@@ -31,5 +31,6 @@ todo/
 docs/
 *.md
 !README.md
+!financial/prompts/*.md
 deploy-local.sh
 
