@@ -63,103 +63,94 @@ jobs:
             --cpu-boost \
             --startup-probe="httpGet.path=/health,httpGet.port=8080,initialDelaySeconds=10,timeoutSeconds=10,periodSeconds=10,failureThreshold=30"
 
-      - name: Clean up old images
+      - name: Clean up old images and orphaned layers
         if: success()
         run: |
-          # Keep only the latest 1 image (newest by creation time)
+          # Keep only the latest 1 image and clean up orphaned layers
           # This ensures we stay within the 500MB free tier limit
-          echo "Checking for old images to clean up..."
+          echo "🧹 Starting cleanup..."
           
-          # Get all unique images by digest, sorted by creation time (newest first)
-          # Using a custom format that combines package and version with @ separator
+          REPO_PATH="${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/psx-research-agent"
+          
+          # Step 1: Delete old images (keep newest 1)
+          echo ""
+          echo "📦 Step 1: Checking for old images..."
+          
           gcloud artifacts docker images list \
             $IMAGE_NAME \
             --format="csv[no-heading](package,version)" \
             --sort-by=~create_time > /tmp/all_images.txt 2>/dev/null || touch /tmp/all_images.txt
           
-          # Convert CSV format (package,version) to image@digest format
           sed 's/,/@/' /tmp/all_images.txt > /tmp/images_formatted.txt 2>/dev/null || touch /tmp/images_formatted.txt
           
           IMAGE_COUNT=$(wc -l < /tmp/images_formatted.txt | tr -d ' ')
           
-          if [ "$IMAGE_COUNT" -eq 0 ]; then
-            echo "No images found (first deployment or cleanup already completed)"
-            rm -f /tmp/all_images.txt /tmp/images_formatted.txt
-            exit 0
-          fi
-          
-          echo "Total unique images: $IMAGE_COUNT"
-          echo "Images found:"
-          cat /tmp/images_formatted.txt | head -5
-          if [ "$IMAGE_COUNT" -gt 5 ]; then
-            echo "... and $((IMAGE_COUNT - 5)) more"
-          fi
-          
-          # Store the image we want to keep (newest)
-          KEEP_IMAGE=$(head -1 /tmp/images_formatted.txt)
-          echo ""
-          echo "Keeping newest image: $KEEP_IMAGE"
-          
-          # If we have more than 1 image, delete the old ones (keep first 1 = newest)
           if [ "$IMAGE_COUNT" -gt 1 ]; then
-            DELETE_COUNT=$((IMAGE_COUNT - 1))
-            echo "Deleting $DELETE_COUNT old image(s) (keeping 1 newest)..."
+            KEEP_IMAGE=$(head -1 /tmp/images_formatted.txt)
+            echo "Keeping newest image: $KEEP_IMAGE"
+            echo "Deleting $((IMAGE_COUNT - 1)) old image(s)..."
             
-            DELETED=0
-            FAILED=0
-            
-            # Read lines starting from line 2 (skip first 1 newest image)
-            # Use process substitution to avoid subshell issues with variables
             while IFS= read -r image_ref; do
               if [ -n "$image_ref" ]; then
-                echo "Deleting old image: $image_ref"
-                # Try deletion with retry (up to 2 retries)
-                RETRY_COUNT=0
-                MAX_RETRIES=2
-                DELETED_SUCCESS=false
-                
-                while [ $RETRY_COUNT -le $MAX_RETRIES ]; do
-                  if gcloud artifacts docker images delete "$image_ref" --delete-tags --quiet 2>/dev/null; then
-                    DELETED_SUCCESS=true
-                    break
-                  fi
-                  RETRY_COUNT=$((RETRY_COUNT + 1))
-                  if [ $RETRY_COUNT -le $MAX_RETRIES ]; then
-                    echo "  Retrying deletion (attempt $((RETRY_COUNT + 1))/$((MAX_RETRIES + 1)))..."
-                    sleep 2
-                  fi
-                done
-                
-                if [ "$DELETED_SUCCESS" = true ]; then
-                  echo "  ✅ Deleted successfully"
-                  DELETED=$((DELETED + 1))
-                else
-                  echo "  ⚠️  Warning: Failed to delete after $((MAX_RETRIES + 1)) attempts (may already be deleted or in use)"
-                  FAILED=$((FAILED + 1))
+                if gcloud artifacts docker images delete "$image_ref" --delete-tags --quiet 2>/dev/null; then
+                  echo "  ✅ Deleted: $image_ref"
                 fi
               fi
             done < <(tail -n +2 /tmp/images_formatted.txt)
-            
-            echo ""
-            echo "Cleanup summary:"
-            echo "  Successfully deleted: $DELETED"
-            echo "  Failed/Skipped: $FAILED"
-            
-            # Verify the kept image still exists
-            echo ""
-            echo "Verifying kept image still exists..."
-            if gcloud artifacts docker images describe "$KEEP_IMAGE" --quiet >/dev/null 2>&1; then
-              echo "✅ Kept image verified: $KEEP_IMAGE"
-            else
-              echo "⚠️  Warning: Kept image not found! This should not happen."
-              echo "   Image reference: $KEEP_IMAGE"
-            fi
-            
-            echo ""
-            echo "✅ Cleanup complete. Kept 1 most recent image."
           else
-            echo "✅ No cleanup needed. Only $IMAGE_COUNT image(s) stored."
+            echo "✅ Only 1 image exists, no old images to delete."
           fi
           
           rm -f /tmp/all_images.txt /tmp/images_formatted.txt
+          
+          # Step 2: Clean up orphaned layers
+          echo ""
+          echo "🔍 Step 2: Finding orphaned layers..."
+          
+          # Get layers used by current image
+          docker manifest inspect $IMAGE_NAME:latest 2>/dev/null | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          if 'config' in data:
+              print(data['config']['digest'])
+          for layer in data.get('layers', []):
+              print(layer['digest'])
+          " > /tmp/used_layers.txt 2>/dev/null || touch /tmp/used_layers.txt
+          
+          # Get all layers in repository
+          gcloud artifacts files list \
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+            --location=${{ env.REGION }} \
+            --repository=psx-research-agent \
+            --format="value(name)" 2>/dev/null | grep -v "manifests" | sed 's/.*\(sha256:[a-f0-9]*\).*/\1/' > /tmp/all_layers.txt || touch /tmp/all_layers.txt
+          
+          # Find orphaned layers
+          comm -23 <(sort /tmp/all_layers.txt) <(sort /tmp/used_layers.txt) > /tmp/orphaned_layers.txt
+          
+          ORPHAN_COUNT=$(wc -l < /tmp/orphaned_layers.txt | tr -d ' ')
+          
+          if [ "$ORPHAN_COUNT" -gt 0 ]; then
+            echo "Found $ORPHAN_COUNT orphaned layers. Deleting..."
+            
+            while IFS= read -r digest; do
+              if [ -n "$digest" ]; then
+                if gcloud artifacts files delete "$digest" \
+                  --project=${{ secrets.GCP_PROJECT_ID }} \
+                  --location=${{ env.REGION }} \
+                  --repository=psx-research-agent \
+                  --quiet 2>/dev/null; then
+                  echo "  ✅ Deleted: ${digest:0:30}..."
+                fi
+              fi
+            done < /tmp/orphaned_layers.txt
+            
+            echo "✅ Deleted $ORPHAN_COUNT orphaned layers."
+          else
+            echo "✅ No orphaned layers found."
+          fi
+          
+          rm -f /tmp/used_layers.txt /tmp/all_layers.txt /tmp/orphaned_layers.txt
+          
+          echo ""
+          echo "✅ Cleanup complete!"
 
