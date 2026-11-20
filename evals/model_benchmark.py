@@ -5,6 +5,7 @@ import base64
 from collections import defaultdict
 from datetime import datetime, timezone
 import hashlib
+from itertools import combinations
 import json
 import math
 import os
@@ -262,6 +263,50 @@ def _audit_field(case, actual, path, expected, passed):
     }
 
 
+def compare_field_audits(cases, trials):
+    """Compare raw field values on the same audit fixture and repeat."""
+    audited_cases = {case["id"] for case in cases if "audit_references" in case}
+    groups = defaultdict(list)
+    for trial in trials:
+        if trial["case"] in audited_cases:
+            groups[trial["case"], trial["repeat"]].append(trial)
+
+    comparisons = []
+    for (case_id, repeat), group in groups.items():
+        if len(group) < 2:
+            continue
+        observations = defaultdict(list)
+        for trial in group:
+            for row in trial.get("field_audit", []):
+                observations[row["field"]].append({**row, "model": trial["model"]})
+
+        findings = []
+        for path, rows in observations.items():
+            mismatches = []
+            for left, right in combinations(rows, 2):
+                same_presence = (left["status"] == "omitted") == (right["status"] == "omitted")
+                if not same_presence or not equal_value(left["actual"], right["actual"], 0):
+                    mismatches.append([left["model"], right["model"]])
+            errors = sum(row["status"] != "correct" for row in rows)
+            if len(rows) >= 2 and (mismatches or errors):
+                findings.append({
+                    "field": path, "source": rows[0]["source"], "expected": rows[0]["expected"],
+                    "mismatched_pairs": mismatches,
+                    "all_compared_models_wrong": errors == len(rows),
+                    "values": [{key: row[key] for key in ("model", "actual", "status", "reason")}
+                               for row in rows],
+                })
+
+        comparisons.append({
+            "case": case_id, "repeat": repeat,
+            "models": [trial["model"] for trial in group if trial.get("field_audit")],
+            "unavailable_models": [trial["model"] for trial in group if not trial.get("field_audit")],
+            "fields_compared": sum(len(rows) >= 2 for rows in observations.values()),
+            "findings": findings,
+        })
+    return comparisons
+
+
 def reject_json_constant(value):
     raise ValueError(f"Invalid JSON constant {value}")
 
@@ -452,6 +497,7 @@ def main(argv=None):
         "summary": summaries,
         "cheapest_passing": cheapest,
         "trials": rows,
+        "field_comparisons": compare_field_audits(cases, rows),
     }
     args.output.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     print()

@@ -26,12 +26,14 @@ The starter PDFs are stored in `evals/pdfs/` and pinned by SHA-256. A fresh chec
 ```bash
 uv run python -m evals.model_benchmark --live \
   --case lucky-cement-sep2026-results-scan --case indus-motor-sep2026-quarter \
-  --model google/gemini-3.1-flash-lite --temperature 0 \
+  --model google/gemini-3.1-flash-lite --model google/gemini-4-hydrogen --temperature 0 \
   --output data/evals/luck-indu-field-audit.json
 uv run python -m evals.calculation_audit
 ```
 
 The extraction audit checks 46 fields for the LUCK scan and 58 for the INDU text PDF. It covers the numeric fields mapped by the app, reporting scope and units, entries in the selected notes, and fields that should remain null. Each field records the location in the filing, expected value, returned value, and finding. A failure reason is recorded only when the response matches a known alternative or has an identifiable sign or scale difference. An empty reason means the available output does not establish the cause. The audit does not enumerate every figure or verify all narrative in either filing.
+
+The `field_comparisons` section compares the exact model outputs for each filing and repeat. It lists the model pairs with different values, distinguishes a missing field from an explicit null, and retains fields where the models agreed on an incorrect value. Compare the per-model status to see whether a difference falls within the precision reported in the filing. Failed provider responses are listed as unavailable.
 
 The calculation audit runs without an API key. It uses figures checked against the filings, separately supplied share counts and illustrative quotes, and expected values computed independently. It exercises the same Python functions the app uses for normalization, cash flow, working capital, margins, leverage, valuation, and the checks that require trailing-period data. The recorded results compare the initial and refined extraction prompts. [Field findings](../evals/results/2026-11-20-luck-indu-audit.md) · [Scored run snapshot](../evals/results/2026-11-20-luck-indu-audit.json)
 

@@ -529,5 +529,459 @@
         ]
       }
     ]
+  },
+  "three_model": {
+    "timestamp_utc": "2026-11-20T16:36:19.983126+00:00",
+    "temperature": 0.0,
+    "repeats": 1,
+    "cases": [
+      {
+        "id": "indus-motor-sep2026-quarter",
+        "pdf_path": "pdfs/indus-motor-sep2026-quarter.pdf",
+        "pdf_sha256": "ae88559bd9464915e5cf74652aa0eb91119189efec754a58ad6fadbabd29a28a",
+        "pdf_input_kind": "selectable text",
+        "critical": [
+          "period_end",
+          "period_months",
+          "monetary_scale",
+          "reporting_scope",
+          "revenue.current",
+          "net_income",
+          "operating_cash_flow",
+          "net_change_cash"
+        ]
+      },
+      {
+        "id": "lucky-cement-sep2026-results-scan",
+        "pdf_path": "pdfs/lucky-cement-sep2026-results-scan.pdf",
+        "pdf_sha256": "8ad2bfb4a93019078d76d90398b975e251bd7c28e4f017f077d8eaa5a5a06a41",
+        "pdf_input_kind": "scanned images",
+        "critical": [
+          "period_end",
+          "period_months",
+          "monetary_scale",
+          "reporting_scope",
+          "revenue.current",
+          "net_income",
+          "operating_cash_flow",
+          "cash_fx_effect",
+          "operating_income",
+          "operating_income_previous",
+          "ebitda",
+          "total_assets",
+          "total_equity",
+          "total_liabilities"
+        ]
+      }
+    ],
+    "input_errors": {},
+    "baselines": {
+      "extraction": "google/gemini-3-flash-preview"
+    },
+    "prompt_hashes": {
+      "indus-motor-sep2026-quarter": "2b18fbce63fd60c2957df3ec0b5d960207464764954291ba36c12806a61a4c66",
+      "lucky-cement-sep2026-results-scan": "f6282c99ab1ab588fb0f76fbacbd3b406fd8070d4b0acd5ec0ddd5f6bc1b875f"
+    },
+    "summary": [
+      {
+        "stage": "extraction",
+        "model": "google/gemini-3-flash-preview",
+        "baseline": true,
+        "trials": 2,
+        "passed": 2,
+        "mean_score": 0.9827586206896552,
+        "json_rate": 1,
+        "median_latency_s": 9.5915,
+        "total_cost_usd": 0.0106212,
+        "cost_per_pass_usd": 0.0053106,
+        "cost_savings_vs_baseline_pct": 0.0,
+        "score_delta_vs_baseline": 0.0
+      },
+      {
+        "stage": "extraction",
+        "model": "google/gemini-3.1-flash-lite",
+        "baseline": false,
+        "trials": 2,
+        "passed": 1,
+        "mean_score": 0.9479010494752623,
+        "json_rate": 1,
+        "median_latency_s": 7.5634999999999994,
+        "total_cost_usd": 0.004681875,
+        "cost_per_pass_usd": 0.004681875,
+        "cost_savings_vs_baseline_pct": 11.839057733589431,
+        "score_delta_vs_baseline": -0.034857571214392924
+      },
+      {
+        "stage": "extraction",
+        "model": "google/gemini-4-hydrogen",
+        "baseline": false,
+        "trials": 2,
+        "passed": 2,
+        "mean_score": 1.0,
+        "json_rate": 1,
+        "median_latency_s": 57.057,
+        "total_cost_usd": 0.20425500000000002,
+        "cost_per_pass_usd": 0.10212750000000001,
+        "cost_savings_vs_baseline_pct": -1823.0877866907695,
+        "score_delta_vs_baseline": 0.01724137931034475
+      }
+    ],
+    "cheapest_passing": {
+      "extraction": "google/gemini-3-flash-preview"
+    },
+    "trials": [
+      {
+        "stage": "extraction",
+        "case": "indus-motor-sep2026-quarter",
+        "model": "google/gemini-3-flash-preview",
+        "repeat": 1,
+        "score": 0.9655172413793104,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.0053679,
+        "latency_s": 9.468,
+        "resolved_model": "google/gemini-3-flash-preview",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "cached_input_tokens": 16978,
+        "fields_passed": 56,
+        "fields_checked": 58
+      },
+      {
+        "stage": "extraction",
+        "case": "indus-motor-sep2026-quarter",
+        "model": "google/gemini-3.1-flash-lite",
+        "repeat": 1,
+        "score": 0.9827586206896551,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.002429325,
+        "latency_s": 5.188,
+        "resolved_model": "google/gemini-3.1-flash-lite",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "cached_input_tokens": 17263,
+        "fields_passed": 57,
+        "fields_checked": 58
+      },
+      {
+        "stage": "extraction",
+        "case": "indus-motor-sep2026-quarter",
+        "model": "google/gemini-4-hydrogen",
+        "repeat": 1,
+        "score": 1.0,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.097251,
+        "latency_s": 39.969,
+        "resolved_model": "google/gemini-4-hydrogen",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "cached_input_tokens": 0,
+        "fields_passed": 58,
+        "fields_checked": 58
+      },
+      {
+        "stage": "extraction",
+        "case": "lucky-cement-sep2026-results-scan",
+        "model": "google/gemini-3-flash-preview",
+        "repeat": 1,
+        "score": 1.0,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.0052533,
+        "latency_s": 9.715,
+        "resolved_model": "google/gemini-3-flash-preview",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "cached_input_tokens": 16456,
+        "fields_passed": 46,
+        "fields_checked": 46
+      },
+      {
+        "stage": "extraction",
+        "case": "lucky-cement-sep2026-results-scan",
+        "model": "google/gemini-3.1-flash-lite",
+        "repeat": 1,
+        "score": 0.9130434782608695,
+        "passed": false,
+        "valid_json": true,
+        "cost_usd": 0.00225255,
+        "latency_s": 9.939,
+        "resolved_model": "google/gemini-3.1-flash-lite",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": false,
+        "cached_input_tokens": 17732,
+        "fields_passed": 42,
+        "fields_checked": 46
+      },
+      {
+        "stage": "extraction",
+        "case": "lucky-cement-sep2026-results-scan",
+        "model": "google/gemini-4-hydrogen",
+        "repeat": 1,
+        "score": 1.0,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.107004,
+        "latency_s": 74.145,
+        "resolved_model": "google/gemini-4-hydrogen",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "cached_input_tokens": 0,
+        "fields_passed": 46,
+        "fields_checked": 46
+      }
+    ],
+    "field_comparisons": [
+      {
+        "case": "indus-motor-sep2026-quarter",
+        "repeat": 1,
+        "models": [
+          "google/gemini-3-flash-preview",
+          "google/gemini-3.1-flash-lite",
+          "google/gemini-4-hydrogen"
+        ],
+        "unavailable_models": [],
+        "fields_compared": 58,
+        "findings": [
+          {
+            "field": "shares_outstanding",
+            "source": "PDF p. 9 (printed p. 8), balance sheet",
+            "expected": null,
+            "mismatched_pairs": [
+              [
+                "google/gemini-3-flash-preview",
+                "google/gemini-3.1-flash-lite"
+              ],
+              [
+                "google/gemini-3-flash-preview",
+                "google/gemini-4-hydrogen"
+              ]
+            ],
+            "all_compared_models_wrong": false,
+            "values": [
+              {
+                "model": "google/gemini-3-flash-preview",
+                "actual": 78600000,
+                "status": "unsubstantiated_value",
+                "reason": "This is the paid-up share capital divided by face value, rather than a count explicitly printed in the report."
+              },
+              {
+                "model": "google/gemini-3.1-flash-lite",
+                "actual": null,
+                "status": "correct",
+                "reason": null
+              },
+              {
+                "model": "google/gemini-4-hydrogen",
+                "actual": null,
+                "status": "correct",
+                "reason": null
+              }
+            ]
+          },
+          {
+            "field": "total_liabilities",
+            "source": "PDF p. 9 (printed p. 8), balance sheet",
+            "expected": null,
+            "mismatched_pairs": [
+              [
+                "google/gemini-3-flash-preview",
+                "google/gemini-4-hydrogen"
+              ],
+              [
+                "google/gemini-3.1-flash-lite",
+                "google/gemini-4-hydrogen"
+              ]
+            ],
+            "all_compared_models_wrong": false,
+            "values": [
+              {
+                "model": "google/gemini-3-flash-preview",
+                "actual": 75706357,
+                "status": "unsubstantiated_value",
+                "reason": "This is the correct sum, but the report prints the components and the application owns the calculation."
+              },
+              {
+                "model": "google/gemini-3.1-flash-lite",
+                "actual": 75706357,
+                "status": "unsubstantiated_value",
+                "reason": "This is the correct sum, but the report prints the components and the application owns the calculation."
+              },
+              {
+                "model": "google/gemini-4-hydrogen",
+                "actual": null,
+                "status": "correct",
+                "reason": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "case": "lucky-cement-sep2026-results-scan",
+        "repeat": 1,
+        "models": [
+          "google/gemini-3-flash-preview",
+          "google/gemini-3.1-flash-lite",
+          "google/gemini-4-hydrogen"
+        ],
+        "unavailable_models": [],
+        "fields_compared": 46,
+        "findings": [
+          {
+            "field": "total_debt",
+            "source": "PDF p. 4, balance sheet and unit caption",
+            "expected": null,
+            "mismatched_pairs": [
+              [
+                "google/gemini-3-flash-preview",
+                "google/gemini-3.1-flash-lite"
+              ],
+              [
+                "google/gemini-3.1-flash-lite",
+                "google/gemini-4-hydrogen"
+              ]
+            ],
+            "all_compared_models_wrong": false,
+            "values": [
+              {
+                "model": "google/gemini-3-flash-preview",
+                "actual": null,
+                "status": "correct",
+                "reason": null
+              },
+              {
+                "model": "google/gemini-3.1-flash-lite",
+                "actual": 181796847,
+                "status": "unsubstantiated_value",
+                "reason": null
+              },
+              {
+                "model": "google/gemini-4-hydrogen",
+                "actual": null,
+                "status": "correct",
+                "reason": null
+              }
+            ]
+          },
+          {
+            "field": "operating_income",
+            "source": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+            "expected": 26630000,
+            "mismatched_pairs": [
+              [
+                "google/gemini-3-flash-preview",
+                "google/gemini-3.1-flash-lite"
+              ],
+              [
+                "google/gemini-3.1-flash-lite",
+                "google/gemini-4-hydrogen"
+              ]
+            ],
+            "all_compared_models_wrong": false,
+            "values": [
+              {
+                "model": "google/gemini-3-flash-preview",
+                "actual": 26630000,
+                "status": "correct",
+                "reason": null
+              },
+              {
+                "model": "google/gemini-3.1-flash-lite",
+                "actual": 24624578,
+                "status": "wrong_value",
+                "reason": "Copied the subtotal after finance costs rather than operating profit."
+              },
+              {
+                "model": "google/gemini-4-hydrogen",
+                "actual": 26630000,
+                "status": "correct",
+                "reason": null
+              }
+            ]
+          },
+          {
+            "field": "operating_income_previous",
+            "source": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+            "expected": 26826000,
+            "mismatched_pairs": [
+              [
+                "google/gemini-3-flash-preview",
+                "google/gemini-3.1-flash-lite"
+              ],
+              [
+                "google/gemini-3.1-flash-lite",
+                "google/gemini-4-hydrogen"
+              ]
+            ],
+            "all_compared_models_wrong": false,
+            "values": [
+              {
+                "model": "google/gemini-3-flash-preview",
+                "actual": 26826000,
+                "status": "correct",
+                "reason": null
+              },
+              {
+                "model": "google/gemini-3.1-flash-lite",
+                "actual": 24549184,
+                "status": "wrong_value",
+                "reason": "Copied the prior-year subtotal after finance costs rather than operating profit."
+              },
+              {
+                "model": "google/gemini-4-hydrogen",
+                "actual": 26826000,
+                "status": "correct",
+                "reason": null
+              }
+            ]
+          },
+          {
+            "field": "other_income_breakdown.#count",
+            "source": "Quarterly announcement, no audited trailing period or itemized consolidated notes in this packet",
+            "expected": 0,
+            "mismatched_pairs": [
+              [
+                "google/gemini-3-flash-preview",
+                "google/gemini-3.1-flash-lite"
+              ],
+              [
+                "google/gemini-3.1-flash-lite",
+                "google/gemini-4-hydrogen"
+              ]
+            ],
+            "all_compared_models_wrong": false,
+            "values": [
+              {
+                "model": "google/gemini-3-flash-preview",
+                "actual": 0,
+                "status": "correct",
+                "reason": null
+              },
+              {
+                "model": "google/gemini-3.1-flash-lite",
+                "actual": 1,
+                "status": "wrong_value",
+                "reason": null
+              },
+              {
+                "model": "google/gemini-4-hydrogen",
+                "actual": 0,
+                "status": "correct",
+                "reason": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }

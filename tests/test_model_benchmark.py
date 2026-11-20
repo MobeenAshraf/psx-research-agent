@@ -8,6 +8,30 @@ from evals import model_benchmark as benchmark
 
 
 class ModelBenchmarkTests(unittest.TestCase):
+    def test_comparison_keeps_model_mismatches_and_shared_errors(self):
+        case = {
+            "id": "report", "stage": "extraction", "audit_references": {},
+            "expected": {"operating_profit": 100, "ebitda": 80, "shares": None, "assets": 500},
+        }
+        trials = [
+            {"case": "report", "repeat": 1, "model": name,
+             **benchmark.grade(case, values)}
+            for name, values in [
+                ("first", {"operating_profit": 90, "ebitda": 80, "shares": None, "assets": 500}),
+                ("second", {"operating_profit": 90, "ebitda": 85, "assets": 500}),
+            ]
+        ]
+        trials.append({"case": "report", "repeat": 1, "model": "failed"})
+        comparison, = benchmark.compare_field_audits([case], trials)
+        self.assertEqual(comparison["unavailable_models"], ["failed"])
+        self.assertEqual(comparison["fields_compared"], 4)
+        fields = {row["field"]: row for row in comparison["findings"]}
+        self.assertNotIn("assets", fields)
+        self.assertTrue(fields["operating_profit"]["all_compared_models_wrong"])
+        self.assertEqual(fields["operating_profit"]["mismatched_pairs"], [])
+        self.assertEqual(fields["ebitda"]["mismatched_pairs"], [["first", "second"]])
+        self.assertEqual(fields["shares"]["mismatched_pairs"], [["first", "second"]])
+
     def test_field_audit_resolves_note_rows_and_reports_missing_values(self):
         case = {
             "stage": "extraction",

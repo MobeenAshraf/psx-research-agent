@@ -11,6 +11,29 @@ Both models received the same September 2026 issuer PDFs and ran once per prompt
 
 The refined audit requires LUCK’s reported operating profit for both years and EBITDA as mandatory checks. Both models failed LUCK on operating profit and passed INDU. The refined run billed $0.02585 for Flash Preview and $0.01256 for Flash Lite across both filings (51% less). Median request times were 9.09 s and 5.88 s respectively. This is one sample per model and filing.
 
+## Three models on the same PDFs
+
+This follow-up ran the refined prompt again and added Gemini 4 Hydrogen. Flash Preview recovered both LUCK operating-profit values on this run. Its earlier failure on the same fixture and prompt shows that one passing sample does not establish repeatability. Hydrogen matched all 104 checked fields. Flash Lite continued to select both post-finance-cost subtotals on the scan.
+
+| Model | LUCK | INDU | Billed total | Median request time |
+| --- | ---: | ---: | ---: | ---: |
+| Gemini 3 Flash Preview | 46/46 | 56/58 | $0.01062 | 9.59 s |
+| Gemini 3.1 Flash Lite | 42/46 | 57/58 | $0.00468 | 7.56 s |
+| Gemini 4 Hydrogen | 46/46 | 58/58 | $0.20426 | 57.06 s |
+
+The Flash models had cached input in these requests. Hydrogen had no cache hits. The billed totals describe this run.
+
+| Filing and field | Expected from PDF | Flash Preview | Flash Lite | Hydrogen |
+| --- | ---: | ---: | ---: | ---: |
+| LUCK current operating profit | 26,630,000 | 26,630,000 | **24,624,578** | 26,630,000 |
+| LUCK prior-year operating profit | 26,826,000 | 26,826,000 | **24,549,184** | 26,826,000 |
+| LUCK total borrowings | `null` | `null` | **181,796,847** | `null` |
+| LUCK itemized other-income rows | 0 | 0 | **1** | 0 |
+| INDU period-end share count | `null` | **78,600,000** | `null` | `null` |
+| INDU total liabilities | `null` | **75,706,357** | **75,706,357** | `null` |
+
+The three models agreed and matched the filing expectation on the other 42 LUCK and 56 INDU fields. For INDU, both Flash models supplied the same correctly added liabilities figure, even though the source shows only the two components. This is an extraction-stage error and Python still returns PKR 75,706,357,000 when it adds the reported components. The [scored run snapshot](2026-11-20-luck-indu-audit.json) includes each mismatched model pair and the expected value’s source.
+
 ## LUCK scanned PDF
 
 | Field and source | Expected | Flash Preview, initial → refined | Flash Lite, initial → refined | Finding |
