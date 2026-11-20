@@ -63,6 +63,9 @@ const MODEL_PRICING = {
 };
 
 function calculateCost(tokenUsage, modelName) {
+    if (Number.isFinite(tokenUsage?.cost_usd) && tokenUsage.cost_usd >= 0) {
+        return tokenUsage.cost_usd;
+    }
     if (!tokenUsage || !modelName) {
         return 0.0;
     }
@@ -666,8 +669,7 @@ async function handleLLMDecision() {
         if (data.token_usage && data.cost !== undefined) {
             decisionCost = data.cost;
         } else if (data.token_usage) {
-            const decisionModel = 'openai/gpt-4o';
-            decisionCost = calculateCost(data.token_usage, decisionModel);
+            decisionCost = calculateCost(data.token_usage, data.model);
         }
         
         trackEvent('analysis_completed', {

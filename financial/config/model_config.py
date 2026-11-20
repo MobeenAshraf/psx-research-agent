@@ -19,13 +19,13 @@ class ModelConfig:
     # Default analysis model - better reasoning for qualitative assessment
     DEFAULT_ANALYSIS_MODEL: str = os.getenv(
         'ANALYSIS_MODEL',
-        'openai/gpt-4o'
+        'openai/gpt-6-luna'
     )
     
     # Default decision model - strong reasoning for decision-making
     DEFAULT_DECISION_MODEL: str = os.getenv(
         'DECISION_MODEL',
-        'openai/gpt-4o'
+        'deepseek/deepseek-v4.1-flash-1017'
     )
     
     # Models that support multimodal PDF processing

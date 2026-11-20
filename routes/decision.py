@@ -185,6 +185,7 @@ def get_llm_decision(
             "halal_compliance": decision_result.get("halal_compliance"),
             "psx_shariah": get_psx_shariah_status(symbol_upper),
             "raw_response": json.dumps(decision_result, indent=2),
+            "model": decision_model_actual,
             "token_usage": token_usage,
             "cost": decision_cost
         }

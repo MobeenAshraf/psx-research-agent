@@ -2,8 +2,9 @@
 
 import json
 import logging
+from math import isfinite
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ def get_model_pricing(model_name: str) -> Optional[Dict[str, float]]:
     return pricing.get(model_name)
 
 
-def calculate_cost(token_usage: Dict[str, int], model_name: str) -> float:
+def calculate_cost(token_usage: Dict[str, int | float], model_name: str) -> float:
     """
     Calculate cost in USD for token usage.
     
@@ -62,6 +63,10 @@ def calculate_cost(token_usage: Dict[str, int], model_name: str) -> float:
     if not token_usage:
         return 0.0
     
+    reported_cost = token_usage.get("cost_usd")
+    if type(reported_cost) in (int, float) and isfinite(reported_cost) and reported_cost >= 0:
+        return float(reported_cost)
+
     pricing = get_model_pricing(model_name)
     if not pricing:
         logger.warning(f"No pricing found for model: {model_name}")

@@ -9,7 +9,7 @@ from financial.services.stock_page_service import get_stock_page_service
 from models.stock_analysis import StockAnalysis
 from routes.helpers import format_detailed_analysis, normalize_indicators
 from technical.analyzer import TechnicalAnalyzer
-from technical.price_repository import MARKET_TZ, WebPriceRepository
+from technical.price_repository import MARKET_TZ, MAX_PRICE_AGE_DAYS, WebPriceRepository
 from technical.recommendation_engine import RecommendationEngine
 
 _logger = logging.getLogger(__name__)
@@ -27,9 +27,16 @@ def get_technical_analysis(symbol: str) -> Dict[str, Any]:
             return {
                 'symbol': symbol_upper,
                 'status': 'error',
-                'error': 'No historical price data available'
+                'error': 'Daily price history is unavailable from PSX and SuperX'
             }
         
+        if not technical_analyzer.has_sufficient_data(historical):
+            return {
+                'symbol': symbol_upper,
+                'status': 'error',
+                'error': f'Only {len(historical)} daily sessions available. Technical analysis requires at least 50.',
+            }
+
         indicators = _calculate_all_indicators(technical_analyzer, price_repo, symbol_upper, historical)
         signals, candlestick_patterns = _generate_all_signals(technical_analyzer, indicators, historical)
         metrics = _get_financial_metrics(symbol_upper)
@@ -53,8 +60,9 @@ def _calculate_all_indicators(technical_analyzer, price_repo, symbol_upper, hist
         current_price = latest["close"]
         date = latest["date"].date()
         indicators["price_as_of"] = date.isoformat()
-        indicators["price_data_stale"] = (datetime.now(MARKET_TZ).date() - date).days > 7
-        indicators["price_adjustment"] = "unverified"
+        indicators["price_data_stale"] = (datetime.now(MARKET_TZ).date() - date).days > MAX_PRICE_AGE_DAYS
+        indicators["price_source"] = latest.get("source")
+        indicators["price_adjustment"] = latest.get("adjustment", "unverified")
         if latest.get("volume") is not None:
             indicators["current_volume"] = latest["volume"]
     else:

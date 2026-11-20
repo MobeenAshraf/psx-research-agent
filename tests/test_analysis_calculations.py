@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
+import requests
 
 from financial.langgraph.analyzer import LangGraphAnalyzer
 from financial.langgraph.workflow_steps.calculate_step import calculate_metrics
@@ -141,8 +142,9 @@ def test_price_feed_keeps_zero_volume_and_omits_unreported_range():
     repository = WebPriceRepository()
     now = datetime.now(MARKET_TZ).timestamp()
     repository.session.get = Mock()
-    repository.session.get.return_value.headers = {}
-    repository.session.get.return_value.json.return_value = {"data": [[now, 108, 0, 103]]}
+    primary = Mock()
+    primary.json.return_value = {"data": [[now, 108, 0, 103]]}
+    repository.session.get.side_effect = [primary, requests.ConnectionError("fallback unavailable")]
     bar = repository.get_historical_prices("TEST")[0]
     assert bar["volume"] == 0 and bar["open"] == 103
     assert "high" not in bar and "low" not in bar
@@ -156,6 +158,44 @@ def test_price_feed_keeps_zero_volume_and_omits_unreported_range():
     assert "trend" in indicators
     assert "atr" not in indicators and "fibonacci" not in indicators
     assert analyzer.get_candlestick_patterns(history) == []
+
+
+def test_price_history_falls_back_to_split_adjusted_daily_closes():
+    repository = WebPriceRepository()
+    primary = Mock()
+    primary.raise_for_status.side_effect = requests.HTTPError("404")
+    today = datetime.now(MARKET_TZ).date()
+    lines = [
+        f"{today - timedelta(days=lag)},90,130,80,105,1000"
+        for lag in range(60)
+    ]
+    csv_response = Mock(text="date,open,high,low,close_adjusted,volume\n" + "\n".join(lines))
+    repository.session.get = Mock(side_effect=[primary, csv_response])
+
+    bars = repository.get_historical_prices("luck")
+    assert len(bars) == 60
+    assert bars[-1]["close"] == 105 and bars[-1]["volume"] == 1000
+    assert bars[-1]["source"] == "SuperX (PSX daily data)"
+    assert "high" not in bars[-1] and "low" not in bars[-1]
+    assert bars[0]["date"] < bars[-1]["date"]
+    assert repository.session.get.call_args.args[0] == "https://superx.pk/chart/LUCK.csv"
+
+
+def test_openrouter_billed_cost_overrides_estimates_and_text_uses_provider_sampling():
+    from financial.config.cost_calculator import calculate_cost
+    from financial.langgraph.api_client import OpenRouterAPIClient
+
+    reply = Mock()
+    reply.json.return_value = {
+        "choices": [{"message": {"content": "{}"}}],
+        "usage": {"prompt_tokens": 100, "completion_tokens": 20, "cost": 0.00123},
+    }
+    with patch("financial.langgraph.api_client.requests.post", return_value=reply) as post:
+        _, usage = OpenRouterAPIClient("test-key").call(
+            [{"role": "user", "content": "Return JSON"}], "openai/gpt-6-luna"
+        )
+    assert "temperature" not in post.call_args.kwargs["json"]
+    assert calculate_cost(usage, "openai/gpt-6-luna") == 0.00123
 
 
 def test_technical_conflict_is_independent_of_strategy_order():

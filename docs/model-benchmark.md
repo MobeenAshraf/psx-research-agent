@@ -1,6 +1,6 @@
 # Model benchmark
 
-The benchmark compares OpenRouter models separately for PDF extraction, investor analysis, and the final investment decision. Each candidate sees the same input and is compared with the baseline for that stage. The runner uses the configured `EXTRACTION_MODEL`, `ANALYSIS_MODEL`, and `DECISION_MODEL` when set, or the repository defaults.
+The benchmark compares OpenRouter models separately for PDF extraction, investor analysis, and the final investment decision. Each candidate sees the same input and is compared with the baseline for that stage. The runner uses the configured `EXTRACTION_MODEL`, `ANALYSIS_MODEL`, and `DECISION_MODEL` when set, or the original screening baselines for reproducibility. Production uses GPT-6 Luna for analysis and DeepSeek V4.1 Flash 1017 for decisions by default.
 
 ## Run it
 
@@ -31,7 +31,7 @@ Prices are OpenRouter's advertised USD per million input and output tokens, chec
 | Extraction | [Gemini 3.5 Flash Lite](https://openrouter.ai/google/gemini-3.5-flash-lite) | $0.30 | $2.50 | Lowest listed price in the PDF comparison |
 | Extraction | [Gemini 3.8 Flash](https://openrouter.ai/google/gemini-3.8-flash) | $0.75 | $3.75 | Discounted rate |
 | Extraction | [Gemini 4 Hydrogen](https://openrouter.ai/google/gemini-4-hydrogen) | $1.50 | $7.50 | Newer PDF candidate |
-| Analysis and decision | [GPT-4o](https://openrouter.ai/openai/gpt-4o) | $2.50 | $10.00 | Repository baseline |
+| Analysis and decision | [GPT-4o](https://openrouter.ai/openai/gpt-4o) | $2.50 | $10.00 | Original screening baseline |
 | Analysis and decision | [DeepSeek V4.1 Flash 1017](https://openrouter.ai/deepseek/deepseek-v4.1-flash-1017) | $0.036 | $0.50 | Lowest listed input price in the text comparison |
 | Analysis and decision | [Claude Haiku 5.5](https://openrouter.ai/anthropic/claude-haiku-5.5) | $0.10 | $0.50 | Low-cost candidate |
 | Analysis and decision | [GPT-6 Luna](https://openrouter.ai/openai/gpt-6-luna) | $0.10 | $0.50 | Low-cost candidate |

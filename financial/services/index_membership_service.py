@@ -153,7 +153,7 @@ class IndexMembershipService:
                 for holding in holdings:
                     symbol = holding["symbol"]
                     shares = holding["shares"]
-                    current_price = price_repo.get_current_price(symbol)
+                    current_price = price_repo.get_current_price(symbol, daily_fallback=False)
                     if current_price:
                         value = shares * current_price
                         holding["value"] = value

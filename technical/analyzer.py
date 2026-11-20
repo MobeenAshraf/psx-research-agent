@@ -24,7 +24,7 @@ class TechnicalAnalyzer:
         self.ichimoku_calc = IchimokuCalculator()
     
     def calculate_indicators(self, price_data: List[Dict]) -> Dict[str, Any]:
-        if not self._has_sufficient_data(price_data):
+        if not self.has_sufficient_data(price_data):
             return {}
         
         df = self._prepare_dataframe(price_data)
@@ -126,7 +126,7 @@ class TechnicalAnalyzer:
             return self.candlestick.detect_patterns(recent)
         return []
     
-    def _has_sufficient_data(self, price_data: List[Dict]) -> bool:
+    def has_sufficient_data(self, price_data: List[Dict]) -> bool:
         return price_data and len(price_data) >= 50
     
     def _prepare_dataframe(self, price_data: List[Dict]) -> pd.DataFrame:

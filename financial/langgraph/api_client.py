@@ -1,8 +1,19 @@
 """OpenRouter API client for LangGraph workflow."""
 
+from math import isfinite
+
 import requests
 from typing import Dict, Optional, List, Tuple
 from financial.pdf_exceptions import LLMAnalysisError
+
+
+def read_token_usage(result: dict) -> Dict[str, int | float]:
+    usage = result.get("usage") or {}
+    tokens = {key: usage.get(key) or 0 for key in ("prompt_tokens", "completion_tokens", "total_tokens")}
+    cost = usage.get("cost")
+    if type(cost) in (int, float) and isfinite(cost) and cost >= 0:
+        tokens["cost_usd"] = cost
+    return tokens
 
 
 class OpenRouterAPIClient:
@@ -20,7 +31,7 @@ class OpenRouterAPIClient:
         messages: List[Dict[str, str]],
         model: str,
         response_format: Optional[Dict[str, str]] = None
-    ) -> Tuple[str, Dict[str, int]]:
+    ) -> Tuple[str, Dict[str, int | float]]:
         """Call OpenRouter API. Returns (content, token_usage)."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -30,7 +41,6 @@ class OpenRouterAPIClient:
         payload = {
             "model": model,
             "messages": messages,
-            "temperature": 0,
             "max_tokens": 8000,
         }
         
@@ -52,19 +62,7 @@ class OpenRouterAPIClient:
             
             content = result["choices"][0]["message"]["content"]
             
-            token_usage = {
-                "prompt_tokens": 0,
-                "completion_tokens": 0,
-                "total_tokens": 0,
-            }
-            
-            if "usage" in result:
-                usage = result["usage"]
-                token_usage["prompt_tokens"] = usage.get("prompt_tokens", 0)
-                token_usage["completion_tokens"] = usage.get("completion_tokens", 0)
-                token_usage["total_tokens"] = usage.get("total_tokens", 0)
-            
-            return content, token_usage
+            return content, read_token_usage(result)
         except requests.RequestException as e:
             raise LLMAnalysisError(f"OpenRouter API error: {str(e)}")
         except (KeyError, IndexError) as e:
@@ -76,7 +74,7 @@ class OpenRouterAPIClient:
         messages: List[Dict],
         model: str,
         response_format: Optional[Dict[str, str]] = None
-    ) -> Tuple[str, Dict[str, int]]:
+    ) -> Tuple[str, Dict[str, int | float]]:
         """Call OpenRouter API with PDF. Delegates to PDFAPIClient."""
         from financial.langgraph.api.pdf_client import PDFAPIClient
         pdf_client = PDFAPIClient(self.api_key)

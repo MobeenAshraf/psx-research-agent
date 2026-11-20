@@ -5,7 +5,7 @@ import requests
 from pathlib import Path
 from typing import Dict, Optional, List, Tuple
 from financial.pdf_exceptions import LLMAnalysisError
-from financial.langgraph.api_client import OpenRouterAPIClient
+from financial.langgraph.api_client import OpenRouterAPIClient, read_token_usage
 
 
 class PDFAPIClient:
@@ -23,7 +23,7 @@ class PDFAPIClient:
         messages: List[Dict],
         model: str,
         response_format: Optional[Dict[str, str]] = None
-    ) -> Tuple[str, Dict[str, int]]:
+    ) -> Tuple[str, Dict[str, int | float]]:
         """Call OpenRouter API with PDF. Returns (content, token_usage)."""
         try:
             pdf_file = Path(pdf_path)
@@ -94,19 +94,7 @@ class PDFAPIClient:
                     f"Check if model supports response_format or if prompt is too complex."
                 )
             
-            token_usage = {
-                "prompt_tokens": 0,
-                "completion_tokens": 0,
-                "total_tokens": 0,
-            }
-            
-            if "usage" in result:
-                usage = result["usage"]
-                token_usage["prompt_tokens"] = usage.get("prompt_tokens", 0)
-                token_usage["completion_tokens"] = usage.get("completion_tokens", 0)
-                token_usage["total_tokens"] = usage.get("total_tokens", 0)
-            
-            return content, token_usage
+            return content, read_token_usage(result)
         except FileNotFoundError as e:
             raise LLMAnalysisError(f"PDF file not found: {str(e)}")
         except requests.RequestException as e:

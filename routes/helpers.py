@@ -35,8 +35,12 @@ def format_detailed_analysis(analysis) -> str:
 
     if normalized_indicators.get("price_as_of"):
         lines.append(f"Last session: {normalized_indicators['price_as_of']}")
+    if normalized_indicators.get("price_source"):
+        lines.append(f"Price source: {normalized_indicators['price_source']}")
     if normalized_indicators.get("price_adjustment") == "unverified":
         lines.append("Corporate-action adjustment is unverified for this feed.")
+    elif normalized_indicators.get("price_adjustment"):
+        lines.append(f"Close adjusted for: {normalized_indicators['price_adjustment']}")
     if not normalized_indicators.get("has_session_high_low"):
         lines.append("Range-based indicators require daily highs and lows.")
     lines.append("")
