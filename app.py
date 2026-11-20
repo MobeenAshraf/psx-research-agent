@@ -14,6 +14,7 @@ from typing import Optional, Dict, Any
 from pathlib import Path
 from starlette.middleware.base import BaseHTTPMiddleware
 from routes import get_technical_analysis, check_latest_report, run_financial_analysis, get_llm_decision
+from routes.evaluations import router as evaluations_router
 from financial.config.model_config import ModelConfig
 from state_monitor import stream_states, get_current_states
 from utils import log_api_request
@@ -25,6 +26,7 @@ app = FastAPI(
     description="API for technical and financial analysis of PSX stocks",
     version="1.0.0"
 )
+app.include_router(evaluations_router)
 
 app.add_middleware(
     CORSMiddleware,

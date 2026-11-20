@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Compare model accuracy, cost and speed on PSX financial reports and investment scenarios.">
+    <meta name="theme-color" content="#101513">
+    <title>Model Evaluations | PSX Research</title>
+    <link rel="icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/evals.css">
+    <script src="/static/evals.js" defer></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="wrap site-nav" aria-label="Main navigation">
+            <a class="brand" href="/">
+                <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+                PSX Research
+            </a>
+            <a class="back-link" href="/">Stock analysis <span aria-hidden="true">↗</span></a>
+        </nav>
+    </header>
+    <main class="wrap">
+        <section class="hero" aria-labelledby="page-title">
+            <div>
+                <h1 id="page-title">Model evaluations</h1>
+                <p>Compare accuracy, cost and speed on PSX filings and investment scenarios. Inspect the exact values behind each score.</p>
+            </div>
+            <p class="run-date"><span class="status-dot" aria-hidden="true"></span> Latest recorded run <time id="run-date"></time></p>
+        </section>
+        <div class="tabs" role="tablist" aria-label="Evaluation stages">
+            <button type="button" id="tab-extraction" role="tab" aria-controls="results" aria-selected="true" data-stage="extraction">PDF extraction</button>
+            <button type="button" id="tab-analysis" role="tab" aria-controls="results" aria-selected="false" data-stage="analysis" tabindex="-1">Financial analysis</button>
+            <button type="button" id="tab-decision" role="tab" aria-controls="results" aria-selected="false" data-stage="decision" tabindex="-1">Investment decisions</button>
+            <button type="button" id="tab-calculations" role="tab" aria-controls="results" aria-selected="false" data-stage="calculations" tabindex="-1">Python calculations</button>
+        </div>
+        <section id="results" role="tabpanel" aria-labelledby="tab-extraction" tabindex="0"></section>
+        <noscript><p class="panel">Enable JavaScript to switch evaluation stages and inspect the results.</p></noscript>
+    </main>
+    <script type="application/json" id="evaluation-data"><!-- EVALUATION_DATA --></script>
+</body>
+</html>

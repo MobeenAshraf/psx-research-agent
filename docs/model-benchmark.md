@@ -2,6 +2,8 @@
 
 The benchmark compares OpenRouter models separately for PDF extraction, investor analysis, and the final investment decision. Each candidate sees the same input and is compared with the baseline for that stage. The runner uses the configured `EXTRACTION_MODEL`, `ANALYSIS_MODEL`, and `DECISION_MODEL` when set, or the original screening baselines for reproducibility. Production uses DeepSeek V4.1 Flash 1017 for analysis and decisions by default.
 
+The app’s `/evals` dashboard displays the published run snapshots, filing-level mismatches, and the arithmetic audit. Viewing the page makes no model requests.
+
 ## Run it
 
 From the repository root, after installing the app dependencies:
