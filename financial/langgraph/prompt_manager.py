@@ -3,6 +3,8 @@
 from pathlib import Path
 from typing import Optional, Dict, Any
 
+from financial.prompt_builders import DEFAULT_SYSTEM_PROMPT
+
 
 BASE_PROMPT_DIR = Path(__file__).resolve().parents[1] / "prompts"
 
@@ -35,7 +37,7 @@ class PromptManager:
             return self._system_prompt_cache
         
         if not self.SYSTEM_PROMPT_FILE.exists():
-            self._system_prompt_cache = "You are a financial data extraction and analysis specialist. Extract accurate numerical data and provide insightful analysis."
+            self._system_prompt_cache = DEFAULT_SYSTEM_PROMPT
             return self._system_prompt_cache
         
         self._system_prompt_cache = self.SYSTEM_PROMPT_FILE.read_text(encoding='utf-8')

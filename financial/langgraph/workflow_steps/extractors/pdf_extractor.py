@@ -4,6 +4,7 @@ import logging
 from typing import Optional, Tuple, Dict, Any
 from financial.langgraph.llm_helper import LLMHelper
 from financial.config.model_config import ModelConfig
+from financial.prompt_builders import build_pdf_extraction_prompt
 from financial.pdf_exceptions import LLMAnalysisError
 
 _logger = logging.getLogger(__name__)
@@ -24,21 +25,8 @@ class PDFExtractor:
         preferred_model: Optional[str] = None
     ) -> Tuple[Dict[str, Any], Dict[str, int]]:
         """Extract financial data from PDF using multimodal model."""
-        user_prompt_content = f"""{extraction_prompt_content}{stock_price_str}
+        user_prompt_content = build_pdf_extraction_prompt(extraction_prompt_content, stock_price_str)
 
-**YOUR TASK:**
-Extract all financial data from the PDF document and return it as a valid JSON object matching the required schema.
-
-**CRITICAL REQUIREMENTS:**
-1. Return ONLY valid JSON - no markdown code blocks, no explanations, no additional text
-2. Use numbers (not strings) for all monetary values
-3. Use null for missing values (never use 0 or empty string as placeholder)
-4. Search ALL sections: Income Statement, Balance Sheet, Cash Flow Statement, Notes
-5. Extract exact values as stated in the document - do not estimate or calculate unless explicitly instructed
-6. Read the PDF carefully - look for tables, financial statements, and numerical data
-
-Return the JSON object now:"""
-        
         if preferred_model and ModelConfig.is_multimodal_model(preferred_model):
             try:
                 _logger.info(f"Using user-selected Gemini model: {preferred_model}")

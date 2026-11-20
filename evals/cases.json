@@ -1,0 +1,148 @@
+[
+  {
+    "id": "colgate-fy2025",
+    "stage": "extraction",
+    "pdf_url": "https://colgate.com.pk/wp-content/uploads/2025/09/CPPL-Annual-Report-2025.pdf",
+    "scope": "Use the audited primary statements for FY ended June 30, 2025. Keep monetary figures in the statements' displayed PKR thousands. Keep EPS in PKR per share.",
+    "reference": "Printed pages 57–59",
+    "expected": {
+      "currency": "PKR",
+      "revenue.current": 116000701,
+      "revenue.previous": 113230777,
+      "net_income": 18397273,
+      "net_income_previous": 17292230,
+      "eps": 75.78,
+      "operating_cash_flow": 13989999,
+      "shareholders_equity": 37216518
+    },
+    "critical": ["revenue.current", "net_income", "operating_cash_flow"]
+  },
+  {
+    "id": "hum-fy2025-unconsolidated",
+    "stage": "extraction",
+    "pdf_url": "https://humnetwork.tv/wp-content/uploads/2025/09/Annual%20Report%20HUM.pdf",
+    "scope": "Use the unconsolidated financial statements for FY ended June 30, 2025. Keep monetary values in PKR as shown, with no scaling.",
+    "reference": "Printed pages 67–70",
+    "expected": {
+      "currency": "PKR",
+      "revenue.current": 8012805226,
+      "revenue.previous": 8307666130,
+      "net_income": 2102986638,
+      "net_income_previous": 2610591757,
+      "eps": 1.85,
+      "operating_cash_flow": 116105950,
+      "shareholders_equity": 11959442775
+    },
+    "critical": ["revenue.current", "net_income", "operating_cash_flow"]
+  },
+  {
+    "id": "indus-motor-sep2026-quarter",
+    "stage": "extraction",
+    "pdf_url": "https://toyota-indus.com/wp-content/uploads/2026/10/Financial-Report-for-the-Quarter-ended-September-30-2026.pdf",
+    "source_url": "https://dps.psx.com.pk/download/document/287155.pdf",
+    "scope": "Use the primary financial statements for the quarter ended September 30, 2026 and the comparable September 2025 quarter. Keep monetary figures in the statements' displayed PKR thousands. Keep EPS in PKR per share.",
+    "reference": "Printed pages 8–12 of the issuer's quarterly report",
+    "expected": {
+      "currency": "PKR",
+      "revenue.current": 74014959,
+      "revenue.previous": 61737936,
+      "net_income": 7384376,
+      "net_income_previous": 6719280,
+      "eps": 93.95,
+      "operating_cash_flow": -23894961,
+      "capital_expenditures": 430365,
+      "shareholders_equity": 90585731
+    },
+    "critical": ["revenue.current", "net_income", "operating_cash_flow"]
+  },
+  {
+    "id": "analysis-payout-and-segments",
+    "stage": "analysis",
+    "input": {
+      "extracted_data": {
+        "company_name": "Fixture Foods",
+        "currency": "PKR",
+        "revenue": {"current": 1000000, "previous": 800000},
+        "net_income": 200000,
+        "capital_expenditures": 100000,
+        "dividends_paid": 50000,
+        "free_cash_flow": 100000,
+        "segment_data": [{"name": "Packaged Goods", "revenue": 1000000, "operating_income": 230000}],
+        "other_income_breakdown": [{"item": "Rental income", "value": 10000}]
+      },
+      "calculated_metrics": {"pe_ratio": 12, "pb_ratio": 2, "fcf_yield": 4.1667, "capex_pct_revenue": 10, "payout_ratio": 25, "fcf_coverage": 2}
+    },
+    "expected": {
+      "investment_analysis.capex": 100000,
+      "investment_analysis.capex_pct_revenue": 10,
+      "dividend_analysis.payout_ratio": 25,
+      "dividend_analysis.fcf_coverage": 2,
+      "valuation_metrics.pe_ratio": 12,
+      "valuation_metrics.fcf_yield": 4.1667,
+      "income_composition.segments.0.revenue_pct": 100,
+      "income_composition.other_income.pct_of_net_income": 5
+    },
+    "absolute_tolerance": {"valuation_metrics.fcf_yield": 0.05},
+    "nonempty": {"investor_summary": "string"},
+    "critical": ["dividend_analysis.payout_ratio", "dividend_analysis.fcf_coverage"]
+  },
+  {
+    "id": "analysis-undisclosed-breakdowns",
+    "stage": "analysis",
+    "input": {
+      "extracted_data": {
+        "company_name": "Fixture Textiles",
+        "currency": "PKR",
+        "revenue": {"current": 2000000, "previous": 2500000},
+        "net_income": -200000,
+        "capital_expenditures": 160000,
+        "dividends_paid": 0,
+        "free_cash_flow": -70000,
+        "segment_data": [],
+        "other_income_breakdown": []
+      },
+      "calculated_metrics": {"pb_ratio": 0.8, "fcf_yield": -7, "capex_pct_revenue": 8}
+    },
+    "expected": {
+      "investment_analysis.capex": 160000,
+      "investment_analysis.capex_pct_revenue": 8,
+      "dividend_analysis.dividends_paid": 0,
+      "valuation_metrics.pb_ratio": 0.8,
+      "valuation_metrics.fcf_yield": -7,
+      "income_composition.segments": [],
+      "income_composition.other_income.breakdown": []
+    },
+    "nonempty": {"investor_summary": "string", "red_flags": "string_list"},
+    "critical": ["valuation_metrics.fcf_yield", "income_composition.segments", "income_composition.other_income.breakdown"]
+  },
+  {
+    "id": "decision-conflicting-halal-signal",
+    "stage": "decision",
+    "input": {
+      "symbol": "FIXBANK",
+      "profile": {"halal_only": true, "risk_tolerance": "low", "investment_horizon": "one year", "investment_goals": "dividend income"},
+      "technical": {"recommendation": "BUY", "confidence": 0.91, "indicators": {"rsi": 56}},
+      "financial_report": "The company's primary business is conventional interest-bearing lending. Dividend yield is 9%, P/E is 6, and net income rose 20%. The latest screening explicitly marked this company as non-compliant.",
+      "index_membership": {"KSE100": {"included": true, "weightage": 4.0}, "KMI30": {"included": false}, "MZNETF": {"included": false}}
+    },
+    "expected": {"decision": "DO_NOT_BUY"},
+    "patterns": {"halal_compliance": "\\b(?:non[- ]?(?:shariah[- ]?)?compliant|not (?:shariah |halal )?compliant|not halal|non[- ]?halal|fails?\\b)"},
+    "nonempty": {"summary": "string", "reasons": "string_list", "risk_notes": "string_list", "dividend_analysis": "string"},
+    "critical": ["decision", "halal_compliance"]
+  },
+  {
+    "id": "decision-aligned-dividend-profile",
+    "stage": "decision",
+    "input": {
+      "symbol": "FIXUTIL",
+      "profile": {"halal_only": true, "risk_tolerance": "moderate", "investment_horizon": "five years", "investment_goals": "sustainable dividend income", "target_dividend_yield_pct": 5, "sector_exposure": "no utility holdings"},
+      "technical": {"recommendation": "BUY", "confidence": 0.86, "indicators": {"rsi": 55}, "reasoning": ["Price is above its rising 200-day moving average."]},
+      "financial_report": "Latest Shariah screening explicitly confirms compliance. Dividend yield is 7%, payout ratio is 45% and free cash flow covers dividends 2.1 times. P/E is 8 versus a sector median of 12. Debt is low. Tariff approvals are the principal risk.",
+      "index_membership": {"KSE100": {"included": true, "weightage": 2.0}, "KMI30": {"included": true, "weightage": 8.0}, "MZNETF": {"included": true, "weightage": 10.0}}
+    },
+    "expected": {"decision": "BUY"},
+    "patterns": {"risk_notes": "tariff", "reasons": "KMI.?30|MZNETF"},
+    "nonempty": {"summary": "string", "reasons": "string_list", "risk_notes": "string_list", "dividend_analysis": "string", "halal_compliance": "string"},
+    "critical": ["decision"]
+  }
+]

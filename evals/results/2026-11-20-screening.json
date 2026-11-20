@@ -1,0 +1,1273 @@
+{
+  "sampling": {
+    "extraction": {
+      "temperature": 0
+    },
+    "analysis": "provider default",
+    "decision": "provider default"
+  },
+  "cases": [
+    {
+      "id": "analysis-payout-and-segments",
+      "stage": "analysis",
+      "input": {
+        "extracted_data": {
+          "company_name": "Fixture Foods",
+          "currency": "PKR",
+          "revenue": {
+            "current": 1000000,
+            "previous": 800000
+          },
+          "net_income": 200000,
+          "capital_expenditures": 100000,
+          "dividends_paid": 50000,
+          "free_cash_flow": 100000,
+          "segment_data": [
+            {
+              "name": "Packaged Goods",
+              "revenue": 1000000,
+              "operating_income": 230000
+            }
+          ],
+          "other_income_breakdown": [
+            {
+              "item": "Rental income",
+              "value": 10000
+            }
+          ]
+        },
+        "calculated_metrics": {
+          "pe_ratio": 12,
+          "pb_ratio": 2,
+          "fcf_yield": 4.1667,
+          "capex_pct_revenue": 10,
+          "payout_ratio": 25,
+          "fcf_coverage": 2
+        }
+      },
+      "expected": {
+        "investment_analysis.capex": 100000,
+        "investment_analysis.capex_pct_revenue": 10,
+        "dividend_analysis.payout_ratio": 25,
+        "dividend_analysis.fcf_coverage": 2,
+        "valuation_metrics.pe_ratio": 12,
+        "valuation_metrics.fcf_yield": 4.1667,
+        "income_composition.segments.0.revenue_pct": 100,
+        "income_composition.other_income.pct_of_net_income": 5
+      },
+      "absolute_tolerance": {
+        "valuation_metrics.fcf_yield": 0.05
+      },
+      "nonempty": {
+        "investor_summary": "string"
+      },
+      "critical": [
+        "dividend_analysis.payout_ratio",
+        "dividend_analysis.fcf_coverage"
+      ]
+    },
+    {
+      "id": "analysis-undisclosed-breakdowns",
+      "stage": "analysis",
+      "input": {
+        "extracted_data": {
+          "company_name": "Fixture Textiles",
+          "currency": "PKR",
+          "revenue": {
+            "current": 2000000,
+            "previous": 2500000
+          },
+          "net_income": -200000,
+          "capital_expenditures": 160000,
+          "dividends_paid": 0,
+          "free_cash_flow": -70000,
+          "segment_data": [],
+          "other_income_breakdown": []
+        },
+        "calculated_metrics": {
+          "pb_ratio": 0.8,
+          "fcf_yield": -7,
+          "capex_pct_revenue": 8
+        }
+      },
+      "expected": {
+        "investment_analysis.capex": 160000,
+        "investment_analysis.capex_pct_revenue": 8,
+        "dividend_analysis.dividends_paid": 0,
+        "valuation_metrics.pb_ratio": 0.8,
+        "valuation_metrics.fcf_yield": -7,
+        "income_composition.segments": [],
+        "income_composition.other_income.breakdown": []
+      },
+      "nonempty": {
+        "investor_summary": "string",
+        "red_flags": "string_list"
+      },
+      "critical": [
+        "valuation_metrics.fcf_yield",
+        "income_composition.segments",
+        "income_composition.other_income.breakdown"
+      ]
+    },
+    {
+      "id": "decision-conflicting-halal-signal",
+      "stage": "decision",
+      "input": {
+        "symbol": "FIXBANK",
+        "profile": {
+          "halal_only": true,
+          "risk_tolerance": "low",
+          "investment_horizon": "one year",
+          "investment_goals": "dividend income"
+        },
+        "technical": {
+          "recommendation": "BUY",
+          "confidence": 0.91,
+          "indicators": {
+            "rsi": 56
+          }
+        },
+        "financial_report": "The company's primary business is conventional interest-bearing lending. Dividend yield is 9%, P/E is 6, and net income rose 20%. The latest screening explicitly marked this company as non-compliant.",
+        "index_membership": {
+          "KSE100": {
+            "included": true,
+            "weightage": 4.0
+          },
+          "KMI30": {
+            "included": false
+          },
+          "MZNETF": {
+            "included": false
+          }
+        }
+      },
+      "expected": {
+        "decision": "DO_NOT_BUY"
+      },
+      "patterns": {
+        "halal_compliance": "\\b(?:non[- ]?(?:shariah[- ]?)?compliant|not (?:shariah |halal )?compliant|not halal|non[- ]?halal|fails?\\b)"
+      },
+      "nonempty": {
+        "summary": "string",
+        "reasons": "string_list",
+        "risk_notes": "string_list",
+        "dividend_analysis": "string"
+      },
+      "critical": [
+        "decision",
+        "halal_compliance"
+      ]
+    },
+    {
+      "id": "decision-aligned-dividend-profile",
+      "stage": "decision",
+      "input": {
+        "symbol": "FIXUTIL",
+        "profile": {
+          "halal_only": true,
+          "risk_tolerance": "moderate",
+          "investment_horizon": "five years",
+          "investment_goals": "sustainable dividend income",
+          "target_dividend_yield_pct": 5,
+          "sector_exposure": "no utility holdings"
+        },
+        "technical": {
+          "recommendation": "BUY",
+          "confidence": 0.86,
+          "indicators": {
+            "rsi": 55
+          },
+          "reasoning": [
+            "Price is above its rising 200-day moving average."
+          ]
+        },
+        "financial_report": "Latest Shariah screening explicitly confirms compliance. Dividend yield is 7%, payout ratio is 45% and free cash flow covers dividends 2.1 times. P/E is 8 versus a sector median of 12. Debt is low. Tariff approvals are the principal risk.",
+        "index_membership": {
+          "KSE100": {
+            "included": true,
+            "weightage": 2.0
+          },
+          "KMI30": {
+            "included": true,
+            "weightage": 8.0
+          },
+          "MZNETF": {
+            "included": true,
+            "weightage": 10.0
+          }
+        }
+      },
+      "expected": {
+        "decision": "BUY"
+      },
+      "patterns": {
+        "risk_notes": "tariff",
+        "reasons": "KMI.?30|MZNETF"
+      },
+      "nonempty": {
+        "summary": "string",
+        "reasons": "string_list",
+        "risk_notes": "string_list",
+        "dividend_analysis": "string",
+        "halal_compliance": "string"
+      },
+      "critical": [
+        "decision"
+      ]
+    },
+    {
+      "id": "hum-fy2025-unconsolidated",
+      "stage": "extraction",
+      "pdf_url": "https://humnetwork.tv/wp-content/uploads/2025/09/Annual%20Report%20HUM.pdf",
+      "scope": "Use the unconsolidated financial statements for FY ended June 30, 2025. Keep monetary values in PKR as shown, with no scaling.",
+      "reference": "Printed pages 67\u201370",
+      "expected": {
+        "currency": "PKR",
+        "revenue.current": 8012805226,
+        "revenue.previous": 8307666130,
+        "net_income": 2102986638,
+        "net_income_previous": 2610591757,
+        "eps": 1.85,
+        "operating_cash_flow": 116105950,
+        "shareholders_equity": 11959442775
+      },
+      "critical": [
+        "revenue.current",
+        "net_income",
+        "operating_cash_flow"
+      ]
+    },
+    {
+      "id": "indus-motor-sep2026-quarter",
+      "stage": "extraction",
+      "pdf_url": "https://toyota-indus.com/wp-content/uploads/2026/10/Financial-Report-for-the-Quarter-ended-September-30-2026.pdf",
+      "source_url": "https://dps.psx.com.pk/download/document/287155.pdf",
+      "scope": "Use the primary financial statements for the quarter ended September 30, 2026 and the comparable September 2025 quarter. Keep monetary figures in the statements' displayed PKR thousands. Keep EPS in PKR per share.",
+      "reference": "Printed pages 8\u201312 of the issuer's quarterly report",
+      "expected": {
+        "currency": "PKR",
+        "revenue.current": 74014959,
+        "revenue.previous": 61737936,
+        "net_income": 7384376,
+        "net_income_previous": 6719280,
+        "eps": 93.95,
+        "operating_cash_flow": -23894961,
+        "capital_expenditures": 430365,
+        "shareholders_equity": 90585731
+      },
+      "critical": [
+        "revenue.current",
+        "net_income",
+        "operating_cash_flow"
+      ]
+    },
+    {
+      "id": "colgate-fy2025",
+      "stage": "extraction",
+      "pdf_url": "https://colgate.com.pk/wp-content/uploads/2025/09/CPPL-Annual-Report-2025.pdf",
+      "scope": "Use the audited primary statements for FY ended June 30, 2025. Keep monetary figures in the statements' displayed PKR thousands. Keep EPS in PKR per share.",
+      "reference": "Printed pages 57\u201359",
+      "expected": {
+        "currency": "PKR",
+        "revenue.current": 116000701,
+        "revenue.previous": 113230777,
+        "net_income": 18397273,
+        "net_income_previous": 17292230,
+        "eps": 75.78,
+        "operating_cash_flow": 13989999,
+        "shareholders_equity": 37216518
+      },
+      "critical": [
+        "revenue.current",
+        "net_income",
+        "operating_cash_flow"
+      ]
+    }
+  ],
+  "baselines": {
+    "analysis": "openai/gpt-4o",
+    "decision": "openai/gpt-4o",
+    "extraction": "google/gemini-3-flash-preview"
+  },
+  "prompt_hashes": {
+    "analysis-payout-and-segments": "ba2450668ae81a7793c88e4ad2c766a1c00e5a046c4a075091f8267001d9ebd3",
+    "analysis-undisclosed-breakdowns": "353a2ba7573f5fc91d2e8995ac3f1593d19590f7d63a5bc045ed02b6e84600e6",
+    "decision-conflicting-halal-signal": "d94d83780aba95efbf18f92cc3ae24ab776bd650f0a8fd0ed2841480328d98b5",
+    "decision-aligned-dividend-profile": "bb758c8f3242af5a3d68d4f8f520fcd0d28a2aa05227f2b2c9b3145e5d1ea0d8",
+    "hum-fy2025-unconsolidated": "9547ee910c6d322edecc6bd7ce1f36ea6966a29c52c763f8e8f563c909512f44",
+    "indus-motor-sep2026-quarter": "51cf850cdb121bde11c6f222c139be604f2438cfc27b68ef4cb2feb8a1ddf674",
+    "colgate-fy2025": "55ba90ce45425261c91a5c0c206afe64003bb50e3c5aede6bb1ae1bcbfc6d3c9"
+  },
+  "summary": [
+    {
+      "stage": "analysis",
+      "model": "openai/gpt-4o",
+      "baseline": true,
+      "trials": 2,
+      "passed": 2,
+      "mean_score": 1.0,
+      "json_rate": 1,
+      "median_latency_s": 4.207,
+      "total_cost_usd": 0.013645000000000001,
+      "cost_per_pass_usd": 0.0068225000000000004,
+      "cost_savings_vs_baseline_pct": 0.0,
+      "score_delta_vs_baseline": 0.0
+    },
+    {
+      "stage": "analysis",
+      "model": "deepseek/deepseek-v4.1-flash-1017",
+      "baseline": false,
+      "trials": 2,
+      "passed": 1,
+      "mean_score": 0.7222222222222222,
+      "json_rate": 1,
+      "median_latency_s": 8.04,
+      "total_cost_usd": 0.00262428,
+      "cost_per_pass_usd": 0.00262428,
+      "cost_savings_vs_baseline_pct": 61.53492121656284,
+      "score_delta_vs_baseline": -0.2777777777777778
+    },
+    {
+      "stage": "analysis",
+      "model": "anthropic/claude-haiku-5.5",
+      "baseline": false,
+      "trials": 2,
+      "passed": 2,
+      "mean_score": 1.0,
+      "json_rate": 1,
+      "median_latency_s": 9.5185,
+      "total_cost_usd": 0.0024962,
+      "cost_per_pass_usd": 0.0012481,
+      "cost_savings_vs_baseline_pct": 81.7061194576768,
+      "score_delta_vs_baseline": 0.0
+    },
+    {
+      "stage": "analysis",
+      "model": "openai/gpt-6-luna",
+      "baseline": false,
+      "trials": 2,
+      "passed": 2,
+      "mean_score": 1.0,
+      "json_rate": 1,
+      "median_latency_s": 9.884,
+      "total_cost_usd": 0.0015623500000000001,
+      "cost_per_pass_usd": 0.0007811750000000001,
+      "cost_savings_vs_baseline_pct": 88.55001832172957,
+      "score_delta_vs_baseline": 0.0
+    },
+    {
+      "stage": "analysis",
+      "model": "openai/gpt-6.2-sol",
+      "baseline": false,
+      "trials": 2,
+      "passed": 2,
+      "mean_score": 1.0,
+      "json_rate": 1,
+      "median_latency_s": 8.922,
+      "total_cost_usd": 0.020047000000000002,
+      "cost_per_pass_usd": 0.010023500000000001,
+      "cost_savings_vs_baseline_pct": -46.918285086112135,
+      "score_delta_vs_baseline": 0.0
+    },
+    {
+      "stage": "decision",
+      "model": "openai/gpt-4o",
+      "baseline": true,
+      "trials": 2,
+      "passed": 2,
+      "mean_score": 1.0,
+      "json_rate": 1,
+      "median_latency_s": 4.4425,
+      "total_cost_usd": 0.0099975,
+      "cost_per_pass_usd": 0.00499875,
+      "cost_savings_vs_baseline_pct": 0.0,
+      "score_delta_vs_baseline": 0.0
+    },
+    {
+      "stage": "decision",
+      "model": "deepseek/deepseek-v4.1-flash-1017",
+      "baseline": false,
+      "trials": 2,
+      "passed": 2,
+      "mean_score": 1.0,
+      "json_rate": 1,
+      "median_latency_s": 9.768,
+      "total_cost_usd": 0.000961387,
+      "cost_per_pass_usd": 0.0004806935,
+      "cost_savings_vs_baseline_pct": 90.38372593148287,
+      "score_delta_vs_baseline": 0.0
+    },
+    {
+      "stage": "decision",
+      "model": "anthropic/claude-haiku-5.5",
+      "baseline": false,
+      "trials": 2,
+      "passed": 1,
+      "mean_score": 0.9444444444444444,
+      "json_rate": 1,
+      "median_latency_s": 9.537500000000001,
+      "total_cost_usd": 0.0022323,
+      "cost_per_pass_usd": 0.0022323,
+      "cost_savings_vs_baseline_pct": 55.34283570892723,
+      "score_delta_vs_baseline": -0.05555555555555558
+    },
+    {
+      "stage": "decision",
+      "model": "openai/gpt-6-luna",
+      "baseline": false,
+      "trials": 2,
+      "passed": 2,
+      "mean_score": 1.0,
+      "json_rate": 1,
+      "median_latency_s": 8.1995,
+      "total_cost_usd": 0.001044475,
+      "cost_per_pass_usd": 0.0005222375,
+      "cost_savings_vs_baseline_pct": 89.55263815953988,
+      "score_delta_vs_baseline": 0.0
+    },
+    {
+      "stage": "decision",
+      "model": "openai/gpt-6.2-sol",
+      "baseline": false,
+      "trials": 2,
+      "passed": 2,
+      "mean_score": 1.0,
+      "json_rate": 1,
+      "median_latency_s": 8.058,
+      "total_cost_usd": 0.015809499999999997,
+      "cost_per_pass_usd": 0.007904749999999999,
+      "cost_savings_vs_baseline_pct": -58.134533633408324,
+      "score_delta_vs_baseline": 0.0
+    },
+    {
+      "stage": "extraction",
+      "model": "google/gemini-3-flash-preview",
+      "baseline": true,
+      "trials": 3,
+      "passed": 3,
+      "mean_score": 1.0,
+      "json_rate": 1,
+      "median_latency_s": 33.042,
+      "total_cost_usd": 0.08998249999999999,
+      "cost_per_pass_usd": 0.029994166666666666,
+      "cost_savings_vs_baseline_pct": 0.0,
+      "score_delta_vs_baseline": 0.0
+    },
+    {
+      "stage": "extraction",
+      "model": "google/gemini-3.5-flash-lite",
+      "baseline": false,
+      "trials": 3,
+      "passed": 1,
+      "mean_score": 0.3333333333333333,
+      "json_rate": 0.3333333333333333,
+      "median_latency_s": 15.7,
+      "total_cost_usd": null,
+      "cost_per_pass_usd": null,
+      "cost_savings_vs_baseline_pct": null,
+      "score_delta_vs_baseline": -0.6666666666666667
+    },
+    {
+      "stage": "extraction",
+      "model": "google/gemini-3.8-flash",
+      "baseline": false,
+      "trials": 3,
+      "passed": 1,
+      "mean_score": 0.3333333333333333,
+      "json_rate": 0.3333333333333333,
+      "median_latency_s": 17.826,
+      "total_cost_usd": null,
+      "cost_per_pass_usd": null,
+      "cost_savings_vs_baseline_pct": null,
+      "score_delta_vs_baseline": -0.6666666666666667
+    },
+    {
+      "stage": "extraction",
+      "model": "google/gemini-4-hydrogen",
+      "baseline": false,
+      "trials": 3,
+      "passed": 3,
+      "mean_score": 1.0,
+      "json_rate": 1,
+      "median_latency_s": 68.587,
+      "total_cost_usd": 0.521859,
+      "cost_per_pass_usd": 0.173953,
+      "cost_savings_vs_baseline_pct": -479.9561025755008,
+      "score_delta_vs_baseline": 0.0
+    }
+  ],
+  "cheapest_passing": {
+    "analysis": "openai/gpt-6-luna",
+    "decision": "deepseek/deepseek-v4.1-flash-1017",
+    "extraction": "google/gemini-3-flash-preview"
+  },
+  "reported_cost_usd": 0.713805342,
+  "trials": [
+    {
+      "stage": "analysis",
+      "case": "analysis-payout-and-segments",
+      "model": "openai/gpt-4o",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0081075,
+      "latency_s": 5.538,
+      "resolved_model": "openai/gpt-4o",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:investment_analysis.capex": true,
+        "value:investment_analysis.capex_pct_revenue": true,
+        "value:dividend_analysis.payout_ratio": true,
+        "value:dividend_analysis.fcf_coverage": true,
+        "value:valuation_metrics.pe_ratio": true,
+        "value:valuation_metrics.fcf_yield": true,
+        "value:income_composition.segments.0.revenue_pct": true,
+        "value:income_composition.other_income.pct_of_net_income": true,
+        "shape:investor_summary": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "analysis",
+      "case": "analysis-payout-and-segments",
+      "model": "deepseek/deepseek-v4.1-flash-1017",
+      "repeat": 1,
+      "score": 0.4444444444444444,
+      "passed": false,
+      "valid_json": true,
+      "cost_usd": 0.00149298,
+      "latency_s": 11.17,
+      "resolved_model": "deepseek/deepseek-v4.1-flash-1017",
+      "provider": "OpenInference",
+      "finish_reason": "stop",
+      "checks": {
+        "value:investment_analysis.capex": false,
+        "value:investment_analysis.capex_pct_revenue": true,
+        "value:dividend_analysis.payout_ratio": false,
+        "value:dividend_analysis.fcf_coverage": true,
+        "value:valuation_metrics.pe_ratio": false,
+        "value:valuation_metrics.fcf_yield": true,
+        "value:income_composition.segments.0.revenue_pct": false,
+        "value:income_composition.other_income.pct_of_net_income": false,
+        "shape:investor_summary": true
+      },
+      "critical_ok": false
+    },
+    {
+      "stage": "analysis",
+      "case": "analysis-payout-and-segments",
+      "model": "anthropic/claude-haiku-5.5",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0012906,
+      "latency_s": 9.818,
+      "resolved_model": "anthropic/claude-haiku-5.5",
+      "provider": "Claude Platform on AWS",
+      "finish_reason": "stop",
+      "checks": {
+        "value:investment_analysis.capex": true,
+        "value:investment_analysis.capex_pct_revenue": true,
+        "value:dividend_analysis.payout_ratio": true,
+        "value:dividend_analysis.fcf_coverage": true,
+        "value:valuation_metrics.pe_ratio": true,
+        "value:valuation_metrics.fcf_yield": true,
+        "value:income_composition.segments.0.revenue_pct": true,
+        "value:income_composition.other_income.pct_of_net_income": true,
+        "shape:investor_summary": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "analysis",
+      "case": "analysis-payout-and-segments",
+      "model": "openai/gpt-6-luna",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.000793675,
+      "latency_s": 9.955,
+      "resolved_model": "openai/gpt-6-luna",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:investment_analysis.capex": true,
+        "value:investment_analysis.capex_pct_revenue": true,
+        "value:dividend_analysis.payout_ratio": true,
+        "value:dividend_analysis.fcf_coverage": true,
+        "value:valuation_metrics.pe_ratio": true,
+        "value:valuation_metrics.fcf_yield": true,
+        "value:income_composition.segments.0.revenue_pct": true,
+        "value:income_composition.other_income.pct_of_net_income": true,
+        "shape:investor_summary": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "analysis",
+      "case": "analysis-payout-and-segments",
+      "model": "openai/gpt-6.2-sol",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0101435,
+      "latency_s": 8.199,
+      "resolved_model": "openai/gpt-6.2-sol",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:investment_analysis.capex": true,
+        "value:investment_analysis.capex_pct_revenue": true,
+        "value:dividend_analysis.payout_ratio": true,
+        "value:dividend_analysis.fcf_coverage": true,
+        "value:valuation_metrics.pe_ratio": true,
+        "value:valuation_metrics.fcf_yield": true,
+        "value:income_composition.segments.0.revenue_pct": true,
+        "value:income_composition.other_income.pct_of_net_income": true,
+        "shape:investor_summary": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "analysis",
+      "case": "analysis-undisclosed-breakdowns",
+      "model": "openai/gpt-4o",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0055375,
+      "latency_s": 2.876,
+      "resolved_model": "openai/gpt-4o",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:investment_analysis.capex": true,
+        "value:investment_analysis.capex_pct_revenue": true,
+        "value:dividend_analysis.dividends_paid": true,
+        "value:valuation_metrics.pb_ratio": true,
+        "value:valuation_metrics.fcf_yield": true,
+        "value:income_composition.segments": true,
+        "value:income_composition.other_income.breakdown": true,
+        "shape:investor_summary": true,
+        "shape:red_flags": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "analysis",
+      "case": "analysis-undisclosed-breakdowns",
+      "model": "deepseek/deepseek-v4.1-flash-1017",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0011313,
+      "latency_s": 4.91,
+      "resolved_model": "deepseek/deepseek-v4.1-flash-1017",
+      "provider": "Nebius",
+      "finish_reason": "stop",
+      "checks": {
+        "value:investment_analysis.capex": true,
+        "value:investment_analysis.capex_pct_revenue": true,
+        "value:dividend_analysis.dividends_paid": true,
+        "value:valuation_metrics.pb_ratio": true,
+        "value:valuation_metrics.fcf_yield": true,
+        "value:income_composition.segments": true,
+        "value:income_composition.other_income.breakdown": true,
+        "shape:investor_summary": true,
+        "shape:red_flags": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "analysis",
+      "case": "analysis-undisclosed-breakdowns",
+      "model": "anthropic/claude-haiku-5.5",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0012056,
+      "latency_s": 9.219,
+      "resolved_model": "anthropic/claude-haiku-5.5",
+      "provider": "Claude Platform on AWS",
+      "finish_reason": "stop",
+      "checks": {
+        "value:investment_analysis.capex": true,
+        "value:investment_analysis.capex_pct_revenue": true,
+        "value:dividend_analysis.dividends_paid": true,
+        "value:valuation_metrics.pb_ratio": true,
+        "value:valuation_metrics.fcf_yield": true,
+        "value:income_composition.segments": true,
+        "value:income_composition.other_income.breakdown": true,
+        "shape:investor_summary": true,
+        "shape:red_flags": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "analysis",
+      "case": "analysis-undisclosed-breakdowns",
+      "model": "openai/gpt-6-luna",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.000768675,
+      "latency_s": 9.813,
+      "resolved_model": "openai/gpt-6-luna",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:investment_analysis.capex": true,
+        "value:investment_analysis.capex_pct_revenue": true,
+        "value:dividend_analysis.dividends_paid": true,
+        "value:valuation_metrics.pb_ratio": true,
+        "value:valuation_metrics.fcf_yield": true,
+        "value:income_composition.segments": true,
+        "value:income_composition.other_income.breakdown": true,
+        "shape:investor_summary": true,
+        "shape:red_flags": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "analysis",
+      "case": "analysis-undisclosed-breakdowns",
+      "model": "openai/gpt-6.2-sol",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0099035,
+      "latency_s": 9.645,
+      "resolved_model": "openai/gpt-6.2-sol",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:investment_analysis.capex": true,
+        "value:investment_analysis.capex_pct_revenue": true,
+        "value:dividend_analysis.dividends_paid": true,
+        "value:valuation_metrics.pb_ratio": true,
+        "value:valuation_metrics.fcf_yield": true,
+        "value:income_composition.segments": true,
+        "value:income_composition.other_income.breakdown": true,
+        "shape:investor_summary": true,
+        "shape:red_flags": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "decision",
+      "case": "decision-conflicting-halal-signal",
+      "model": "openai/gpt-4o",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.00481,
+      "latency_s": 4.504,
+      "resolved_model": "openai/gpt-4o",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:decision": true,
+        "shape:summary": true,
+        "shape:reasons": true,
+        "shape:risk_notes": true,
+        "shape:dividend_analysis": true,
+        "pattern:halal_compliance": true,
+        "range:confidence": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "decision",
+      "case": "decision-conflicting-halal-signal",
+      "model": "deepseek/deepseek-v4.1-flash-1017",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.000506947,
+      "latency_s": 8.5,
+      "resolved_model": "deepseek/deepseek-v4.1-flash-1017",
+      "provider": "Morph",
+      "finish_reason": "stop",
+      "checks": {
+        "value:decision": true,
+        "shape:summary": true,
+        "shape:reasons": true,
+        "shape:risk_notes": true,
+        "shape:dividend_analysis": true,
+        "pattern:halal_compliance": true,
+        "range:confidence": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "decision",
+      "case": "decision-conflicting-halal-signal",
+      "model": "anthropic/claude-haiku-5.5",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0011298,
+      "latency_s": 9.714,
+      "resolved_model": "anthropic/claude-haiku-5.5",
+      "provider": "Claude Platform on AWS",
+      "finish_reason": "stop",
+      "checks": {
+        "value:decision": true,
+        "shape:summary": true,
+        "shape:reasons": true,
+        "shape:risk_notes": true,
+        "shape:dividend_analysis": true,
+        "pattern:halal_compliance": true,
+        "range:confidence": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "decision",
+      "case": "decision-conflicting-halal-signal",
+      "model": "openai/gpt-6-luna",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0005233,
+      "latency_s": 7.899,
+      "resolved_model": "openai/gpt-6-luna",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:decision": true,
+        "shape:summary": true,
+        "shape:reasons": true,
+        "shape:risk_notes": true,
+        "shape:dividend_analysis": true,
+        "pattern:halal_compliance": true,
+        "range:confidence": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "decision",
+      "case": "decision-conflicting-halal-signal",
+      "model": "openai/gpt-6.2-sol",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.008006,
+      "latency_s": 11.06,
+      "resolved_model": "openai/gpt-6.2-sol",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:decision": true,
+        "shape:summary": true,
+        "shape:reasons": true,
+        "shape:risk_notes": true,
+        "shape:dividend_analysis": true,
+        "pattern:halal_compliance": true,
+        "range:confidence": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "decision",
+      "case": "decision-aligned-dividend-profile",
+      "model": "openai/gpt-4o",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0051875,
+      "latency_s": 4.381,
+      "resolved_model": "openai/gpt-4o",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:decision": true,
+        "shape:summary": true,
+        "shape:reasons": true,
+        "shape:risk_notes": true,
+        "shape:dividend_analysis": true,
+        "shape:halal_compliance": true,
+        "pattern:risk_notes": true,
+        "pattern:reasons": true,
+        "range:confidence": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "decision",
+      "case": "decision-aligned-dividend-profile",
+      "model": "deepseek/deepseek-v4.1-flash-1017",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.00045444,
+      "latency_s": 11.036,
+      "resolved_model": "deepseek/deepseek-v4.1-flash-1017",
+      "provider": "Pearl Research",
+      "finish_reason": "stop",
+      "checks": {
+        "value:decision": true,
+        "shape:summary": true,
+        "shape:reasons": true,
+        "shape:risk_notes": true,
+        "shape:dividend_analysis": true,
+        "shape:halal_compliance": true,
+        "pattern:risk_notes": true,
+        "pattern:reasons": true,
+        "range:confidence": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "decision",
+      "case": "decision-aligned-dividend-profile",
+      "model": "anthropic/claude-haiku-5.5",
+      "repeat": 1,
+      "score": 0.8888888888888888,
+      "passed": false,
+      "valid_json": true,
+      "cost_usd": 0.0011025,
+      "latency_s": 9.361,
+      "resolved_model": "anthropic/claude-haiku-5.5",
+      "provider": "Claude Platform on AWS",
+      "finish_reason": "stop",
+      "checks": {
+        "value:decision": false,
+        "shape:summary": true,
+        "shape:reasons": true,
+        "shape:risk_notes": true,
+        "shape:dividend_analysis": true,
+        "shape:halal_compliance": true,
+        "pattern:risk_notes": true,
+        "pattern:reasons": true,
+        "range:confidence": true
+      },
+      "critical_ok": false
+    },
+    {
+      "stage": "decision",
+      "case": "decision-aligned-dividend-profile",
+      "model": "openai/gpt-6-luna",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.000521175,
+      "latency_s": 8.5,
+      "resolved_model": "openai/gpt-6-luna",
+      "provider": "OpenAI",
+      "finish_reason": "stop",
+      "checks": {
+        "value:decision": true,
+        "shape:summary": true,
+        "shape:reasons": true,
+        "shape:risk_notes": true,
+        "shape:dividend_analysis": true,
+        "shape:halal_compliance": true,
+        "pattern:risk_notes": true,
+        "pattern:reasons": true,
+        "range:confidence": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "decision",
+      "case": "decision-aligned-dividend-profile",
+      "model": "openai/gpt-6.2-sol",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0078035,
+      "latency_s": 5.056,
+      "resolved_model": "openai/gpt-6.2-sol",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "checks": {
+        "value:decision": true,
+        "shape:summary": true,
+        "shape:reasons": true,
+        "shape:risk_notes": true,
+        "shape:dividend_analysis": true,
+        "shape:halal_compliance": true,
+        "pattern:risk_notes": true,
+        "pattern:reasons": true,
+        "range:confidence": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "extraction",
+      "case": "hum-fy2025-unconsolidated",
+      "model": "google/gemini-3-flash-preview",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.044674,
+      "latency_s": 35.811,
+      "resolved_model": "google/gemini-3-flash-preview",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "checks": {
+        "value:currency": true,
+        "value:revenue.current": true,
+        "value:revenue.previous": true,
+        "value:net_income": true,
+        "value:net_income_previous": true,
+        "value:eps": true,
+        "value:operating_cash_flow": true,
+        "value:shareholders_equity": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "extraction",
+      "case": "hum-fy2025-unconsolidated",
+      "model": "google/gemini-3.5-flash-lite",
+      "repeat": 1,
+      "score": 0.0,
+      "passed": false,
+      "valid_json": false,
+      "cost_usd": null,
+      "error": "HTTP 413: Request body exceeds the provider maximum size: 60797265 bytes exceeds the 20000000 byte limit for Google AI Studio",
+      "http_status": 413,
+      "latency_s": 18.414
+    },
+    {
+      "stage": "extraction",
+      "case": "hum-fy2025-unconsolidated",
+      "model": "google/gemini-3.8-flash",
+      "repeat": 1,
+      "score": 0.0,
+      "passed": false,
+      "valid_json": false,
+      "cost_usd": null,
+      "error": "HTTP 413: Request body exceeds the provider maximum size: 60797265 bytes exceeds the 20000000 byte limit for Google AI Studio",
+      "http_status": 413,
+      "latency_s": 17.826
+    },
+    {
+      "stage": "extraction",
+      "case": "hum-fy2025-unconsolidated",
+      "model": "google/gemini-4-hydrogen",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.182769,
+      "latency_s": 76.267,
+      "resolved_model": "google/gemini-4-hydrogen",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "checks": {
+        "value:currency": true,
+        "value:revenue.current": true,
+        "value:revenue.previous": true,
+        "value:net_income": true,
+        "value:net_income_previous": true,
+        "value:eps": true,
+        "value:operating_cash_flow": true,
+        "value:shareholders_equity": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "extraction",
+      "case": "indus-motor-sep2026-quarter",
+      "model": "google/gemini-3-flash-preview",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0115385,
+      "latency_s": 10.128,
+      "resolved_model": "google/gemini-3-flash-preview",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "checks": {
+        "value:currency": true,
+        "value:revenue.current": true,
+        "value:revenue.previous": true,
+        "value:net_income": true,
+        "value:net_income_previous": true,
+        "value:eps": true,
+        "value:operating_cash_flow": true,
+        "value:capital_expenditures": true,
+        "value:shareholders_equity": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "extraction",
+      "case": "indus-motor-sep2026-quarter",
+      "model": "google/gemini-3.5-flash-lite",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0076136,
+      "latency_s": 4.517,
+      "resolved_model": "google/gemini-3.5-flash-lite",
+      "provider": "Google AI Studio",
+      "finish_reason": "stop",
+      "checks": {
+        "value:currency": true,
+        "value:revenue.current": true,
+        "value:revenue.previous": true,
+        "value:net_income": true,
+        "value:net_income_previous": true,
+        "value:eps": true,
+        "value:operating_cash_flow": true,
+        "value:capital_expenditures": true,
+        "value:shareholders_equity": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "extraction",
+      "case": "indus-motor-sep2026-quarter",
+      "model": "google/gemini-3.8-flash",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.02393025,
+      "latency_s": 23.335,
+      "resolved_model": "google/gemini-3.8-flash",
+      "provider": "Google AI Studio",
+      "finish_reason": "stop",
+      "checks": {
+        "value:currency": true,
+        "value:revenue.current": true,
+        "value:revenue.previous": true,
+        "value:net_income": true,
+        "value:net_income_previous": true,
+        "value:eps": true,
+        "value:operating_cash_flow": true,
+        "value:capital_expenditures": true,
+        "value:shareholders_equity": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "extraction",
+      "case": "indus-motor-sep2026-quarter",
+      "model": "google/gemini-4-hydrogen",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.0939225,
+      "latency_s": 39.527,
+      "resolved_model": "google/gemini-4-hydrogen",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "checks": {
+        "value:currency": true,
+        "value:revenue.current": true,
+        "value:revenue.previous": true,
+        "value:net_income": true,
+        "value:net_income_previous": true,
+        "value:eps": true,
+        "value:operating_cash_flow": true,
+        "value:capital_expenditures": true,
+        "value:shareholders_equity": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "extraction",
+      "case": "colgate-fy2025",
+      "model": "google/gemini-3-flash-preview",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.03377,
+      "latency_s": 33.042,
+      "resolved_model": "google/gemini-3-flash-preview",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "checks": {
+        "value:currency": true,
+        "value:revenue.current": true,
+        "value:revenue.previous": true,
+        "value:net_income": true,
+        "value:net_income_previous": true,
+        "value:eps": true,
+        "value:operating_cash_flow": true,
+        "value:shareholders_equity": true
+      },
+      "critical_ok": true
+    },
+    {
+      "stage": "extraction",
+      "case": "colgate-fy2025",
+      "model": "google/gemini-3.5-flash-lite",
+      "repeat": 1,
+      "score": 0.0,
+      "passed": false,
+      "valid_json": false,
+      "cost_usd": null,
+      "error": "HTTP 413: Request body exceeds the provider maximum size: 89206646 bytes exceeds the 20000000 byte limit for Google AI Studio",
+      "http_status": 413,
+      "latency_s": 15.7
+    },
+    {
+      "stage": "extraction",
+      "case": "colgate-fy2025",
+      "model": "google/gemini-3.8-flash",
+      "repeat": 1,
+      "score": 0.0,
+      "passed": false,
+      "valid_json": false,
+      "cost_usd": null,
+      "error": "HTTP 413: Request body exceeds the provider maximum size: 89206646 bytes exceeds the 20000000 byte limit for Google AI Studio",
+      "http_status": 413,
+      "latency_s": 14.821
+    },
+    {
+      "stage": "extraction",
+      "case": "colgate-fy2025",
+      "model": "google/gemini-4-hydrogen",
+      "repeat": 1,
+      "score": 1.0,
+      "passed": true,
+      "valid_json": true,
+      "cost_usd": 0.2451675,
+      "latency_s": 68.587,
+      "resolved_model": "google/gemini-4-hydrogen",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "checks": {
+        "value:currency": true,
+        "value:revenue.current": true,
+        "value:revenue.previous": true,
+        "value:net_income": true,
+        "value:net_income_previous": true,
+        "value:eps": true,
+        "value:operating_cash_flow": true,
+        "value:shareholders_equity": true
+      },
+      "critical_ok": true
+    }
+  ]
+}

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from financial.config.user_profile_loader import UserProfileLoader
 from financial.config.model_config import ModelConfig
+from financial.prompt_builders import build_decision_prompts
 from financial.config.cost_calculator import calculate_cost
 from financial.langgraph.decision_llm_helper import DecisionLLMHelper
 from financial.langgraph.api_client import OpenRouterAPIClient
@@ -106,24 +107,9 @@ def get_llm_decision(
                 "error": "Financial analysis report not available"
             }
         
-        # Build prompt summaries
-        user_profile_summary = json.dumps(user_profile, indent=2)
-        
-        technical_summary = f"""
-Symbol: {symbol_upper}
-Recommendation: {technical_analysis.get('recommendation', 'N/A')}
-Confidence: {technical_analysis.get('confidence', 0):.2f}
-Key Indicators: {json.dumps(technical_analysis.get('indicators', {}), indent=2)}
-Reasoning: {json.dumps(technical_analysis.get('reasoning', []), indent=2)}
-"""
-        
-        financial_summary = financial_report[:2000] if len(financial_report) > 2000 else financial_report
-        
-        # Get index membership data
         index_service = get_index_service()
         index_membership = index_service.get_index_membership(symbol_upper)
-        index_membership_summary = json.dumps(index_membership, indent=2)
-        
+
         # Load decision prompt and schema
         prompt_dir = Path(__file__).resolve().parents[1] / "financial" / "prompts"
         decision_prompt_path = prompt_dir / "decision_prompt.md"
@@ -146,15 +132,11 @@ Reasoning: {json.dumps(technical_analysis.get('reasoning', []), indent=2)}
         system_prompt_template = decision_prompt_path.read_text(encoding='utf-8')
         schema_content = schema_path.read_text(encoding='utf-8')
         
-        # Replace placeholders in prompt
-        system_prompt = system_prompt_template.replace("{SCHEMA_PLACEHOLDER}", schema_content)
-        system_prompt = system_prompt.replace("{USER_PROFILE_PLACEHOLDER}", user_profile_summary)
-        system_prompt = system_prompt.replace("{TECHNICAL_ANALYSIS_SUMMARY_PLACEHOLDER}", technical_summary)
-        system_prompt = system_prompt.replace("{FINANCIAL_ANALYSIS_SUMMARY_PLACEHOLDER}", financial_summary)
-        system_prompt = system_prompt.replace("{INDEX_MEMBERSHIP_PLACEHOLDER}", index_membership_summary)
-        
-        user_prompt = f"Analyze stock {symbol_upper} and provide your investment decision."
-        
+        system_prompt, user_prompt = build_decision_prompts(
+            system_prompt_template, schema_content, symbol_upper, user_profile,
+            technical_analysis, financial_report, index_membership
+        )
+
         # Get decision model
         decision_model_actual = ModelConfig.get_decision_model(decision_model)
         

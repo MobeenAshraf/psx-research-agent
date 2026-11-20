@@ -320,3 +320,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [Report Bug](https://github.com/yourusername/psx-research-agent/issues) • [Request Feature](https://github.com/yourusername/psx-research-agent/issues) • [Documentation](https://github.com/yourusername/psx-research-agent#readme)
 
 </div>
+
+## Model benchmark
+
+Compare OpenRouter models on PSX PDF extraction, investor analysis, and investment decisions. The [benchmark guide](docs/model-benchmark.md) covers the starter cases, candidate pricing, and how to run and interpret the comparison.
