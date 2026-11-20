@@ -12,12 +12,15 @@ from pathlib import Path
 import re
 from statistics import mean, median
 import sys
+from tempfile import NamedTemporaryFile
 import time
+from urllib.parse import urlparse
 
 import requests
 
 from financial.prompt_builders import (
     DEFAULT_SYSTEM_PROMPT,
+    DECISION_RESPONSE_SCHEMA,
     build_analysis_prompt,
     build_decision_prompts,
     build_pdf_extraction_prompt,
@@ -26,6 +29,7 @@ from financial.prompt_builders import (
 ROOT = Path(__file__).resolve().parents[1]
 PROMPTS = ROOT / "financial" / "prompts"
 DEFAULT_CASES = ROOT / "evals" / "cases.json"
+DEFAULT_PDF_CACHE = ROOT / "data" / "evals" / "pdfs"
 URL = "https://openrouter.ai/api/v1/chat/completions"
 BASELINES = {
     "extraction": ("EXTRACTION_MODEL", "google/gemini-3-flash-preview"),
@@ -47,15 +51,6 @@ CANDIDATES = {
     "analysis": TEXT_CANDIDATES,
     "decision": TEXT_CANDIDATES,
 }
-BENCHMARK_DECISION_SCHEMA = {
-    "decision": "BUY or DO_NOT_BUY",
-    "confidence": "number between 0 and 1",
-    "summary": "string",
-    "reasons": ["string"],
-    "risk_notes": ["string"],
-    "dividend_analysis": "string",
-    "halal_compliance": "string",
-}
 MISSING = object()
 
 
@@ -67,7 +62,47 @@ def load_dotenv_if_available():
     load_dotenv(ROOT / ".env")
 
 
-def prepare_payload(case, cases_dir, *, fetch_pdf=False):
+def pdf_cache_path(cache_dir, url):
+    return cache_dir / f"{hashlib.sha256(url.encode()).hexdigest()}.pdf"
+
+
+def validate_pdf(case, contents):
+    if not contents.startswith(b"%PDF-"):
+        raise ValueError(f"{case['id']}: fixture is not a PDF")
+    expected = case.get("pdf_sha256")
+    if expected and hashlib.sha256(contents).hexdigest() != expected:
+        raise ValueError(f"{case['id']}: PDF does not match its pinned SHA-256")
+
+
+def load_pdf(case, cache_dir):
+    url = case["pdf_url"]
+    path = pdf_cache_path(cache_dir, url)
+    try:
+        return path.read_bytes()
+    except FileNotFoundError:
+        pass
+
+    response = requests.get(url, timeout=60)
+    response.raise_for_status()
+    contents = response.content
+    validate_pdf(case, contents)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with NamedTemporaryFile(dir=path.parent, delete=False) as temporary:
+        temp_path = Path(temporary.name)
+        try:
+            temporary.write(contents)
+            temporary.close()
+            try:
+                os.link(temp_path, path)
+            except FileExistsError:
+                # Another run saved the first snapshot while this one downloaded.
+                return path.read_bytes()
+        finally:
+            temp_path.unlink(missing_ok=True)
+    return contents
+
+
+def prepare_payload(case, cases_dir, *, fetch_pdf=False, pdf_cache=DEFAULT_PDF_CACHE):
     stage = case["stage"]
     system_file = PROMPTS / "1_system_prompt_expert_analyst.md"
     system = system_file.read_text(encoding="utf-8") if system_file.exists() else DEFAULT_SYSTEM_PROMPT
@@ -76,7 +111,7 @@ def prepare_payload(case, cases_dir, *, fetch_pdf=False):
         schema = (
             schema_path.read_text(encoding="utf-8")
             if schema_path.exists()
-            else json.dumps(BENCHMARK_DECISION_SCHEMA, indent=2)
+            else json.dumps(DECISION_RESPONSE_SCHEMA, indent=2)
         )
         system, user = build_decision_prompts(
             (PROMPTS / "decision_prompt.md").read_text(encoding="utf-8"),
@@ -97,14 +132,11 @@ def prepare_payload(case, cases_dir, *, fetch_pdf=False):
             filename, pdf_bytes = pdf.name, pdf.read_bytes()
         else:
             url = case["pdf_url"]
-            filename, pdf_bytes = url.rsplit("/", 1)[-1], None
+            filename, pdf_bytes = Path(urlparse(url).path).name or "statement.pdf", None
             if fetch_pdf:
-                response = requests.get(url, timeout=60)
-                response.raise_for_status()
-                pdf_bytes = response.content
+                pdf_bytes = load_pdf(case, pdf_cache)
         if pdf_bytes is not None:
-            if not pdf_bytes.startswith(b"%PDF-"):
-                raise ValueError(f"{case['id']}: fixture is not a PDF")
+            validate_pdf(case, pdf_bytes)
             data = base64.b64encode(pdf_bytes).decode("ascii")
             location = f"data:application/pdf;base64,{data}"
         else:
@@ -284,6 +316,7 @@ def main(argv=None):
     parser.add_argument("--stage", choices=BASELINES, action="append", help="Repeat to select multiple stages")
     parser.add_argument("--model", action="append", help="Override challengers, keeping each stage's baseline")
     parser.add_argument("--cases", type=Path, default=DEFAULT_CASES)
+    parser.add_argument("--pdf-cache", type=Path, default=DEFAULT_PDF_CACHE, help="Directory of reusable PDF fixtures")
     parser.add_argument("--case", action="append", help="Repeat to select case IDs within the chosen stages")
     parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument("--timeout", type=float, default=300, help="Request timeout in seconds")
@@ -322,7 +355,7 @@ def main(argv=None):
     input_errors = {}
     for case in cases:
         try:
-            payload = prepare_payload(case, args.cases.parent, fetch_pdf=args.live)
+            payload = prepare_payload(case, args.cases.parent, fetch_pdf=args.live, pdf_cache=args.pdf_cache)
             if args.temperature is not None:
                 payload["temperature"] = args.temperature
             payloads[case["id"]] = payload

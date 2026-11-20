@@ -1,6 +1,6 @@
 """Validation logic for financial metrics and cross-statement consistency."""
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 from dataclasses import dataclass
 
 
@@ -22,7 +22,6 @@ class FinancialMetricsValidator:
         'total_liabilities',
         'shareholders_equity',
         'operating_cash_flow',
-        'free_cash_flow',
     ]
     
     def __init__(self):
@@ -41,7 +40,9 @@ class FinancialMetricsValidator:
         """
         total_assets = data.get('total_assets')
         total_liabilities = data.get('total_liabilities')
-        shareholders_equity = data.get('shareholders_equity')
+        shareholders_equity = data.get('total_equity')
+        if shareholders_equity is None and data.get('reporting_scope') == 'standalone':
+            shareholders_equity = data.get('shareholders_equity')
         
         if None in (total_assets, total_liabilities, shareholders_equity):
             self.errors.append(ValidationError(
@@ -53,7 +54,7 @@ class FinancialMetricsValidator:
         
         calculated_equity = total_assets - total_liabilities
         difference = abs(shareholders_equity - calculated_equity)
-        tolerance = total_assets * 0.01  # 1% tolerance
+        tolerance = 2 * data.get('reported_monetary_scale', 1)  # rounding in the displayed statement
         
         if difference > tolerance:
             self.errors.append(ValidationError(
@@ -67,7 +68,7 @@ class FinancialMetricsValidator:
     
     def validate_cash_flow_reconciliation(self, data: Dict[str, Any]) -> bool:
         """
-        Validate cash flow reconciliation: Beginning Cash + Net Change = Ending Cash.
+        Validate beginning cash, the net change, and any separately reported FX effect.
         
         Args:
             data: Extracted financial data
@@ -87,14 +88,15 @@ class FinancialMetricsValidator:
             ))
             return True  # Not critical, just warn
         
-        calculated_ending = beginning_cash + net_change_cash
+        fx_effect = data.get('cash_fx_effect')
+        calculated_ending = beginning_cash + net_change_cash + (fx_effect if fx_effect is not None else 0)
         difference = abs(ending_cash - calculated_ending)
-        tolerance = abs(beginning_cash) * 0.01 if beginning_cash != 0 else 1000
+        tolerance = 2 * data.get('reported_monetary_scale', 1)
         
         if difference > tolerance:
             self.errors.append(ValidationError(
                 field='cash_flow',
-                message=f'Cash flow does not reconcile. Beginning ({beginning_cash}) + Net Change ({net_change_cash}) != Ending ({ending_cash}). Difference: {difference}',
+                message=f'Cash flow does not reconcile. Expected ending cash ({calculated_ending}), reported ({ending_cash}). Difference: {difference}',
                 severity='error'
             ))
             return False
@@ -115,12 +117,7 @@ class FinancialMetricsValidator:
         cash_flow_ni = data.get('cash_flow_net_income')
         
         if None in (income_statement_ni, cash_flow_ni):
-            self.warnings.append(ValidationError(
-                field='net_income',
-                message='Missing net income from one or both statements',
-                severity='warning'
-            ))
-            return True  # Not critical if one is missing
+            return True  # Cash flow statements can start from a different profit subtotal
         
         difference = abs(income_statement_ni - cash_flow_ni)
         tolerance = abs(income_statement_ni) * 0.01 if income_statement_ni != 0 else 1000
@@ -147,7 +144,8 @@ class FinancialMetricsValidator:
         """
         missing = []
         for metric in self.CRITICAL_METRICS:
-            if metric not in data or data[metric] is None:
+            value = data.get(metric)
+            if value is None or (metric == 'revenue' and (not isinstance(value, dict) or value.get('current') is None)):
                 missing.append(metric)
         
         if missing:

@@ -3,25 +3,9 @@
 import json
 import time
 import asyncio
-import re
 from pathlib import Path
+from financial.result_paths import DEFAULT_RESULTS_DIRECTORY, model_directory
 from typing import Dict, Any, AsyncIterator, Optional
-
-
-def _generate_model_key(
-    extraction_model: Optional[str] = None, analysis_model: Optional[str] = None
-) -> str:
-    """Generate model key for directory naming (same logic as FileResultRepository)."""
-    extraction = extraction_model or "default"
-    analysis = analysis_model or "default"
-    
-    model_key = f"{extraction}_{analysis}"
-    model_key = model_key.replace("/", "_")
-    model_key = re.sub(r'[^a-zA-Z0-9_-]', '_', model_key)
-    model_key = re.sub(r'_+', '_', model_key)
-    model_key = model_key.strip('_')
-    
-    return model_key
 
 
 def find_states_directory(symbol: str, extraction_model: Optional[str] = None, analysis_model: Optional[str] = None) -> Path:
@@ -30,10 +14,10 @@ def find_states_directory(symbol: str, extraction_model: Optional[str] = None, a
     If model is not provided, checks all model directories and returns the one with most recent states.
     """
     symbol_upper = symbol.upper()
-    base_dir = Path("data/results") / symbol_upper
+    base_dir = DEFAULT_RESULTS_DIRECTORY / symbol_upper
     
     if extraction_model or analysis_model:
-        model_key = _generate_model_key(extraction_model, analysis_model)
+        model_key = model_directory(extraction_model, analysis_model)
         return base_dir / model_key / "states"
     
     # If no model specified, check all model directories and find the most recent
@@ -69,6 +53,22 @@ def find_states_directory(symbol: str, extraction_model: Optional[str] = None, a
         return most_recent_dir
     
     return base_dir / "states"
+
+
+def read_states(states_dir: Path) -> Dict[str, Any]:
+    """Read files belonging to the latest run in the directory."""
+    states = {}
+    for state_file in sorted(states_dir.glob("*_state.json")):
+        try:
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        step = state_file.stem.removesuffix("_state")
+        states[step] = state
+    run_id = states.get("00_initial", {}).get("run_id")
+    if run_id is None:
+        return {}
+    return {step: state for step, state in states.items() if state.get("run_id") == run_id}
 
 
 def get_state_progress(step_name: str) -> int:
@@ -118,6 +118,7 @@ async def stream_states(
         states_dir.mkdir(parents=True, exist_ok=True)
     
     seen_states = set()
+    current_run = None
     max_wait_time = 300
     start_time = time.time()
     
@@ -129,18 +130,17 @@ async def stream_states(
             }
             break
         
-        state_files = sorted(states_dir.glob("*_state.json"))
-        
-        for state_file in state_files:
-            step_name = state_file.stem.replace('_state', '')
-            
+        states = read_states(states_dir)
+        run_id = states.get("00_initial", {}).get("run_id")
+        if run_id != current_run:
+            seen_states.clear()
+            current_run = run_id
+
+        for step_name, state_data in states.items():
             if step_name in seen_states:
                 continue
-            
+
             try:
-                with open(state_file, 'r', encoding='utf-8') as f:
-                    state_data = json.load(f)
-                
                 progress = get_state_progress(step_name)
                 
                 yield {
@@ -155,6 +155,13 @@ async def stream_states(
                 seen_states.add(step_name)
                 
                 if step_name == '99_final':
+                    if state_data.get('errors'):
+                        yield {
+                            'type': 'error',
+                            'step': step_name,
+                            'error': ' | '.join(state_data['errors']),
+                        }
+                        return
                     yield {
                         'type': 'complete',
                         'message': 'Analysis complete',
@@ -199,18 +206,8 @@ def get_current_states(
             'status': 'not_started'
         }
     
-    states = {}
-    state_files = sorted(states_dir.glob("*_state.json"))
-    
-    for state_file in state_files:
-        try:
-            with open(state_file, 'r', encoding='utf-8') as f:
-                state_data = json.load(f)
-                step_name = state_file.stem.replace('_state', '')
-                states[step_name] = state_data
-        except Exception:
-            continue
-    
+    states = read_states(states_dir)
+
     if not states:
         return {
             'symbol': symbol_upper,
@@ -222,7 +219,10 @@ def get_current_states(
     latest_step = max(states.keys())
     progress = get_state_progress(latest_step)
     
-    status = 'complete' if '99_final' in states else 'in_progress'
+    final_state = states.get("99_final")
+    status = "in_progress"
+    if final_state:
+        status = "error" if final_state.get("errors") else "complete"
     
     return {
         'symbol': symbol_upper,

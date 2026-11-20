@@ -7,13 +7,15 @@ from pathlib import Path
 
 from financial.config.user_profile_loader import UserProfileLoader
 from financial.config.model_config import ModelConfig
-from financial.prompt_builders import build_decision_prompts
+from financial.prompt_builders import DECISION_RESPONSE_SCHEMA, build_decision_prompts
 from financial.config.cost_calculator import calculate_cost
 from financial.langgraph.decision_llm_helper import DecisionLLMHelper
 from financial.langgraph.api_client import OpenRouterAPIClient
 from financial.services.index_membership_service import get_index_service
 from routes.technical import get_technical_analysis
-from routes.financial import check_latest_report, _get_existing_states
+from routes.financial import check_latest_report
+from financial.langgraph.workflow_steps.calculate_step import calculate_metrics
+from financial.services.shariah_source import get_psx_shariah_status
 
 
 def get_llm_decision(
@@ -86,27 +88,41 @@ def get_llm_decision(
                 "error": "Financial analysis not found. Please run financial analysis first."
             }
         
-        # Get final report from states (use normalized models to match the cached result)
-        normalized_extraction = ModelConfig.normalize_model_name(extraction_model, is_extraction=True)
-        normalized_analysis = ModelConfig.normalize_model_name(analysis_model, is_extraction=False)
-        states = _get_existing_states(
-            symbol_upper,
-            extraction_model=normalized_extraction,
-            analysis_model=normalized_analysis
-        )
-        final_state = states.get("99_final", {})
-        financial_report = final_state.get("final_report", "")
-        
-        if not financial_report:
-            financial_report = financial_result.get("result", "")
-        
-        if not financial_report:
+        final_state = financial_result.get("states", {}).get("99_final", {})
+        validation = final_state.get("validation_results") or {}
+        extracted = final_state.get("extracted_data") or {}
+        if not validation.get("is_valid") or final_state.get("errors") or not extracted:
             return {
                 "symbol": symbol_upper,
                 "status": "error",
-                "error": "Financial analysis report not available"
+                "error": "Validated financial data is unavailable. Run financial analysis first.",
             }
-        
+
+        indicators = technical_analysis.get("indicators", {})
+        price = indicators.get("current_price") if not indicators.get("price_data_stale") else None
+        analysis = final_state.get("analysis_results") or {}
+        financial_report = {
+            "currency": extracted.get("currency"),
+            "period_end": extracted.get("period_end"),
+            "period_months": extracted.get("period_months"),
+            "reporting_scope": extracted.get("reporting_scope"),
+            "valuation_price_pkr": price,
+            "price_as_of": indicators.get("price_as_of") if price is not None else None,
+            "reported": {
+                key: extracted.get(key) for key in (
+                    "revenue", "net_income", "eps", "cash", "total_debt", "operating_cash_flow",
+                    "capital_expenditures", "dividends_paid", "business_model",
+                    "dividend_statements", "investor_statements",
+                )
+            },
+            "calculated_metrics": calculate_metrics(extracted, price),
+            "validation_warnings": validation.get("warnings", []),
+            "analysis_notes": {
+                key: analysis.get(key)
+                for key in ("investment_growth_areas", "loss_causing_areas", "red_flags")
+            },
+        }
+
         index_service = get_index_service()
         index_membership = index_service.get_index_membership(symbol_upper)
 
@@ -122,16 +138,11 @@ def get_llm_decision(
                 "error": f"Decision prompt file not found: {decision_prompt_path}"
             }
         
-        if not schema_path.exists():
-            return {
-                "symbol": symbol_upper,
-                "status": "error",
-                "error": f"Decision schema file not found: {schema_path}"
-            }
-        
-        system_prompt_template = decision_prompt_path.read_text(encoding='utf-8')
-        schema_content = schema_path.read_text(encoding='utf-8')
-        
+        system_prompt_template = decision_prompt_path.read_text(encoding="utf-8")
+        schema_content = schema_path.read_text(encoding="utf-8") if schema_path.exists() else json.dumps(
+            DECISION_RESPONSE_SCHEMA, indent=2
+        )
+
         system_prompt, user_prompt = build_decision_prompts(
             system_prompt_template, schema_content, symbol_upper, user_profile,
             technical_analysis, financial_report, index_membership
@@ -172,6 +183,7 @@ def get_llm_decision(
             "risk_notes": decision_result.get("risk_notes", []),
             "dividend_analysis": decision_result.get("dividend_analysis"),
             "halal_compliance": decision_result.get("halal_compliance"),
+            "psx_shariah": get_psx_shariah_status(symbol_upper),
             "raw_response": json.dumps(decision_result, indent=2),
             "token_usage": token_usage,
             "cost": decision_cost

@@ -56,7 +56,8 @@ def build_analysis_prompt(analysis_prompt_content: str, state: dict) -> str:
             statements_context += f"investor_statements: {json.dumps(investor_statements, indent=2)}\n"
         statements_context += "\n**You MUST incorporate these statements into your analysis.**"
 
-    stock_page_context = _stock_page_context(state)
+    statements_context = statements_context.replace("{", "{{").replace("}", "}}")
+    stock_page_context = _stock_page_context(state).replace("{", "{{").replace("}", "}}")
 
     return f"""{analysis_prompt_content}
 
@@ -128,19 +129,30 @@ def _stock_page_context(state: dict) -> str:
     return "\n".join(context_parts)
 
 
+DECISION_RESPONSE_SCHEMA = {
+    "decision": "BUY or DO_NOT_BUY",
+    "confidence": "number between 0 and 1",
+    "summary": "string",
+    "reasons": ["string"],
+    "risk_notes": ["string"],
+    "dividend_analysis": "string",
+    "halal_compliance": "documented exposure or supplied screening notes, or empty string",
+}
+
+
 def build_decision_prompts(
     template: str,
     schema: str,
     symbol: str,
     profile: dict,
     technical: dict,
-    financial_report: str,
+    financial_report: str | dict,
     index_membership: dict,
 ) -> tuple[str, str]:
     technical_summary = f"""
 Symbol: {symbol}
 Recommendation: {technical.get('recommendation', 'N/A')}
-Confidence: {technical.get('confidence', 0):.2f}
+Signal strength: {technical.get('signal_strength', technical.get('confidence', 0)):.2f}
 Key Indicators: {json.dumps(technical.get('indicators', {}), indent=2)}
 Reasoning: {json.dumps(technical.get('reasoning', []), indent=2)}
 """
@@ -148,7 +160,9 @@ Reasoning: {json.dumps(technical.get('reasoning', []), indent=2)}
         "SCHEMA": schema,
         "USER_PROFILE": json.dumps(profile, indent=2),
         "TECHNICAL_ANALYSIS_SUMMARY": technical_summary,
-        "FINANCIAL_ANALYSIS_SUMMARY": financial_report[:2000],
+        "FINANCIAL_ANALYSIS_SUMMARY": (
+            json.dumps(financial_report, indent=2) if isinstance(financial_report, dict) else financial_report
+        ),
         "INDEX_MEMBERSHIP": json.dumps(index_membership, indent=2),
     }
     for name, value in values.items():

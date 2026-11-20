@@ -39,14 +39,34 @@ class ModelBenchmarkTests(unittest.TestCase):
                 self.assertEqual(trial["cost_usd"], 0.005)
 
     def test_extraction_encodes_public_pdf_once_per_payload(self):
-        cases = json.loads(benchmark.DEFAULT_CASES.read_text())
+        case = {
+            "id": "remote", "stage": "extraction", "pdf_url": "https://example.org/test.pdf"
+        }
         response = Mock(content=b"%PDF-test")
-        with patch.object(benchmark.requests, "get", return_value=response) as download:
-            payload = benchmark.prepare_payload(cases[0], benchmark.DEFAULT_CASES.parent, fetch_pdf=True)
-        download.assert_called_once_with(cases[0]["pdf_url"], timeout=60)
+        with (
+            TemporaryDirectory() as directory,
+            patch.object(benchmark.requests, "get", return_value=response) as download,
+        ):
+            options = {"fetch_pdf": True, "pdf_cache": Path(directory)}
+            payload = benchmark.prepare_payload(case, benchmark.DEFAULT_CASES.parent, **options)
+            self.assertEqual(payload, benchmark.prepare_payload(case, benchmark.DEFAULT_CASES.parent, **options))
+        download.assert_called_once_with(case["pdf_url"], timeout=60)
         system, user = payload["messages"]
         self.assertIsInstance(system["content"], str)
         self.assertEqual(user["content"][1]["file"]["file_data"], "data:application/pdf;base64,JVBERi10ZXN0")
+
+    def test_wrong_pdf_hash_is_rejected_without_persisting_it(self):
+        case = {
+            "id": "pinned", "pdf_url": "https://example.org/test.pdf", "pdf_sha256": "0" * 64,
+        }
+        with (
+            TemporaryDirectory() as directory,
+            patch.object(benchmark.requests, "get", return_value=Mock(content=b"%PDF-other")),
+        ):
+            cache = Path(directory)
+            with self.assertRaisesRegex(ValueError, "pinned SHA-256"):
+                benchmark.load_pdf(case, cache)
+            self.assertEqual(list(cache.iterdir()), [])
 
     def test_live_cli_keeps_baseline_and_writes_comparison(self):
         session = Mock()

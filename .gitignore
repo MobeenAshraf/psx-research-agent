@@ -49,3 +49,4 @@ deploy-local.sh
 # Checked-in benchmark inputs
 !/evals/cases.json
 !/evals/results/2026-11-20-screening.json
+!/evals/results/2026-11-20-lucky-cement.json

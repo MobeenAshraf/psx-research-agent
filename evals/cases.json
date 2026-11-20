@@ -3,10 +3,16 @@
     "id": "colgate-fy2025",
     "stage": "extraction",
     "pdf_url": "https://colgate.com.pk/wp-content/uploads/2025/09/CPPL-Annual-Report-2025.pdf",
+    "pdf_path": "pdfs/colgate-fy2025.pdf",
+    "pdf_sha256": "dcdbc67fa6b7304c970c195073a3cbef2b82b69d2af310f0e69b64c57ce1760b",
     "scope": "Use the audited primary statements for FY ended June 30, 2025. Keep monetary figures in the statements' displayed PKR thousands. Keep EPS in PKR per share.",
     "reference": "Printed pages 57–59",
     "expected": {
       "currency": "PKR",
+      "period_end": "2025-06-30",
+      "period_months": 12,
+      "monetary_scale": 1000,
+      "reporting_scope": "standalone",
       "revenue.current": 116000701,
       "revenue.previous": 113230777,
       "net_income": 18397273,
@@ -15,16 +21,22 @@
       "operating_cash_flow": 13989999,
       "shareholders_equity": 37216518
     },
-    "critical": ["revenue.current", "net_income", "operating_cash_flow"]
+    "critical": ["period_end", "period_months", "monetary_scale", "reporting_scope", "revenue.current", "net_income", "operating_cash_flow"]
   },
   {
     "id": "hum-fy2025-unconsolidated",
     "stage": "extraction",
     "pdf_url": "https://humnetwork.tv/wp-content/uploads/2025/09/Annual%20Report%20HUM.pdf",
+    "pdf_path": "pdfs/hum-network-fy2025.pdf",
+    "pdf_sha256": "53aeb0d14bb993558724368aa2dbcc18e9e65900aa8efbac546db6821bcbb9c4",
     "scope": "Use the unconsolidated financial statements for FY ended June 30, 2025. Keep monetary values in PKR as shown, with no scaling.",
     "reference": "Printed pages 67–70",
     "expected": {
       "currency": "PKR",
+      "period_end": "2025-06-30",
+      "period_months": 12,
+      "monetary_scale": 1,
+      "reporting_scope": "standalone",
       "revenue.current": 8012805226,
       "revenue.previous": 8307666130,
       "net_income": 2102986638,
@@ -33,17 +45,23 @@
       "operating_cash_flow": 116105950,
       "shareholders_equity": 11959442775
     },
-    "critical": ["revenue.current", "net_income", "operating_cash_flow"]
+    "critical": ["period_end", "period_months", "monetary_scale", "reporting_scope", "revenue.current", "net_income", "operating_cash_flow"]
   },
   {
     "id": "indus-motor-sep2026-quarter",
     "stage": "extraction",
     "pdf_url": "https://toyota-indus.com/wp-content/uploads/2026/10/Financial-Report-for-the-Quarter-ended-September-30-2026.pdf",
+    "pdf_path": "pdfs/indus-motor-sep2026-quarter.pdf",
+    "pdf_sha256": "ae88559bd9464915e5cf74652aa0eb91119189efec754a58ad6fadbabd29a28a",
     "source_url": "https://dps.psx.com.pk/download/document/287155.pdf",
     "scope": "Use the primary financial statements for the quarter ended September 30, 2026 and the comparable September 2025 quarter. Keep monetary figures in the statements' displayed PKR thousands. Keep EPS in PKR per share.",
     "reference": "Printed pages 8–12 of the issuer's quarterly report",
     "expected": {
       "currency": "PKR",
+      "period_end": "2026-09-30",
+      "period_months": 3,
+      "monetary_scale": 1000,
+      "reporting_scope": "standalone",
       "revenue.current": 74014959,
       "revenue.previous": 61737936,
       "net_income": 7384376,
@@ -51,9 +69,43 @@
       "eps": 93.95,
       "operating_cash_flow": -23894961,
       "capital_expenditures": 430365,
-      "shareholders_equity": 90585731
+      "shareholders_equity": 90585731,
+      "total_liabilities": 75706357,
+      "shares_outstanding": 78600000
     },
-    "critical": ["revenue.current", "net_income", "operating_cash_flow"]
+    "critical": ["period_end", "period_months", "monetary_scale", "reporting_scope", "revenue.current", "net_income", "operating_cash_flow"]
+  },
+  {
+    "id": "lucky-cement-sep2026-results-scan",
+    "stage": "extraction",
+    "pdf_url": "https://assets.lucky-cement.com/0000204815_Financial_Results_30_09_2026_2_8c1a80dbf9.pdf",
+    "pdf_path": "pdfs/lucky-cement-sep2026-results-scan.pdf",
+    "source_url": "https://dps.psx.com.pk/download/document/287455.pdf",
+    "pdf_sha256": "8ad2bfb4a93019078d76d90398b975e251bd7c28e4f017f077d8eaa5a5a06a41",
+    "scope": "Use the consolidated financial statements for the September 2026 quarter and the comparable September 2025 quarter. Keep monetary figures in the displayed PKR thousands. Use net profit attributable to owners of the holding company, and keep EPS in PKR per share.",
+    "reference": "PDF pages 4, 5 and 8 of the scanned financial result announcement",
+    "expected": {
+      "currency": "PKR",
+      "period_end": "2026-09-30",
+      "period_months": 3,
+      "monetary_scale": 1000,
+      "reporting_scope": "consolidated",
+      "revenue.current": 131863008,
+      "revenue.previous": 125207898,
+      "net_income": 21628705,
+      "net_income_previous": 21994785,
+      "eps": 14.76,
+      "operating_cash_flow": 21229240,
+      "capital_expenditures": 2792915,
+      "dividends_paid": 1687,
+      "net_change_cash": 20466240,
+      "cash_fx_effect": -219029,
+      "ending_cash": 197040643,
+      "shareholders_equity": 442370186,
+      "total_equity": 487595141,
+      "total_liabilities": 328699699
+    },
+    "critical": ["period_end", "period_months", "monetary_scale", "reporting_scope", "revenue.current", "net_income", "operating_cash_flow", "cash_fx_effect"]
   },
   {
     "id": "analysis-payout-and-segments",
@@ -114,6 +166,57 @@
     },
     "nonempty": {"investor_summary": "string", "red_flags": "string_list"},
     "critical": ["valuation_metrics.fcf_yield", "income_composition.segments", "income_composition.other_income.breakdown"]
+  },
+  {
+    "id": "analysis-lucky-cement-sep2026",
+    "stage": "analysis",
+    "source_url": "https://assets.lucky-cement.com/0000204815_Financial_Results_30_09_2026_2_8c1a80dbf9.pdf",
+    "reference": "Consolidated statements and announcement on PDF pages 1, 5 and 8",
+    "input": {
+      "extracted_data": {
+        "company_name": "Lucky Cement Limited",
+        "currency": "PKR",
+        "period_end": "2026-09-30",
+        "period_months": 3,
+        "reporting_scope": "consolidated",
+        "revenue": {"current": 131863008000, "previous": 125207898000},
+        "net_income": 21628705000,
+        "net_income_previous": 21994785000,
+        "capital_expenditures": 2792915000,
+        "dividends_paid": 1687000,
+        "operating_cash_flow": 21229240000,
+        "operating_cash_flow_previous": 28098835000,
+        "dividend_statements": ["Board recommended no cash dividend in this quarterly announcement. Cash actually paid to owners of the holding company during the period was PKR 1.687 million."],
+        "segment_data": [],
+        "other_income_breakdown": []
+      },
+      "calculated_metrics": {
+        "capex_pct_revenue": 2.1180428403,
+        "payout_ratio": 0.0077998197,
+        "fcf_coverage": 10928.467694,
+        "free_cash_flow": 18436325000
+      }
+    },
+    "expected": {
+      "investment_analysis.capex": 2792915000,
+      "investment_analysis.capex_pct_revenue": 2.1180428403,
+      "dividend_analysis.dividends_paid": 1687000,
+      "dividend_analysis.payout_ratio": 0.0077998197,
+      "dividend_analysis.fcf_coverage": 10928.467694,
+      "valuation_metrics.pe_ratio": null,
+      "income_composition.segments": []
+    },
+    "absolute_tolerance": {
+      "investment_analysis.capex_pct_revenue": 0.02,
+      "dividend_analysis.payout_ratio": 0.003,
+      "dividend_analysis.fcf_coverage": 0.1
+    },
+    "patterns": {
+      "dividend_analysis.dividend_explanation": "\\bno\\b.{0,35}\\b(?:dividend|recommendation)|\\bnil\\b|\\b(?:not|none)\\b.{0,35}\\b(?:declared|recommended|announced)\\b",
+      "red_flags": "cash[ -]?flow|operating cash"
+    },
+    "nonempty": {"investor_summary": "string"},
+    "critical": ["dividend_analysis.dividends_paid", "dividend_analysis.dividend_explanation", "valuation_metrics.pe_ratio"]
   },
   {
     "id": "decision-conflicting-halal-signal",

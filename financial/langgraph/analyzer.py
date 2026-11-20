@@ -3,6 +3,7 @@
 from typing import Optional, Dict, Any
 from langgraph.graph import StateGraph, END
 from financial.pdf_exceptions import LLMAnalysisError
+from financial.config.model_config import ModelConfig
 from financial.langgraph.state import AnalysisState
 from financial.langgraph.prompt_manager import PromptManager
 from financial.langgraph.json_parser import JSONParser
@@ -57,12 +58,18 @@ class LangGraphAnalyzer:
         workflow.set_entry_point("extract")
         workflow.add_edge("extract", "calculate")
         workflow.add_edge("calculate", "validate")
-        workflow.add_edge("validate", "analyze")
+        workflow.add_conditional_edges(
+            "validate", self._after_validation, {"analyze": "analyze", "stop": END}
+        )
         workflow.add_edge("analyze", "format")
         workflow.add_edge("format", END)
         
         return workflow.compile()
     
+    @staticmethod
+    def _after_validation(state: AnalysisState) -> str:
+        return "stop" if state.get("errors") else "analyze"
+
     def analyze(
         self,
         pdf_text: str,
@@ -74,6 +81,8 @@ class LangGraphAnalyzer:
         analysis_model: Optional[str] = "auto",
         user_profile: Optional[Dict[str, Any]] = None,
         stock_page_context: Optional[Dict[str, Any]] = None,
+        report_url: Optional[str] = None,
+        expected_period_end: Optional[str] = None,
     ) -> str:
         """
         Run the complete analysis workflow.
@@ -95,11 +104,17 @@ class LangGraphAnalyzer:
         if not pdf_path and (not pdf_text or not pdf_text.strip()):
             raise LLMAnalysisError("No PDF text content or PDF path provided for analysis")
 
-        self.state_manager.setup_state_dir(symbol, extraction_model, analysis_model)
+        self.state_manager.setup_state_dir(
+            symbol,
+            ModelConfig.get_extraction_model(extraction_model),
+            ModelConfig.get_analysis_model(analysis_model),
+        )
 
         initial_state: AnalysisState = {
             "pdf_text": pdf_text or "",
             "pdf_path": pdf_path,
+            "report_url": report_url,
+            "expected_period_end": expected_period_end,
             "pdf_base64": None,
             "stock_price": stock_price,
             "currency": currency,

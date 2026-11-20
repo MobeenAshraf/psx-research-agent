@@ -345,22 +345,17 @@ async def get_financial_analysis_result(symbol: str):
     Returns:
         Final analysis report
     """
-    from state_monitor import find_states_directory
+    from state_monitor import find_states_directory, read_states
     
     symbol_upper = symbol.upper()
     states_dir = find_states_directory(symbol_upper)
-    final_state_file = states_dir / "99_final_state.json"
-    
-    if not final_state_file.exists():
-        raise HTTPException(
-            status_code=404,
-            detail="Analysis not complete or not found"
-        )
-    
+    final_state = read_states(states_dir).get("99_final")
+    if final_state is None:
+        raise HTTPException(status_code=404, detail="Analysis not complete or not found")
+    if final_state.get("errors"):
+        raise HTTPException(status_code=422, detail=" | ".join(final_state["errors"]))
+
     try:
-        with open(final_state_file, 'r', encoding='utf-8') as f:
-            final_state = json.load(f)
-        
         token_usage = final_state.get('token_usage')
         extraction_cost = 0.0
         analysis_cost = 0.0

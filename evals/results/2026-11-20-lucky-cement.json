@@ -1,0 +1,319 @@
+{
+  "extraction": {
+    "timestamp_utc": "2026-11-20T14:47:46.816648+00:00",
+    "temperature": 0.0,
+    "repeats": 1,
+    "cases": [
+      {
+        "id": "lucky-cement-sep2026-results-scan",
+        "stage": "extraction",
+        "pdf_url": "https://assets.lucky-cement.com/0000204815_Financial_Results_30_09_2026_2_8c1a80dbf9.pdf",
+        "source_url": "https://dps.psx.com.pk/download/document/287455.pdf",
+        "pdf_sha256": "8ad2bfb4a93019078d76d90398b975e251bd7c28e4f017f077d8eaa5a5a06a41",
+        "scope": "Use the consolidated financial statements for the September 2026 quarter and the comparable September 2025 quarter. Keep monetary figures in the displayed PKR thousands. Use net profit attributable to owners of the holding company, and keep EPS in PKR per share.",
+        "reference": "PDF pages 4, 5 and 8 of the scanned financial result announcement",
+        "expected": {
+          "currency": "PKR",
+          "period_end": "2026-09-30",
+          "period_months": 3,
+          "monetary_scale": 1000,
+          "reporting_scope": "consolidated",
+          "revenue.current": 131863008,
+          "revenue.previous": 125207898,
+          "net_income": 21628705,
+          "net_income_previous": 21994785,
+          "eps": 14.76,
+          "operating_cash_flow": 21229240,
+          "capital_expenditures": 2792915,
+          "dividends_paid": 1687,
+          "net_change_cash": 20466240,
+          "cash_fx_effect": -219029,
+          "ending_cash": 197040643,
+          "shareholders_equity": 442370186,
+          "total_equity": 487595141,
+          "total_liabilities": 328699699
+        },
+        "critical": [
+          "period_end",
+          "period_months",
+          "monetary_scale",
+          "reporting_scope",
+          "revenue.current",
+          "net_income",
+          "operating_cash_flow",
+          "cash_fx_effect"
+        ]
+      }
+    ],
+    "input_errors": {},
+    "baselines": {
+      "extraction": "google/gemini-3-flash-preview"
+    },
+    "prompt_hashes": {
+      "lucky-cement-sep2026-results-scan": "ce3c953b8166128e3191c1b94520567ecde3211e81ccbbde271ea393a3708e04"
+    },
+    "summary": [
+      {
+        "stage": "extraction",
+        "model": "google/gemini-3-flash-preview",
+        "baseline": true,
+        "trials": 1,
+        "passed": 1,
+        "mean_score": 1.0,
+        "json_rate": 1,
+        "median_latency_s": 11.227,
+        "total_cost_usd": 0.012612,
+        "cost_per_pass_usd": 0.012612,
+        "cost_savings_vs_baseline_pct": 0.0,
+        "score_delta_vs_baseline": 0.0
+      }
+    ],
+    "cheapest_passing": {
+      "extraction": "google/gemini-3-flash-preview"
+    },
+    "trials": [
+      {
+        "stage": "extraction",
+        "case": "lucky-cement-sep2026-results-scan",
+        "model": "google/gemini-3-flash-preview",
+        "repeat": 1,
+        "score": 1.0,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.012612,
+        "latency_s": 11.227,
+        "resolved_model": "google/gemini-3-flash-preview",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "checks": {
+          "value:currency": true,
+          "value:period_end": true,
+          "value:period_months": true,
+          "value:monetary_scale": true,
+          "value:reporting_scope": true,
+          "value:revenue.current": true,
+          "value:revenue.previous": true,
+          "value:net_income": true,
+          "value:net_income_previous": true,
+          "value:eps": true,
+          "value:operating_cash_flow": true,
+          "value:capital_expenditures": true,
+          "value:dividends_paid": true,
+          "value:net_change_cash": true,
+          "value:cash_fx_effect": true,
+          "value:ending_cash": true,
+          "value:shareholders_equity": true,
+          "value:total_equity": true,
+          "value:total_liabilities": true
+        },
+        "critical_ok": true
+      }
+    ]
+  },
+  "analysis": {
+    "timestamp_utc": "2026-11-20T14:48:10.587976+00:00",
+    "temperature": null,
+    "repeats": 1,
+    "cases": [
+      {
+        "id": "analysis-lucky-cement-sep2026",
+        "stage": "analysis",
+        "source_url": "https://assets.lucky-cement.com/0000204815_Financial_Results_30_09_2026_2_8c1a80dbf9.pdf",
+        "reference": "Consolidated statements and announcement on PDF pages 1, 5 and 8",
+        "input": {
+          "extracted_data": {
+            "company_name": "Lucky Cement Limited",
+            "currency": "PKR",
+            "period_end": "2026-09-30",
+            "period_months": 3,
+            "reporting_scope": "consolidated",
+            "revenue": {
+              "current": 131863008000,
+              "previous": 125207898000
+            },
+            "net_income": 21628705000,
+            "net_income_previous": 21994785000,
+            "capital_expenditures": 2792915000,
+            "dividends_paid": 1687000,
+            "operating_cash_flow": 21229240000,
+            "operating_cash_flow_previous": 28098835000,
+            "dividend_statements": [
+              "Board recommended no cash dividend in this quarterly announcement. Cash actually paid to owners of the holding company during the period was PKR 1.687 million."
+            ],
+            "segment_data": [],
+            "other_income_breakdown": []
+          },
+          "calculated_metrics": {
+            "capex_pct_revenue": 2.1180428403,
+            "payout_ratio": 0.0077998197,
+            "fcf_coverage": 10928.467694,
+            "free_cash_flow": 18436325000
+          }
+        },
+        "expected": {
+          "investment_analysis.capex": 2792915000,
+          "investment_analysis.capex_pct_revenue": 2.1180428403,
+          "dividend_analysis.dividends_paid": 1687000,
+          "dividend_analysis.payout_ratio": 0.0077998197,
+          "dividend_analysis.fcf_coverage": 10928.467694,
+          "valuation_metrics.pe_ratio": null,
+          "income_composition.segments": []
+        },
+        "absolute_tolerance": {
+          "investment_analysis.capex_pct_revenue": 0.02,
+          "dividend_analysis.payout_ratio": 0.003,
+          "dividend_analysis.fcf_coverage": 0.1
+        },
+        "patterns": {
+          "dividend_analysis.dividend_explanation": "\\bno\\b.{0,35}\\b(?:dividend|recommendation)|\\bnil\\b|\\b(?:not|none)\\b.{0,35}\\b(?:declared|recommended|announced)\\b",
+          "red_flags": "cash[ -]?flow|operating cash"
+        },
+        "nonempty": {
+          "investor_summary": "string"
+        },
+        "critical": [
+          "dividend_analysis.dividends_paid",
+          "dividend_analysis.dividend_explanation",
+          "valuation_metrics.pe_ratio"
+        ]
+      }
+    ],
+    "input_errors": {},
+    "baselines": {
+      "analysis": "openai/gpt-4o"
+    },
+    "prompt_hashes": {
+      "analysis-lucky-cement-sep2026": "b1cb84fed0bad935a00c39dcbd64fe8e4cb2eae1119014b360383d6eb2b166ee"
+    },
+    "summary": [
+      {
+        "stage": "analysis",
+        "model": "openai/gpt-4o",
+        "baseline": true,
+        "trials": 1,
+        "passed": 1,
+        "mean_score": 0.9,
+        "json_rate": 1,
+        "median_latency_s": 4.673,
+        "total_cost_usd": 0.00828,
+        "cost_per_pass_usd": 0.00828,
+        "cost_savings_vs_baseline_pct": 0.0,
+        "score_delta_vs_baseline": 0.0
+      },
+      {
+        "stage": "analysis",
+        "model": "deepseek/deepseek-v4.1-flash-1017",
+        "baseline": false,
+        "trials": 1,
+        "passed": 1,
+        "mean_score": 0.9,
+        "json_rate": 1,
+        "median_latency_s": 18.924,
+        "total_cost_usd": 0.00247932,
+        "cost_per_pass_usd": 0.00247932,
+        "cost_savings_vs_baseline_pct": 70.05652173913043,
+        "score_delta_vs_baseline": 0.0
+      },
+      {
+        "stage": "analysis",
+        "model": "openai/gpt-6-luna",
+        "baseline": false,
+        "trials": 1,
+        "passed": 1,
+        "mean_score": 0.9,
+        "json_rate": 1,
+        "median_latency_s": 11.422,
+        "total_cost_usd": 0.0008873,
+        "cost_per_pass_usd": 0.0008873,
+        "cost_savings_vs_baseline_pct": 89.28381642512078,
+        "score_delta_vs_baseline": 0.0
+      }
+    ],
+    "cheapest_passing": {
+      "analysis": "openai/gpt-6-luna"
+    },
+    "trials": [
+      {
+        "stage": "analysis",
+        "case": "analysis-lucky-cement-sep2026",
+        "model": "openai/gpt-4o",
+        "repeat": 1,
+        "score": 0.9,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.00828,
+        "latency_s": 4.673,
+        "resolved_model": "openai/gpt-4o",
+        "provider": "OpenAI",
+        "finish_reason": "stop",
+        "checks": {
+          "value:investment_analysis.capex": true,
+          "value:investment_analysis.capex_pct_revenue": true,
+          "value:dividend_analysis.dividends_paid": true,
+          "value:dividend_analysis.payout_ratio": true,
+          "value:dividend_analysis.fcf_coverage": true,
+          "value:valuation_metrics.pe_ratio": true,
+          "value:income_composition.segments": true,
+          "shape:investor_summary": true,
+          "pattern:dividend_analysis.dividend_explanation": true,
+          "pattern:red_flags": false
+        },
+        "critical_ok": true
+      },
+      {
+        "stage": "analysis",
+        "case": "analysis-lucky-cement-sep2026",
+        "model": "deepseek/deepseek-v4.1-flash-1017",
+        "repeat": 1,
+        "score": 0.9,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.00247932,
+        "latency_s": 18.924,
+        "resolved_model": "deepseek/deepseek-v4.1-flash-1017",
+        "provider": "InferenceNet",
+        "finish_reason": "stop",
+        "checks": {
+          "value:investment_analysis.capex": true,
+          "value:investment_analysis.capex_pct_revenue": true,
+          "value:dividend_analysis.dividends_paid": true,
+          "value:dividend_analysis.payout_ratio": true,
+          "value:dividend_analysis.fcf_coverage": true,
+          "value:valuation_metrics.pe_ratio": true,
+          "value:income_composition.segments": true,
+          "shape:investor_summary": true,
+          "pattern:dividend_analysis.dividend_explanation": true,
+          "pattern:red_flags": false
+        },
+        "critical_ok": true
+      },
+      {
+        "stage": "analysis",
+        "case": "analysis-lucky-cement-sep2026",
+        "model": "openai/gpt-6-luna",
+        "repeat": 1,
+        "score": 0.9,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.0008873,
+        "latency_s": 11.422,
+        "resolved_model": "openai/gpt-6-luna",
+        "provider": "OpenAI",
+        "finish_reason": "stop",
+        "checks": {
+          "value:investment_analysis.capex": true,
+          "value:investment_analysis.capex_pct_revenue": true,
+          "value:dividend_analysis.dividends_paid": true,
+          "value:dividend_analysis.payout_ratio": true,
+          "value:dividend_analysis.fcf_coverage": true,
+          "value:valuation_metrics.pe_ratio": true,
+          "value:income_composition.segments": true,
+          "shape:investor_summary": true,
+          "pattern:dividend_analysis.dividend_explanation": true,
+          "pattern:red_flags": false
+        },
+        "critical_ok": true
+      }
+    ]
+  }
+}

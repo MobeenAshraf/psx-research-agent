@@ -34,9 +34,12 @@ class TechnicalAnalyzer:
         volumes = df.get('volume', pd.Series())
         
         indicators = self._calculate_basic_indicators(prices)
+        indicators.update(self.trend_analyzer.analyze_trend(prices, indicators["sma_20"], indicators["sma_50"]))
         indicators.update(self._calculate_volume_indicators(prices, volumes))
         indicators.update(self._calculate_advanced_indicators(highs, lows, prices, volumes))
-        indicators.update(self._calculate_fibonacci_levels(price_data))
+        if not highs.empty and not lows.empty and highs.notna().all() and lows.notna().all():
+            indicators.update(self._calculate_fibonacci_levels(df.reset_index().to_dict("records")))
+        indicators["has_session_high_low"] = bool(not highs.empty and not lows.empty and highs.notna().all() and lows.notna().all())
         
         return indicators
     
@@ -55,6 +58,7 @@ class TechnicalAnalyzer:
             'rsi': rsi,
             'macd': macd_data.get('macd'),
             'macd_signal': macd_data.get('signal'),
+            'macd_crossover': macd_data.get('crossover'),
             **bb_data,
         }
     
@@ -62,7 +66,7 @@ class TechnicalAnalyzer:
         """Calculate volume-based indicators."""
         indicators = {}
         
-        if not volumes.empty:
+        if not volumes.empty and volumes.notna().all():
             indicators.update(self.volume_analyzer.calculate_volume_indicators(prices, volumes))
             obv_data = self.obv_calc.calculate(prices, volumes)
             if obv_data.get('obv') is not None:
@@ -76,11 +80,7 @@ class TechnicalAnalyzer:
         """Calculate advanced indicators requiring high/low data."""
         indicators = {}
         
-        if not highs.empty and not lows.empty:
-            sma_20 = self.ma_calc.calculate_sma(prices, 20)
-            sma_50 = self.ma_calc.calculate_sma(prices, 50)
-            indicators.update(self.trend_analyzer.analyze_trend(prices, sma_20, sma_50))
-            
+        if not highs.empty and not lows.empty and highs.notna().all() and lows.notna().all():
             atr = self.atr_calc.calculate(highs, lows, prices)
             if atr is not None:
                 indicators['atr'] = atr
@@ -91,7 +91,7 @@ class TechnicalAnalyzer:
             if stoch_data.get('stoch_d') is not None:
                 indicators['stoch_d'] = stoch_data['stoch_d']
             
-            vwap = self.vwap_calc.calculate(highs, lows, prices, volumes)
+            vwap = self.vwap_calc.calculate(highs, lows, prices, volumes) if volumes.notna().all() else None
             if vwap is not None:
                 indicators['vwap'] = vwap
             
@@ -118,10 +118,13 @@ class TechnicalAnalyzer:
         signals.extend(self._check_trend_signals(indicators))
         signals.extend(self._check_volume_signals(indicators))
         signals.extend(self._check_stochastic_signals(indicators))
-        return list(set(signals))
+        return list(dict.fromkeys(signals))
     
     def get_candlestick_patterns(self, price_data: List[Dict]) -> List[str]:
-        return self.candlestick.detect_patterns(price_data)
+        recent = sorted(price_data, key=lambda candle: candle["date"])[-3:]
+        if all(all(candle.get(field) is not None for field in ("open", "high", "low")) for candle in recent):
+            return self.candlestick.detect_patterns(recent)
+        return []
     
     def _has_sufficient_data(self, price_data: List[Dict]) -> bool:
         return price_data and len(price_data) >= 50
@@ -135,7 +138,7 @@ class TechnicalAnalyzer:
     def _check_rsi_signals(self, indicators: Dict[str, Any]) -> List[str]:
         signals = []
         rsi = indicators.get('rsi')
-        if rsi:
+        if rsi is not None:
             if rsi < 30:
                 signals.append('Oversold (RSI < 30)')
             elif rsi > 70:
@@ -147,16 +150,9 @@ class TechnicalAnalyzer:
         return signals
     
     def _check_macd_signals(self, indicators: Dict[str, Any]) -> List[str]:
-        signals = []
-        macd = indicators.get('macd')
-        signal_line = indicators.get('macd_signal')
-        if macd and signal_line:
-            if macd > signal_line:
-                signals.append('Bullish MACD crossover')
-            else:
-                signals.append('Bearish MACD crossover')
-        return signals
-    
+        crossover = indicators.get("macd_crossover")
+        return [f"{crossover.capitalize()} MACD crossover"] if crossover else []
+
     def _check_bollinger_signals(self, indicators: Dict[str, Any]) -> List[str]:
         signals = []
         price = indicators.get('current_price')
@@ -180,7 +176,7 @@ class TechnicalAnalyzer:
     def _check_volume_signals(self, indicators: Dict[str, Any]) -> List[str]:
         signals = []
         volume_ratio = indicators.get('volume_ratio')
-        if volume_ratio:
+        if volume_ratio is not None:
             if volume_ratio > 1.5:
                 signals.append('High volume (1.5x average)')
             elif volume_ratio < 0.5:
@@ -197,8 +193,8 @@ class TechnicalAnalyzer:
             elif stoch_k > 80 and stoch_d > 80:
                 signals.append('Stochastic overbought (> 80)')
             elif stoch_k > stoch_d:
-                signals.append('Stochastic bullish crossover')
+                signals.append('Stochastic %K above %D')
             elif stoch_k < stoch_d:
-                signals.append('Stochastic bearish crossover')
+                signals.append('Stochastic %K below %D')
         return signals
 

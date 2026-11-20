@@ -28,6 +28,7 @@ env/
 *.log
 .cursorrules
 data/
+evals/pdfs/
 .github/
 todo/
 docs/

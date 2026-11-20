@@ -11,13 +11,15 @@ uv run python -m evals.model_benchmark
 uv run python -m evals.model_benchmark --live --repeats 3
 ```
 
-The first command prepares the cases and prints the run matrix. The second uses `OPENROUTER_API_KEY` from the environment or the root `.env` and makes up to 96 billable requests with the default matrix. Use one repeat for a 32-request smoke run. To test a single candidate against the baseline:
+The first command prepares the cases and prints the run matrix. The second uses `OPENROUTER_API_KEY` from the environment or the root `.env` and makes up to 123 billable requests with the default matrix. Use one repeat for a 41-request smoke run. To test a single candidate against the baseline:
 
 ```bash
 uv run python -m evals.model_benchmark --live --stage analysis --model openai/gpt-6-luna
 ```
 
 Use `--case indus-motor-sep2026-quarter` to test just the Indus Motor filing. If a selected PDF cannot be downloaded, the runner records the input error, finishes the other cases, and withholds the affected stage's winner.
+
+The starter PDFs are stored in `evals/pdfs/` and pinned by SHA-256. A fresh checkout can run the default suite without downloading any reports. For custom cases that supply only a public PDF URL, the live runner downloads once to the Git-ignored `data/evals/pdfs/` directory. Use `--pdf-cache /path/to/shared/pdfs` to share those downloaded fixtures between workspaces.
 
 ## Candidates and list prices
 
@@ -41,7 +43,7 @@ The terminal shows pass rate, mean check score, JSON success rate, median reques
 
 A trial passes if it produces a JSON object, scores at least 90% on its checks, and passes every critical check. Cost per pass includes the billed cost of failed trials. Missing billing data makes a model's cost comparison unavailable. The cheapest passing model must pass every case and repeat in its stage. Ties go to the lower median latency.
 
-The starter suite has three published filings and four synthetic cases. The PDF checks cover units, comparative periods, negative cash flow, and the distinction between standalone and consolidated statements. The analysis checks cover capex, payout, cash-flow coverage, valuation, and undisclosed income breakdowns. The decision cases exercise alignment with the profile and a conflict between bullish signals and an explicit halal constraint. [Colgate-Palmolive FY2025 report](https://colgate.com.pk/wp-content/uploads/2025/09/CPPL-Annual-Report-2025.pdf) · [HUM Network FY2025 report](https://humnetwork.tv/wp-content/uploads/2025/09/Annual%20Report%20HUM.pdf) · [Indus Motor quarterly report](https://toyota-indus.com/wp-content/uploads/2026/10/Financial-Report-for-the-Quarter-ended-September-30-2026.pdf)
+The suite has four published PDF filings, one analysis case based on Lucky Cement's reported figures, and four synthetic cases. The PDF checks cover units, comparative periods, cash flow, and the distinction between standalone and consolidated statements. Lucky Cement adds a scanned filing with a separately reported foreign-exchange effect and a distinction between dividends paid and dividends recommended. [Colgate-Palmolive FY2025 report](https://colgate.com.pk/wp-content/uploads/2025/09/CPPL-Annual-Report-2025.pdf) · [HUM Network FY2025 report](https://humnetwork.tv/wp-content/uploads/2025/09/Annual%20Report%20HUM.pdf) · [Indus Motor quarterly report](https://toyota-indus.com/wp-content/uploads/2026/10/Financial-Report-for-the-Quarter-ended-September-30-2026.pdf) · [Lucky Cement financial results](https://assets.lucky-cement.com/0000204815_Financial_Results_30_09_2026_2_8c1a80dbf9.pdf)
 
 This is a screening suite. The checks sample structured outputs and selected facts. Review prose and borderline cases manually and confirm the shortlist on a larger mix of held-out reports, including quarterly statements and scans, before changing app defaults.
 
@@ -56,3 +58,7 @@ Use `--cases` with a JSON file following [the starter cases](../evals/cases.json
 ```bash
 python3 -m unittest tests.test_model_benchmark
 ```
+
+The [first live screening results](../evals/results/2026-11-20-screening.json) record the prompt fingerprints and cases used for that run. The current extraction cases also check reporting scope, period, and unit scale. Use the current benchmark for new model comparisons.
+
+The [Lucky Cement run](../evals/results/2026-11-20-lucky-cement.json) records the scan's extraction checks and the three-model analysis comparison.

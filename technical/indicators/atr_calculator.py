@@ -1,6 +1,8 @@
 import pandas as pd
 from typing import Optional
 
+from technical.indicators.wilder import wilder_average
+
 
 class ATRCalculator:
     """Calculate Average True Range (ATR) - volatility indicator."""
@@ -28,8 +30,4 @@ class ATRCalculator:
         
         true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         
-        # Calculate ATR as moving average of True Range
-        atr = true_range.rolling(window=period).mean()
-        
-        return float(atr.iloc[-1]) if not atr.empty and not pd.isna(atr.iloc[-1]) else None
-
+        return wilder_average(true_range.iloc[1:], period)

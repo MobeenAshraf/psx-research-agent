@@ -27,7 +27,7 @@ class VWAPCalculator:
         if high.empty or low.empty or close.empty or volumes.empty:
             return None
         
-        if len(high) != len(low) != len(close) != len(volumes):
+        if not len(high) == len(low) == len(close) == len(volumes):
             return None
         
         # Calculate typical price (HLC/3)

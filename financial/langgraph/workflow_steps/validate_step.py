@@ -15,6 +15,9 @@ class ValidateStep(BaseWorkflowStep):
     def execute(self, state: AnalysisState) -> AnalysisState:
         """Execute validation step."""
         try:
+            if state.get("errors"):
+                return state
+
             extracted = state.get("extracted_data")
             calculated = state.get("calculated_metrics") or {}
             
@@ -26,6 +29,8 @@ class ValidateStep(BaseWorkflowStep):
             validation_data = {**extracted, **calculated}
             validation_results = self.validator.validate_all(validation_data)
             state["validation_results"] = validation_results
+            if not validation_results["is_valid"]:
+                state["errors"].extend(issue["message"] for issue in validation_results["errors"])
             
         except Exception as e:
             self._handle_errors(state, e, "validation_results", {"is_valid": False, "errors": [str(e)], "warnings": []}, "Validation error: ")

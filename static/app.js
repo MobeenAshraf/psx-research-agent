@@ -717,7 +717,7 @@ function displayLLMDecisionResults(data) {
     const reasons = data.reasons || [];
     const riskNotes = data.risk_notes || [];
     const dividendAnalysis = data.dividend_analysis || '';
-    const halalCompliance = data.halal_compliance || '';
+    const psxShariah = data.psx_shariah;
     
     const decisionColor = decision === 'BUY' ? 'text-green-400' : 'text-red-400';
     const decisionBg = decision === 'BUY' ? 'bg-green-900' : 'bg-red-900';
@@ -763,11 +763,19 @@ function displayLLMDecisionResults(data) {
         html += `</div>`;
     }
     
-    if (halalCompliance) {
-        html += `<div class="mb-4">`;
-        html += `<h3 class="text-lg font-semibold text-gray-200 mb-2">Halal Compliance</h3>`;
-        html += `<p class="text-gray-300">${halalCompliance}</p>`;
-        html += `</div>`;
+    if (psxShariah) {
+        const statusLabels = {
+            listed: 'Listed by PSX',
+            not_listed: 'Absent from the PSX eligible equities list',
+            unavailable: 'PSX list unavailable'
+        };
+        const checkedOn = /^\d{4}-\d{2}-\d{2}$/.test(psxShariah.checked_on) ? psxShariah.checked_on : '';
+        const status = statusLabels[psxShariah.status] || statusLabels.unavailable;
+        html += '<div class="mb-4">';
+        html += '<h3 class="text-lg font-semibold text-gray-200 mb-2">PSX Shariah listing</h3>';
+        html += `<p class="text-gray-300">${status}${checkedOn ? ` (checked ${checkedOn})` : ''}</p>`;
+        html += '<a class="underline text-blue-300" href="https://dps.psx.com.pk/shariah/eligible-scrips" target="_blank" rel="noopener noreferrer">Review the PSX source</a>';
+        html += '</div>';
     }
     
     if (data.token_usage) {

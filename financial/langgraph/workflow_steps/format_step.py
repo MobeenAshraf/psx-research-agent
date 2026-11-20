@@ -22,23 +22,26 @@ class FormatStep(BaseWorkflowStep):
             if not isinstance(analysis, dict):
                 analysis = {}
             
+            financial_facts = {"income_composition": calculated.get("income_composition", {})}
             report_lines = []
             self._format_company_info(extracted, report_lines)
             self._format_business_model(extracted, report_lines)
-            self._format_segment_performance(analysis, report_lines)
-            self._format_income_composition(analysis, report_lines)
+            self._format_segment_performance(financial_facts, report_lines)
+            self._format_income_composition(financial_facts, report_lines)
             self._format_investor_statements(extracted, report_lines)
             self._format_investment_growth_areas(analysis, report_lines)
             self._format_holding_focus_areas(analysis, report_lines)
             self._format_loss_causing_areas(extracted, analysis, report_lines)
             self._format_growth_metrics(calculated, report_lines)
-            self._format_investment_analysis(extracted, analysis, report_lines)
-            self._format_dividend_analysis(extracted, analysis, report_lines)
-            self._format_valuation_metrics(extracted, calculated, analysis, report_lines)
+            self._format_investment_analysis(extracted, calculated, analysis, report_lines)
+            self._format_dividend_analysis(extracted, calculated, analysis, report_lines)
+            self._format_valuation_metrics(extracted, calculated, state.get('stock_price'), report_lines)
             self._format_financial_health(calculated, report_lines)
             self._format_initiatives(analysis, report_lines)
             self._format_summary(analysis, report_lines)
             self._format_red_flags(analysis, report_lines)
+            warnings = (state.get("validation_results") or {}).get("warnings", [])
+            self._format_list_section(report_lines, "DATA QUALITY", [issue["message"] for issue in warnings])
             
             state["final_report"] = "\n".join(report_lines)
             
@@ -80,7 +83,10 @@ class FormatStep(BaseWorkflowStep):
         report_lines.append("COMPANY INFORMATION:")
         report_lines.append(f"- Company Name: {extracted.get('company_name', 'N/A')}")
         report_lines.append(f"- Fiscal Year: {extracted.get('fiscal_year', 'N/A')}")
-        report_lines.append(f"- Currency: {extracted.get('currency', 'N/A')}")
+        report_lines.append(f"- Currency: {extracted.get('currency', 'N/A')} (monetary totals in currency units)")
+        report_lines.append(f"- Period end: {extracted.get('period_end', 'N/A')}")
+        report_lines.append(f"- Period length: {extracted.get('period_months', 'N/A')} months")
+        report_lines.append(f"- Statement scope: {extracted.get('reporting_scope', 'N/A')}")
         report_lines.append("")
     
     def _format_business_model(self, extracted: Dict[str, Any], report_lines: List[str]) -> None:
@@ -100,21 +106,25 @@ class FormatStep(BaseWorkflowStep):
         self._format_metric(report_lines, "Net Income Growth", calculated.get('net_income_growth_pct'), suffix="%")
         report_lines.append("")
     
-    def _format_investment_analysis(self, extracted: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        inv_analysis = analysis.get("investment_analysis", {})
+    def _format_investment_analysis(self, extracted: Dict[str, Any], calculated: dict, analysis: Dict[str, Any], report_lines: List[str]) -> None:
+        inv_analysis = analysis.get("investment_analysis")
+        if not isinstance(inv_analysis, dict):
+            inv_analysis = {}
         report_lines.append("INVESTMENT ANALYSIS:")
         report_lines.append(f"- Capital Expenditures: {extracted.get('capital_expenditures', 'N/A')}")
-        report_lines.append(f"- CapEx as % of Revenue: {inv_analysis.get('capex_pct_revenue', 'N/A')}%")
+        self._format_metric(report_lines, "CapEx as % of Revenue", calculated.get("capex_pct_revenue"), suffix="%")
         report_lines.append(f"- Investment Trend: {inv_analysis.get('investment_trend', 'N/A')}")
         report_lines.append(f"- EPS (Latest): {extracted.get('eps', 'N/A')}")
         report_lines.append("")
     
-    def _format_dividend_analysis(self, extracted: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        div_analysis = analysis.get("dividend_analysis", {})
+    def _format_dividend_analysis(self, extracted: Dict[str, Any], calculated: dict, analysis: Dict[str, Any], report_lines: List[str]) -> None:
+        div_analysis = analysis.get("dividend_analysis")
+        if not isinstance(div_analysis, dict):
+            div_analysis = {}
         report_lines.append("DIVIDEND ANALYSIS:")
         report_lines.append(f"- Dividends Paid: {extracted.get('dividends_paid', 'N/A')}")
-        report_lines.append(f"- Payout Ratio: {div_analysis.get('payout_ratio', 'N/A')}%")
-        report_lines.append(f"- FCF Coverage: {div_analysis.get('fcf_coverage', 'N/A')}x")
+        self._format_metric(report_lines, "Payout Ratio", calculated.get("payout_ratio"), suffix="%")
+        self._format_metric(report_lines, "FCF Coverage", calculated.get("fcf_coverage"), suffix="x")
         report_lines.append(f"- Strategy: {div_analysis.get('strategy', 'N/A')}")
         
         dividend_statements = div_analysis.get("dividend_statements", [])
@@ -129,21 +139,18 @@ class FormatStep(BaseWorkflowStep):
         
         report_lines.append("")
     
-    def _format_valuation_metrics(self, extracted: Dict[str, Any], calculated: Dict[str, Any], analysis: Dict[str, Any], report_lines: List[str]) -> None:
-        val_metrics = analysis.get("valuation_metrics", {})
+    def _format_valuation_metrics(self, extracted, calculated, stock_price, report_lines):
         report_lines.append("VALUATION METRICS:")
-        report_lines.append(f"- P/E Ratio: {val_metrics.get('pe_ratio', 'N/A')}")
-        
-        book_value = extracted.get("book_value_per_share") or calculated.get("book_value_per_share")
-        self._format_metric(report_lines, "Book Value per Share", book_value)
-        
-        report_lines.append(f"- P/B Ratio: {val_metrics.get('pb_ratio', 'N/A')}")
-        self._format_metric(report_lines, "P/S Ratio", calculated.get('ps_ratio'))
-        report_lines.append(f"- EPS: {extracted.get('eps', 'N/A')}")
-        report_lines.append(f"- EV/EBITDA: {val_metrics.get('ev_ebitda', 'N/A')}")
-        report_lines.append(f"- FCF Yield: {val_metrics.get('fcf_yield', 'N/A')}%")
+        self._format_metric(report_lines, "Stock price used (PKR)", stock_price)
+        self._format_metric(report_lines, "Trailing P/E", calculated.get("pe_ratio"), suffix="x")
+        self._format_metric(report_lines, "Book Value per Share", calculated.get("book_value_per_share"))
+        self._format_metric(report_lines, "P/B", calculated.get("pb_ratio"), suffix="x")
+        self._format_metric(report_lines, "Trailing P/S", calculated.get("ps_ratio"), suffix="x")
+        self._format_metric(report_lines, "EPS (filing period)", extracted.get("eps"))
+        self._format_metric(report_lines, "Trailing EV/EBITDA", calculated.get("ev_ebitda"), suffix="x")
+        self._format_metric(report_lines, "Trailing FCF Yield", calculated.get("fcf_yield"), suffix="%")
         report_lines.append("")
-    
+
     def _format_financial_health(self, calculated: Dict[str, Any], report_lines: List[str]) -> None:
         report_lines.append("FINANCIAL HEALTH:")
         self._format_metric(report_lines, "Working Capital", calculated.get('working_capital'), "{:,.0f}")

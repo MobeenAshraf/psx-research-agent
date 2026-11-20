@@ -12,7 +12,11 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
 {{
   "company_name": "string or null",
   "fiscal_year": "string or null",
-  "currency": "string or null",
+  "currency": "three-letter ISO currency code or null",
+  "monetary_scale": 1, 1000, 1000000, 1000000000, or null,
+  "period_end": "YYYY-MM-DD or null",
+  "period_months": 3, 6, 9, 12, or null,
+  "reporting_scope": "consolidated" | "standalone" | null,
   "revenue": {{"current": number or null, "previous": number or null}},
   "net_income": number or null,
   "net_income_previous": number or null,
@@ -26,6 +30,17 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "shares_outstanding": number or null,
   "book_value_per_share": number or null,
   "shareholders_equity": number or null,
+  "total_equity": number or null,
+  "total_liabilities": number or null,
+  "beginning_cash": number or null,
+  "net_change_cash": number or null,
+  "cash_fx_effect": number or null,
+  "ending_cash": number or null,
+  "ttm_eps": number or null,
+  "ttm_revenue": number or null,
+  "ttm_ebitda": number or null,
+  "ttm_operating_cash_flow": number or null,
+  "ttm_capital_expenditures": number or null,
   "total_assets": number or null,
   "current_assets": number or null,
   "current_liabilities": number or null,
@@ -50,7 +65,9 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
 ### Step 1: Identify Document Structure
 - Find Income Statement, Balance Sheet, Cash Flow Statement
 - Identify currency symbol (USD, PKR, EUR, etc.)
-- Extract company name and fiscal year/period
+- Record the filing's period end, number of months covered by the flow values and statement scope. Prefer consolidated statements when both are present, unless the request specifies standalone. Keep the same scope throughout.
+- Use the primary statements' displayed monetary units consistently across every monetary field. Set monetary_scale to the multiplier to reach one currency unit (e.g., 1000 for PKR in thousands). EPS and book value per share must be currency per share. Shares outstanding must be the actual number of ordinary shares outstanding at period end.
+- Match comparative flow values to the same period length a year earlier. For the main flow values choose the current year-to-date statement column matching the cash flow period. Fill ttm_* fields only if the filing explicitly discloses a trailing twelve-month figure for the same scope and period end.
 
 ### Step 2: Extract Core Financial Metrics
 **From Income Statement:**
@@ -65,7 +82,8 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
 **From Balance Sheet:**
 - Cash and Cash Equivalents
 - Total Debt (sum of Short-term Debt + Long-term Debt)
-- Shareholders' Equity (CRITICAL: Needed for Book Value calculation)
+- Shareholders' equity attributable to the parent and total equity including non-controlling interests. For standalone statements use the same equity amount in both fields.
+- Total liabilities, or the sum of current and non-current liabilities if there is no total row.
 - Total Assets
 - Current Assets
 - Current Liabilities
@@ -75,9 +93,9 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
 
 **From Cash Flow Statement:**
 - Operating Cash Flow
-- Free Cash Flow (Operating CF - CapEx)
+- Beginning cash, net change, and ending cash as presented in the cash flow statement. If a separate foreign-exchange effect appears between the net change and ending cash, copy it with its sign into cash_fx_effect.
 - Capital Expenditures (CapEx) - usually negative, use absolute value
-- Dividends Paid
+- Cash dividends paid from the financing cash flow statement, including an explicit zero
 
 ### Step 3: Extract Investment & Growth Data
 - **Capital Expenditures**: Find in Cash Flow Statement (Investing Activities)
@@ -88,15 +106,10 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   - Strategic investments or expansions
   - R&D spending (if mentioned separately)
 
-### Step 4: Calculate if Components Available
-- Shares Outstanding = Net Income / EPS (if both available)
-- **Book Value per Share** = Shareholders' Equity / Shares Outstanding (CRITICAL: Calculate if not explicitly stated)
-- Free Cash Flow = Operating Cash Flow - |Capital Expenditures|
-
-**IMPORTANT: Book Value per Share**
-- First, try to find it explicitly stated in the financial statements
-- If not found, calculate it using: Shareholders' Equity / Shares Outstanding
-- This is essential for P/B ratio calculation and valuation analysis
+### Step 4: Return reported source values
+- Use null for free_cash_flow and for any book value per share the filing does not state. The application calculates these from reported inputs.
+- Do not infer shares outstanding from net income and EPS. Use the period-end ordinary shares from the notes. If only weighted-average shares are available, use null.
+- Use the same scope and profit definition throughout. For consolidated EPS and net income, use profit attributable to ordinary shareholders of the parent where stated.
 
 ### Step 5: Handle Missing Data
 - Search ALL sections: Income Statement, Balance Sheet, Cash Flow, Notes, MD&A
@@ -233,6 +246,10 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "company_name": "ABC Corporation",
   "fiscal_year": "2023",
   "currency": "USD",
+  "monetary_scale": 1,
+  "period_end": "2023-12-31",
+  "period_months": 12,
+  "reporting_scope": "standalone",
   "revenue": {{"current": 1000000000, "previous": 950000000}},
   "net_income": 150000000,
   "net_income_previous": 140000000,
@@ -240,12 +257,14 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "cash": 250000000,
   "total_debt": 500000000,
   "operating_cash_flow": 200000000,
-  "free_cash_flow": 150000000,
+  "free_cash_flow": null,
   "capital_expenditures": 50000000,
   "dividends_paid": 50000000,
   "shares_outstanding": 42857143,
   "book_value_per_share": 11.67,
   "shareholders_equity": 500000000,
+  "total_equity": 500000000,
+  "total_liabilities": 500000000,
   "total_assets": 1000000000,
   "current_assets": 400000000,
   "current_liabilities": 200000000,

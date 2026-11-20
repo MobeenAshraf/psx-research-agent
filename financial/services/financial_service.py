@@ -66,7 +66,7 @@ class FinancialService:
 
             period_ended = cells[1].text.strip() if len(cells) > 1 else ""
             posting_date_str = cells[2].text.strip() if len(cells) > 2 else ""
-            posting_date = self._parse_posting_date(posting_date_str)
+            posting_date = self.parse_report_date(posting_date_str)
 
             if report_type and report_url:
                 reports.append(
@@ -153,7 +153,7 @@ class FinancialService:
             )
 
     @staticmethod
-    def _parse_posting_date(raw: str) -> Optional[datetime]:
+    def parse_report_date(raw: str) -> Optional[datetime]:
         if not raw:
             return None
         for fmt in ("%Y-%m-%d", "%d %b %Y"):

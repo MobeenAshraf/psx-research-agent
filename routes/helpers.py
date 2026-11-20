@@ -1,6 +1,5 @@
 """Shared helper functions for routes."""
 
-from typing import Dict, Any, List
 import pandas as pd
 
 
@@ -30,9 +29,17 @@ def format_detailed_analysis(analysis) -> str:
     lines = [
         f"Symbol: {analysis.symbol}",
         f"Recommendation: {analysis.recommendation}",
-        f"Confidence: {analysis.confidence:.2f}",
+        f"Signal strength: {analysis.confidence:.2f}",
         "",
     ]
+
+    if normalized_indicators.get("price_as_of"):
+        lines.append(f"Last session: {normalized_indicators['price_as_of']}")
+    if normalized_indicators.get("price_adjustment") == "unverified":
+        lines.append("Corporate-action adjustment is unverified for this feed.")
+    if not normalized_indicators.get("has_session_high_low"):
+        lines.append("Range-based indicators require daily highs and lows.")
+    lines.append("")
 
     index_membership = normalized_indicators.pop('index_membership', None)
 

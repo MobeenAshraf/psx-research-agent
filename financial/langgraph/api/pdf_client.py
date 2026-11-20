@@ -12,9 +12,10 @@ class PDFAPIClient:
     """PDF-specific API client extending OpenRouterAPIClient."""
     
     def __init__(self, api_key: str):
-        self.base_client = OpenRouterAPIClient(api_key)
+        if not api_key:
+            raise ValueError("OPENROUTER_API_KEY is required")
         self.api_key = api_key
-        self.BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
+        self.BASE_URL = OpenRouterAPIClient.BASE_URL
     
     def call_with_pdf(
         self,
@@ -40,58 +41,20 @@ class PDFAPIClient:
                 "Content-Type": "application/json",
             }
             
-            modified_messages = []
-            for msg in messages:
-                msg_copy = msg.copy()
-                content = msg_copy.get("content", "")
-                
-                if isinstance(content, str):
-                    msg_copy["content"] = [
-                        {
-                            "type": "text",
-                            "text": content
-                        },
-                        {
-                            "type": "file",
-                            "file": {
-                                "filename": pdf_file.name,
-                                "file_data": data_url
-                            }
-                        }
-                    ]
-                elif isinstance(content, list):
-                    content_copy = []
-                    for item in content:
-                        if isinstance(item, dict) and item.get("type") == "text":
-                            content_copy.append(item)
-                        elif isinstance(item, str):
-                            content_copy.append({"type": "text", "text": item})
-                        else:
-                            content_copy.append(item)
-                    content_copy.append({
-                        "type": "file",
-                        "file": {
-                            "filename": pdf_file.name,
-                            "file_data": data_url
-                        }
-                    })
-                    msg_copy["content"] = content_copy
-                else:
-                    msg_copy["content"] = [
-                        {
-                            "type": "text",
-                            "text": str(content)
-                        },
-                        {
-                            "type": "file",
-                            "file": {
-                                "filename": pdf_file.name,
-                                "file_data": data_url
-                            }
-                        }
-                    ]
-                modified_messages.append(msg_copy)
-            
+            modified_messages = [message.copy() for message in messages]
+            user_message = next(
+                (message for message in reversed(modified_messages) if message.get("role") == "user"),
+                None,
+            )
+            if user_message is None:
+                raise LLMAnalysisError("A user message is required to attach a financial statement")
+            content = user_message.get("content", "")
+            parts = list(content) if isinstance(content, list) else [{"type": "text", "text": str(content)}]
+            user_message["content"] = parts + [{
+                "type": "file",
+                "file": {"filename": pdf_file.name, "file_data": data_url},
+            }]
+
             payload = {
                 "model": model,
                 "messages": modified_messages,

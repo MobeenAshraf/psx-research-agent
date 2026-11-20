@@ -1,14 +1,15 @@
 """Technical analysis routes."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List
 
 from financial.services.index_membership_service import get_index_service
 from financial.services.stock_page_service import get_stock_page_service
 from models.stock_analysis import StockAnalysis
 from routes.helpers import format_detailed_analysis, normalize_indicators
 from technical.analyzer import TechnicalAnalyzer
-from technical.price_repository import WebPriceRepository
+from technical.price_repository import MARKET_TZ, WebPriceRepository
 from technical.recommendation_engine import RecommendationEngine
 
 _logger = logging.getLogger(__name__)
@@ -48,7 +49,14 @@ def _calculate_all_indicators(technical_analyzer, price_repo, symbol_upper, hist
     indicators = technical_analyzer.calculate_indicators(historical)
     
     if historical:
-        current_price = historical[-1]['close']
+        latest = historical[-1]
+        current_price = latest["close"]
+        date = latest["date"].date()
+        indicators["price_as_of"] = date.isoformat()
+        indicators["price_data_stale"] = (datetime.now(MARKET_TZ).date() - date).days > 7
+        indicators["price_adjustment"] = "unverified"
+        if latest.get("volume") is not None:
+            indicators["current_volume"] = latest["volume"]
     else:
         current_price = price_repo.get_current_price(symbol_upper)
     
@@ -176,7 +184,7 @@ def _consolidate_semantic_duplicates(signals: List[str]) -> List[str]:
 
 def _create_stock_analysis(symbol_upper, indicators, metrics, signals, candlestick_patterns):
     """Create StockAnalysis object with recommendation."""
-    unique_signals = list(set(signals))
+    unique_signals = list(dict.fromkeys(signals))
     consolidated_signals = _consolidate_semantic_duplicates(unique_signals)
     
     reasoning = []
@@ -239,7 +247,8 @@ def _format_analysis_response(analysis):
         'symbol': analysis.symbol,
         'recommendation': analysis.recommendation,
         'confidence': analysis.confidence,
-        'indicators': analysis.indicators,
+        'signal_strength': analysis.confidence,
+        'indicators': normalize_indicators(analysis.indicators),
         'reasoning': analysis.reasoning,
         'detailed_format': detailed_format,
         'status': 'success'

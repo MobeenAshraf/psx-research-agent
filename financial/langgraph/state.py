@@ -7,6 +7,8 @@ class AnalysisState(TypedDict, total=False):
     """State for the financial analysis workflow."""
     pdf_text: str
     pdf_path: Optional[str]
+    report_url: Optional[str]
+    expected_period_end: Optional[str]
     pdf_base64: Optional[str]
     stock_price: Optional[float]
     currency: str

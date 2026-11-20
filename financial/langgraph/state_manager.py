@@ -1,10 +1,12 @@
 """State file management for LangGraph workflow."""
 
 import json
-import re
-from typing import Dict, Any, Optional
+from typing import Optional
 from pathlib import Path
+from financial.result_paths import DEFAULT_RESULTS_DIRECTORY, model_directory
 from datetime import datetime
+from tempfile import NamedTemporaryFile
+from uuid import uuid4
 from financial.langgraph.state import AnalysisState
 
 
@@ -13,22 +15,7 @@ class StateManager:
     
     def __init__(self):
         self._state_save_dir: Path = None
-        self._current_symbol: str = None
-    
-    def _generate_model_key(
-        self, extraction_model: Optional[str] = None, analysis_model: Optional[str] = None
-    ) -> str:
-        """Generate model key for directory naming (same logic as FileResultRepository)."""
-        extraction = extraction_model or "default"
-        analysis = analysis_model or "default"
-        
-        model_key = f"{extraction}_{analysis}"
-        model_key = model_key.replace("/", "_")
-        model_key = re.sub(r'[^a-zA-Z0-9_-]', '_', model_key)
-        model_key = re.sub(r'_+', '_', model_key)
-        model_key = model_key.strip('_')
-        
-        return model_key
+        self._run_id: Optional[str] = None
     
     def setup_state_dir(
         self, 
@@ -37,18 +24,18 @@ class StateManager:
         analysis_model: Optional[str] = None
     ) -> None:
         """Setup state saving directory."""
-        self._current_symbol = symbol
+        self._run_id = uuid4().hex
         if symbol:
-            base_dir = Path("data/results") / symbol.upper()
+            base_dir = DEFAULT_RESULTS_DIRECTORY / symbol.upper()
             if extraction_model or analysis_model:
-                model_key = self._generate_model_key(extraction_model, analysis_model)
+                model_key = model_directory(extraction_model, analysis_model)
                 self._state_save_dir = base_dir / model_key / "states"
             else:
                 self._state_save_dir = base_dir / "states"
             self._state_save_dir.mkdir(parents=True, exist_ok=True)
         else:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            self._state_save_dir = Path("data/results") / timestamp / "states"
+            self._state_save_dir = DEFAULT_RESULTS_DIRECTORY / timestamp / "states"
             self._state_save_dir.mkdir(parents=True, exist_ok=True)
     
     def save_state(self, state: AnalysisState, step_name: str) -> None:
@@ -58,6 +45,8 @@ class StateManager:
         
         state_copy = {
             "step": step_name,
+            "run_id": self._run_id,
+            "report_url": state.get("report_url"),
             "timestamp": datetime.now().isoformat(),
             "stock_price": state.get("stock_price"),
             "currency": state.get("currency"),
@@ -76,9 +65,16 @@ class StateManager:
             state_copy["pdf_text_preview"] = pdf_text[:500] if pdf_text else ""
         
         state_file = self._state_save_dir / f"{step_name}_state.json"
+        temporary = None
         try:
-            with open(state_file, "w", encoding="utf-8") as f:
-                json.dump(state_copy, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"Warning: Failed to save state for step {step_name}: {e}", flush=True)
-
+            with NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=self._state_save_dir, delete=False
+            ) as stream:
+                temporary = Path(stream.name)
+                json.dump(state_copy, stream, indent=2, ensure_ascii=False)
+            temporary.replace(state_file)
+        except OSError as error:
+            print(f"Warning: Failed to save state for step {step_name}: {error}", flush=True)
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)

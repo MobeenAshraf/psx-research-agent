@@ -4,8 +4,11 @@ import requests
 import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
+from math import isfinite
+from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
+MARKET_TZ = ZoneInfo("Asia/Karachi")
 
 
 class WebPriceRepository:
@@ -39,9 +42,12 @@ class WebPriceRepository:
             if not data or 'data' not in data or not data['data']:
                 return None
             
-            latest = data['data'][-1]
-            if len(latest) >= 2:
-                return float(latest[1])
+            latest = max((row for row in data["data"] if len(row) >= 2), key=lambda row: float(row[0]))
+            quote_time = datetime.fromtimestamp(float(latest[0]), MARKET_TZ)
+            price = float(latest[1])
+            age = datetime.now(MARKET_TZ) - quote_time
+            if timedelta(0) <= age <= timedelta(days=7) and isfinite(price) and price > 0:
+                return price
             
             return None
         except Exception:
@@ -74,36 +80,33 @@ class WebPriceRepository:
             
             logger.info(f"Received {len(eod_data)} entries from PSX API for {symbol}")
             
-            cutoff_date = datetime.now() - timedelta(days=days)
+            cutoff_date = datetime.now(MARKET_TZ) - timedelta(days=days)
             cutoff_timestamp = int(cutoff_date.timestamp())
             
-            historical_prices = []
+            historical_prices = {}
             for entry in eod_data:
-                if len(entry) < 2:
+                try:
+                    timestamp = float(entry[0])
+                    close_price = float(entry[1])
+                    if not isfinite(close_price) or close_price <= 0 or timestamp < cutoff_timestamp:
+                        continue
+                    date_obj = datetime.fromtimestamp(timestamp, MARKET_TZ)
+                    volume = float(entry[2]) if len(entry) >= 3 and entry[2] is not None else None
+                    open_price = float(entry[3]) if len(entry) >= 4 and entry[3] is not None else None
+                except (IndexError, ValueError, TypeError, OverflowError, OSError):
                     continue
-                
-                timestamp = entry[0]
-                if timestamp < cutoff_timestamp:
-                    continue
-                
-                close_price = float(entry[1])
-                volume = float(entry[2]) if len(entry) >= 3 else 0.0
-                open_price = float(entry[3]) if len(entry) >= 4 else close_price
-                date_obj = datetime.fromtimestamp(timestamp)
-                
-                high_price = max(open_price, close_price)
-                low_price = min(open_price, close_price)
-                
-                historical_prices.append({
-                    'date': date_obj,
-                    'open': open_price,
-                    'high': high_price,
-                    'low': low_price,
-                    'close': close_price,
-                    'volume': volume
-                })
-            
-            historical_prices.sort(key=lambda x: x['date'])
+
+                candle = {
+                    "date": date_obj,
+                    "open": open_price if open_price is not None and isfinite(open_price) and open_price > 0 else None,
+                    "close": close_price,
+                    "volume": volume if volume is not None and isfinite(volume) and volume >= 0 else None,
+                }
+                session = date_obj.date()
+                if session not in historical_prices or date_obj > historical_prices[session]["date"]:
+                    historical_prices[session] = candle
+
+            historical_prices = [historical_prices[date] for date in sorted(historical_prices)]
             logger.info(f"Returning {len(historical_prices)} historical prices for {symbol}")
             return historical_prices
             

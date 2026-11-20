@@ -324,3 +324,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Model benchmark
 
 Compare OpenRouter models on PSX PDF extraction, investor analysis, and investment decisions. The [benchmark guide](docs/model-benchmark.md) covers the starter cases, candidate pricing, and how to run and interpret the comparison.
+
+## Technical backtest
+
+Run the same technical rules against a local history of daily closes and traded volumes:
+
+```bash
+uv run python -m technical.backtest history.csv --start 2025-01-01 --cost-bps 40 --min-turnover 1000000
+```
+
+Supply CSV columns `date` (YYYY-MM-DD), `close`, and `volume`, with one row per session and at least 50 sessions before the evaluation start. Verify corporate-action adjustments in the source. The replay generates signals at the prior close, simulates eligible trades at the next close, applies the specified one-way fees and slippage, and reports return and drawdown alongside buy-and-hold return. It uses technical signals only. Results depend on the supplied prices, liquidity threshold, and execution assumptions.

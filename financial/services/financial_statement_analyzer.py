@@ -6,7 +6,6 @@ import logging
 from financial.pdf_exceptions import (
     LLMAnalysisError,
     PDFDownloadError,
-    PDFExtractionError,
 )
 from financial.services.financial_service import FinancialService
 from financial.services.pdf_download_service import PDFDownloadService
@@ -60,10 +59,8 @@ class FinancialStatementAnalyzerService:
         normalized_extraction = ModelConfig.normalize_model_name(extraction_model, is_extraction=True)
         normalized_analysis = ModelConfig.normalize_model_name(analysis_model, is_extraction=False)
         
-        if self.result_repository.has_result(
-            symbol, statement_name,
-            extraction_model=normalized_extraction,
-            analysis_model=normalized_analysis
+        if self.result_repository.has_valid_analysis(
+            symbol, statement_name, report.report_url, normalized_extraction, normalized_analysis
         ):
             cached = self.result_repository.get_result(
                 symbol, statement_name,
@@ -127,6 +124,7 @@ class FinancialStatementAnalyzerService:
                 stock_price = None
 
         stock_page_context = self._build_stock_page_context(report)
+        period_end = FinancialService.parse_report_date(report.period_ended)
 
         return self.llm_client.analyze(
             pdf_text="",
@@ -138,6 +136,8 @@ class FinancialStatementAnalyzerService:
             analysis_model=analysis_model,
             user_profile=user_profile,
             stock_page_context=stock_page_context,
+            report_url=report.report_url,
+            expected_period_end=period_end.date().isoformat() if period_end else None,
         )
 
     def _build_stock_page_context(self, report) -> Optional[Dict[str, Any]]:

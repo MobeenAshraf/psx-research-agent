@@ -1,9 +1,10 @@
 """Financial analysis routes."""
 
-import json
 import os
 from typing import Dict, Any, Optional
 from pathlib import Path
+from financial.result_paths import DEFAULT_RESULTS_DIRECTORY, model_directory
+from state_monitor import read_states
 from concurrent.futures import ThreadPoolExecutor
 
 from technical.price_repository import WebPriceRepository
@@ -32,7 +33,7 @@ def _create_financial_analyzer():
         financial_service=FinancialService(),
         pdf_download_service=PDFDownloadService(base_dir=Path("data/financial_statements")),
         llm_client=LangGraphAnalyzer(api_key=api_key),
-        result_repository=FileResultRepository(base_dir=Path("data/results")),
+        result_repository=FileResultRepository(base_dir=DEFAULT_RESULTS_DIRECTORY),
         stock_price_service=WebPriceRepository(),
     )
 
@@ -62,10 +63,8 @@ def check_latest_report(
         normalized_extraction = ModelConfig.normalize_model_name(extraction_model, is_extraction=True)
         normalized_analysis = ModelConfig.normalize_model_name(analysis_model, is_extraction=False)
 
-        if analyzer.result_repository.has_result(
-            symbol_upper, statement_name,
-            extraction_model=normalized_extraction,
-            analysis_model=normalized_analysis
+        if analyzer.result_repository.has_valid_analysis(
+            symbol_upper, statement_name, report.report_url, normalized_extraction, normalized_analysis
         ):
             cached_result = analyzer.result_repository.get_result(
                 symbol_upper, statement_name,
@@ -153,51 +152,18 @@ def run_financial_analysis(
         return {"symbol": symbol.upper(), "status": "error", "error": str(exc)}
 
 
-def _generate_model_key(
-    extraction_model: Optional[str] = None, analysis_model: Optional[str] = None
-) -> str:
-    """Generate model key for directory naming (same logic as FileResultRepository)."""
-    import re
-    extraction = extraction_model or "default"
-    analysis = analysis_model or "default"
-    
-    model_key = f"{extraction}_{analysis}"
-    model_key = model_key.replace("/", "_")
-    model_key = re.sub(r'[^a-zA-Z0-9_-]', '_', model_key)
-    model_key = re.sub(r'_+', '_', model_key)
-    model_key = model_key.strip('_')
-    
-    return model_key
-
-
 def _get_existing_states(
     symbol: str,
     extraction_model: Optional[str] = None,
     analysis_model: Optional[str] = None
 ) -> Dict[str, Any]:
     """Get existing state files for a symbol and model combination."""
-    base_dir = Path("data/results") / symbol.upper()
+    base_dir = DEFAULT_RESULTS_DIRECTORY / symbol.upper()
     
     if extraction_model or analysis_model:
-        model_key = _generate_model_key(extraction_model, analysis_model)
+        model_key = model_directory(extraction_model, analysis_model)
         states_dir = base_dir / model_key / "states"
     else:
         states_dir = base_dir / "states"
     
-    if not states_dir.exists():
-        return {}
-    
-    states = {}
-    state_files = sorted(states_dir.glob("*_state.json"))
-    
-    for state_file in state_files:
-        try:
-            with open(state_file, 'r', encoding='utf-8') as f:
-                state_data = json.load(f)
-                step_name = state_file.stem.replace('_state', '')
-                states[step_name] = state_data
-        except Exception:
-            continue
-    
-    return states
-
+    return read_states(states_dir)

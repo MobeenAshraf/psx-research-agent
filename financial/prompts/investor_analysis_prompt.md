@@ -104,6 +104,9 @@ Return structured JSON:
 
 ## Instructions
 
+- Treat calculated metrics as the authoritative source for quantitative claims. If a valuation ratio is absent, return null and describe it as unavailable. Do not annualize an interim filing or calculate a replacement valuation ratio.
+- Use the reporting period and statement scope shown in the extracted data when describing results.
+
 - **Be concise** - 2-3 lines for summary
 - **Focus on numbers** - P/E, CapEx, Dividends, etc.
 - **No fluff** - ignore management promises, CSR, marketing
