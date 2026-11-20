@@ -156,11 +156,24 @@ def field(output, path):
     for part in path.split("."):
         if isinstance(output, dict):
             output = output.get(part, MISSING)
+        elif isinstance(output, list) and part == "#count":
+            output = len(output)
+        elif isinstance(output, list) and part.startswith("@"):
+            labels = {_row_label(label) for label in part[1:].split("|")}
+            output = next(
+                (row for row in output if isinstance(row, dict)
+                 and _row_label(row.get("name") or row.get("item")) in labels),
+                MISSING,
+            )
         elif isinstance(output, list) and part.isdecimal() and int(part) < len(output):
             output = output[int(part)]
         else:
             return MISSING
     return output
+
+
+def _row_label(value):
+    return re.sub(r"[^a-z0-9]", "", value.lower()) if isinstance(value, str) else ""
 
 
 def is_number(value):
@@ -201,11 +214,51 @@ def grade(case, output):
     score = sum(checks.values()) / len(checks)
     critical = set(case.get("critical", []))
     critical_ok = all(passed for name, passed in checks.items() if name.split(":", 1)[1] in critical)
-    return {
+    result = {
         "checks": checks,
         "score": score,
         "critical_ok": critical_ok,
         "passed": critical_ok and score >= 0.90,
+    }
+    if "audit_references" in case:
+        result["field_audit"] = [
+            _audit_field(case, field(output, path), path, expected, checks[f"value:{path}"])
+            for path, expected in case["expected"].items()
+        ]
+    return result
+
+
+def _audit_field(case, actual, path, expected, passed):
+    reason = None
+    if passed:
+        status = "correct"
+    elif actual is MISSING:
+        status = "omitted"
+    elif actual is None:
+        status = "returned_null"
+    elif expected is None:
+        status = "unsubstantiated_value"
+    elif is_number(expected) and not is_number(actual):
+        status = "wrong_type"
+    else:
+        status = "wrong_value"
+    if not passed and actual is not MISSING:
+        for alternative in case.get("audit_alternatives", {}).get(path, []):
+            if equal_value(actual, alternative["value"], 0):
+                reason = alternative["reason"]
+                break
+        if reason is None and is_number(expected) and is_number(actual):
+            if expected and actual == -expected:
+                reason = "Opposite sign to the requested convention."
+            elif expected and abs(actual / expected) in (1_000, 1_000_000, 0.001, 0.000001):
+                reason = "Value differs by a common reporting-unit multiplier."
+    return {
+        "field": path,
+        "source": case["audit_references"].get(path, case.get("reference")),
+        "status": status,
+        "expected": expected,
+        "actual": None if actual is MISSING else actual,
+        "reason": reason,
     }
 
 

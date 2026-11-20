@@ -19,7 +19,7 @@ class ModelConfig:
     # Default analysis model - better reasoning for qualitative assessment
     DEFAULT_ANALYSIS_MODEL: str = os.getenv(
         'ANALYSIS_MODEL',
-        'openai/gpt-6-luna'
+        'deepseek/deepseek-v4.1-flash-1017'
     )
     
     # Default decision model - strong reasoning for decision-making
@@ -61,12 +61,7 @@ class ModelConfig:
         return cls.DEFAULT_DECISION_MODEL
     
     @classmethod
-    def normalize_model_name(cls, model: str, is_extraction: bool = True) -> str:
+    def normalize_model_name(cls, model: Optional[str], is_extraction: bool = True) -> str:
         """Normalize 'auto' to actual default model name for consistent caching."""
-        if model == "auto":
-            if is_extraction:
-                return cls.DEFAULT_EXTRACTION_MODEL
-            else:
-                return cls.DEFAULT_ANALYSIS_MODEL
-        return model
+        return cls.get_extraction_model(model) if is_extraction else cls.get_analysis_model(model)
 

@@ -14,7 +14,7 @@ from financial.langgraph.api_client import OpenRouterAPIClient
 from financial.services.index_membership_service import get_index_service
 from routes.technical import get_technical_analysis
 from routes.financial import check_latest_report
-from financial.langgraph.workflow_steps.calculate_step import calculate_metrics
+from financial.statement_calculations import calculate_metrics
 from financial.services.shariah_source import get_psx_shariah_status
 
 

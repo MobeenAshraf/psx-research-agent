@@ -5,10 +5,11 @@ from math import isfinite
 
 
 AMOUNT_FIELDS = {
-    "net_income", "net_income_previous", "cash", "total_debt",
+    "net_income", "net_income_previous", "cash", "total_debt", "long_term_debt",
+    "current_portion_long_term_debt", "short_term_borrowings",
     "operating_cash_flow", "free_cash_flow", "capital_expenditures", "dividends_paid",
     "shareholders_equity", "total_equity", "total_assets", "total_liabilities",
-    "current_assets", "current_liabilities", "operating_income", "operating_income_previous",
+    "current_assets", "current_liabilities", "noncurrent_liabilities", "operating_income", "operating_income_previous",
     "ebitda", "cogs", "accounts_receivable", "inventory", "interest_expense",
     "beginning_cash", "net_change_cash", "cash_fx_effect", "ending_cash", "cash_flow_net_income",
     "ttm_revenue", "ttm_ebitda", "ttm_operating_cash_flow", "ttm_capital_expenditures",
@@ -59,6 +60,14 @@ def normalize_statement(extracted: dict) -> dict:
     for key in sorted(UNSCALED_FIELDS):
         if not finite_number(data.get(key)):
             data[key] = None
+
+    for total, components in {
+        "total_liabilities": ("current_liabilities", "noncurrent_liabilities"),
+        "total_debt": ("long_term_debt", "current_portion_long_term_debt", "short_term_borrowings"),
+    }.items():
+        values = [data[key] for key in components]
+        if all(value is not None for value in values):
+            data[total] = sum(values)
 
     revenue = data.get("revenue")
     data["revenue"] = {

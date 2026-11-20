@@ -8,6 +8,19 @@ from evals import model_benchmark as benchmark
 
 
 class ModelBenchmarkTests(unittest.TestCase):
+    def test_field_audit_resolves_note_rows_and_reports_missing_values(self):
+        case = {
+            "stage": "extraction",
+            "expected": {"rows.#count": 2, "rows.@Zero line|Nil line.value": 0, "profit": 50},
+            "audit_references": {"profit": "p. 5"},
+            "audit_alternatives": {"profit": [{"value": 45, "reason": "After finance costs"}]},
+        }
+        result = benchmark.grade(case, {"rows": [{"item": "Other", "value": 20}], "profit": 45})
+        self.assertEqual([row["status"] for row in result["field_audit"]], ["wrong_value", "omitted", "wrong_value"])
+        self.assertEqual(result["field_audit"][-1]["reason"], "After finance costs")
+        self.assertEqual(result["field_audit"][-1]["source"], "p. 5")
+        self.assertEqual(benchmark.field({"rows": [{"item": "Nil-line", "value": 0}]}, "rows.@Zero line|Nil line.value"), 0)
+
     def test_missing_null_and_numeric_strings_fail(self):
         case = {
             "stage": "extraction",

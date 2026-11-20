@@ -23,6 +23,9 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "eps": number or null,
   "cash": number or null,
   "total_debt": number or null,
+  "long_term_debt": number or null,
+  "current_portion_long_term_debt": number or null,
+  "short_term_borrowings": number or null,
   "operating_cash_flow": number or null,
   "free_cash_flow": number or null,
   "capital_expenditures": number or null,
@@ -44,6 +47,7 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "total_assets": number or null,
   "current_assets": number or null,
   "current_liabilities": number or null,
+  "noncurrent_liabilities": number or null,
   "operating_income": number or null,
   "operating_income_previous": number or null,
   "ebitda": number or null,
@@ -74,28 +78,29 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
 - Revenue (current period and previous period if available)
 - Net Income (also called Profit After Tax, PAT) - current and previous period if available
 - EPS (Earnings Per Share)
-- Operating Income (EBIT) - current and previous period if available
-- EBITDA (if available)
+- Operating Income (EBIT) for the current and comparative periods. Use the row labeled operating profit, before finance costs. If that row appears only in the directors' financial highlights, use the highlights for both periods.
+- EBITDA as stated, including in the directors' financial highlights. Convert any highlights amounts stated in millions to the statement's monetary scale. Preserve their reported precision.
 - COGS (Cost of Goods Sold) - also called Cost of Sales
-- Interest Expense (if available)
+- Report income-statement finance costs in interest_expense. Use the full line, without substituting cash interest paid or an individual financing component.
 
 **From Balance Sheet:**
-- Cash and Cash Equivalents
-- Total Debt (sum of Short-term Debt + Long-term Debt)
+- Cash and bank balances from the balance sheet. Use ending_cash for the cash-flow statement's closing cash and equivalents, which may include additional items.
+- Total interest-bearing borrowing excluding separately presented lease liabilities, if directly stated. Also capture noncurrent borrowing, the current portion of long-term borrowing, and other short-term borrowings in their respective fields. The application calculates a total when all three components are available.
 - Shareholders' equity attributable to the parent and total equity including non-controlling interests. For standalone statements use the same equity amount in both fields.
-- Total liabilities, or the sum of current and non-current liabilities if there is no total row.
+- Total liabilities when explicitly shown, plus the current and non-current liability subtotals. The application reconciles or sums the subtotals.
 - Total Assets
 - Current Assets
 - Current Liabilities
 - Accounts Receivable (Trade Receivables)
 - Inventory (if available)
-- **Book Value per Share** (if explicitly stated, otherwise calculate from Shareholders' Equity / Shares Outstanding)
+- **Book Value per Share** only if explicitly stated.
 
 **From Cash Flow Statement:**
 - Operating Cash Flow
 - Beginning cash, net change, and ending cash as presented in the cash flow statement. If a separate foreign-exchange effect appears between the net change and ending cash, copy it with its sign into cash_fx_effect.
 - Capital Expenditures (CapEx) - usually negative, use absolute value
 - Cash dividends paid from the financing cash flow statement, including an explicit zero
+- Use positive magnitudes for cost of sales, financing costs, capital expenditures and cash dividends paid. Preserve signs on cash flows, profit and foreign-exchange adjustments.
 
 ### Step 3: Extract Investment & Growth Data
 - **Capital Expenditures**: Find in Cash Flow Statement (Investing Activities)
@@ -108,7 +113,7 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
 
 ### Step 4: Return reported source values
 - Use null for free_cash_flow and for any book value per share the filing does not state. The application calculates these from reported inputs.
-- Do not infer shares outstanding from net income and EPS. Use the period-end ordinary shares from the notes. If only weighted-average shares are available, use null.
+- Use the explicitly reported period-end ordinary share count for the selected scope. A paid-up capital amount, face value, EPS or weighted-average count does not establish this input. Return null when the period-end count is absent.
 - Use the same scope and profit definition throughout. For consolidated EPS and net income, use profit attributable to ordinary shareholders of the parent where stated.
 
 ### Step 5: Handle Missing Data
@@ -218,7 +223,8 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
 - **value**: Amount in the same currency as other financials
 
 **DATA INTEGRITY WARNING:**
-- ONLY extract if "Other Income" is ITEMIZED in the notes
+- ONLY extract if "Other Income" is ITEMIZED in the notes for the selected reporting scope.
+- Copy each individual row, including rows with a dash or nil in the current column. Use 0 for those rows and omit subtotals.
 - If only a single "Other Income" line exists without breakdown, return `[]`
 - Do NOT guess the composition of "Other Income"
 - Do NOT assume "Other Income" equals "Interest Income"
@@ -255,13 +261,16 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   "net_income_previous": 140000000,
   "eps": 3.50,
   "cash": 250000000,
-  "total_debt": 500000000,
+  "total_debt": null,
+  "long_term_debt": 300000000,
+  "current_portion_long_term_debt": 50000000,
+  "short_term_borrowings": 150000000,
   "operating_cash_flow": 200000000,
   "free_cash_flow": null,
   "capital_expenditures": 50000000,
   "dividends_paid": 50000000,
   "shares_outstanding": 42857143,
-  "book_value_per_share": 11.67,
+  "book_value_per_share": null,
   "shareholders_equity": 500000000,
   "total_equity": 500000000,
   "total_liabilities": 500000000,
@@ -288,7 +297,7 @@ You MUST return a JSON object matching this EXACT structure. Use `null` for miss
   ],
   "other_income_breakdown": [
     {{"item": "Interest Income", "value": 15000000}},
-    {{"item": "Dividend Income", "value": 5000000}},
+    {{"item": "Dividend Income", "value": 0}},
     {{"item": "Gain on Sale of Assets", "value": 3000000}}
   ]
 }}

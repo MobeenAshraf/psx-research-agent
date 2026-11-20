@@ -50,3 +50,5 @@ deploy-local.sh
 !/evals/cases.json
 !/evals/results/2026-11-20-screening.json
 !/evals/results/2026-11-20-lucky-cement.json
+!/evals/results/2026-11-20-luck-indu-audit.json
+!/evals/calculation_cases.json

@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from technical.price_repository import WebPriceRepository
 from financial.langgraph.analyzer import LangGraphAnalyzer
+from financial.langgraph.state_manager import StateManager
 from financial.repositories import FileResultRepository
 from financial.services import (
     FinancialService,
@@ -59,6 +60,11 @@ def check_latest_report(
         statement_name = StatementNameGenerator.generate_name(
             report.report_type, report.period_ended
         )
+        filing = {
+            "report_url": report.report_url,
+            "report_source": report.report_source,
+            "period_ended": report.period_ended,
+        }
 
         normalized_extraction = ModelConfig.normalize_model_name(extraction_model, is_extraction=True)
         normalized_analysis = ModelConfig.normalize_model_name(analysis_model, is_extraction=False)
@@ -102,6 +108,7 @@ def check_latest_report(
                 "symbol": symbol_upper,
                 "status": "exists",
                 "statement_name": statement_name,
+                **filing,
                 "result": cached_result,
                 "states": states,
                 "token_usage": token_usage,
@@ -114,6 +121,7 @@ def check_latest_report(
             "symbol": symbol_upper,
             "status": "not_found",
             "message": "Report exists but analysis not found",
+            **filing,
         }
     except Exception as exc:
         return {"symbol": symbol.upper(), "status": "error", "error": str(exc)}
@@ -134,13 +142,28 @@ def run_financial_analysis(
         symbol_upper = symbol.upper()
 
         def run_analysis():
-            analyzer = _create_financial_analyzer()
-            analyzer.analyze_stock(
-                symbol_upper,
-                extraction_model=extraction_model,
-                analysis_model=analysis_model,
-                user_profile=user_profile
-            )
+            manager = StateManager()
+            try:
+                analyzer = _create_financial_analyzer()
+                manager = analyzer.llm_client.state_manager
+                result = analyzer.analyze_stock(
+                    symbol_upper,
+                    extraction_model=extraction_model,
+                    analysis_model=analysis_model,
+                    user_profile=user_profile,
+                )
+                if result["status"] in {"analyzed", "cached"} or manager.run_started:
+                    return
+                message = result.get("error") or result.get("message") or "Financial analysis failed"
+            except Exception as error:
+                message = str(error)
+            if not manager.run_started:
+                manager.setup_state_dir(
+                    symbol_upper, ModelConfig.get_extraction_model(extraction_model),
+                    ModelConfig.get_analysis_model(analysis_model),
+                )
+                manager.save_state({"errors": []}, "00_initial")
+            manager.save_state({"errors": [message]}, "99_final")
 
         _executor.submit(run_analysis)
         return {

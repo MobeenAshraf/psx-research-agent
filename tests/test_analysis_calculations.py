@@ -83,6 +83,16 @@ def test_balance_sheet_uses_total_equity_for_consolidated_statements():
     assert not validator.validate_all({**data, "total_liabilities": 400_000})["is_valid"]
 
 
+def test_reported_components_determine_borrowings_and_liabilities():
+    data = normalize_statement(statement(
+        total_debt=999, total_liabilities=999, long_term_debt=25,
+        current_portion_long_term_debt=5, short_term_borrowings=0,
+        current_liabilities=200, noncurrent_liabilities=300,
+    ))
+    assert data["total_debt"] == 30_000
+    assert data["total_liabilities"] == 500_000
+
+
 def test_cash_flow_reconciliation_includes_lucky_cement_translation_effect():
     data = normalize_statement(statement(
         beginning_cash=176793432, net_change_cash=20466240,
@@ -285,3 +295,67 @@ def test_decision_reprices_validated_facts_and_displays_psx_status_separately(mo
     assert '"pe_ratio": 9.0' in prompt
     assert "potentially stale pricing" not in prompt
     assert '"not_listed"' not in prompt
+
+
+def test_report_discovery_uses_issuer_copy_and_preserves_newer_psx_filing():
+    from financial.services.financial_service import FinancialService
+    from financial.services.report_sources import ISSUER_REPORTS
+
+    unavailable = Mock()
+    unavailable.raise_for_status.side_effect = requests.HTTPError("404")
+    announcements = Mock(content=b"""
+        <table>
+          <tr><td>Oct 30, 2026</td><td>Transmission of Quarterly Report for the Period Ended - September 30, 2026</td>
+              <td><a href="/download/document/288146.pdf">PDF</a></td></tr>
+          <tr><td>Jan 30, 2027</td><td>Transmission of Half-Yearly Report for the period ended December 31, 2026</td>
+              <td><a href="/download/document/123456.pdf">PDF</a></td></tr>
+        </table>
+    """)
+    service = FinancialService()
+    service.session.get = Mock(side_effect=[unavailable, announcements])
+    reports = service.fetch_company_reports("LUCK")
+    assert reports[0]["period_ended"] == "2026-12-31"
+    assert reports[0]["url"] == "https://dps.psx.com.pk/download/document/123456.pdf"
+    assert reports[1]["url"] == ISSUER_REPORTS["LUCK"]["url"]
+    assert reports[1]["source"] == "issuer"
+
+    service.session.get.side_effect = [unavailable, unavailable]
+    assert service.fetch_company_reports("INDU")[0]["period_ended"] == "2026-09-30"
+
+
+def test_pdf_download_rejects_html_and_caches_only_complete_pdf(tmp_path):
+    from pathlib import Path
+    from financial.pdf_exceptions import PDFDownloadError
+    from financial.services.pdf_download_service import PDFDownloadService
+
+    service = PDFDownloadService(base_dir=tmp_path)
+    response = Mock()
+    response.iter_content.return_value = iter([b"<html>Unavailable</html>"])
+    with patch("financial.services.pdf_download_service.requests.get") as fetch:
+        fetch.return_value.__enter__.return_value = response
+        with pytest.raises(PDFDownloadError, match="other than a PDF"):
+            service.download_pdf("https://example.org/filing.pdf", "LUCK")
+        assert not list((tmp_path / "LUCK").iterdir())
+        response.iter_content.return_value = iter([b"%PDF", b"-1.7\nfixture"])
+        result = service.download_pdf("https://example.org/filing.pdf", "LUCK")
+        assert Path(result).read_bytes() == b"%PDF-1.7\nfixture"
+        fetch.reset_mock()
+        assert service.download_pdf("https://example.org/filing.pdf", "LUCK") == result
+        fetch.assert_not_called()
+
+
+def test_background_download_failure_publishes_terminal_state(tmp_path, monkeypatch):
+    from financial.langgraph import state_manager
+    from routes import financial
+    from state_monitor import read_states
+
+    monkeypatch.setattr(state_manager, "DEFAULT_RESULTS_DIRECTORY", tmp_path)
+    analyzer = Mock()
+    analyzer.llm_client.state_manager = state_manager.StateManager()
+    analyzer.analyze_stock.return_value = {"status": "error", "error": "Filing source returned an error"}
+    monkeypatch.setattr(financial, "_create_financial_analyzer", lambda: analyzer)
+    with patch.object(financial._executor, "submit", side_effect=lambda job: job()):
+        output = financial.run_financial_analysis("LUCK", extraction_model="gemini", analysis_model="deepseek")
+    assert output["status"] == "started"
+    states = read_states(tmp_path / "LUCK" / "gemini_deepseek" / "states")
+    assert states["99_final"]["errors"] == ["Filing source returned an error"]

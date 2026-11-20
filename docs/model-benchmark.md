@@ -1,6 +1,6 @@
 # Model benchmark
 
-The benchmark compares OpenRouter models separately for PDF extraction, investor analysis, and the final investment decision. Each candidate sees the same input and is compared with the baseline for that stage. The runner uses the configured `EXTRACTION_MODEL`, `ANALYSIS_MODEL`, and `DECISION_MODEL` when set, or the original screening baselines for reproducibility. Production uses GPT-6 Luna for analysis and DeepSeek V4.1 Flash 1017 for decisions by default.
+The benchmark compares OpenRouter models separately for PDF extraction, investor analysis, and the final investment decision. Each candidate sees the same input and is compared with the baseline for that stage. The runner uses the configured `EXTRACTION_MODEL`, `ANALYSIS_MODEL`, and `DECISION_MODEL` when set, or the original screening baselines for reproducibility. Production uses DeepSeek V4.1 Flash 1017 for analysis and decisions by default.
 
 ## Run it
 
@@ -21,6 +21,20 @@ Use `--case indus-motor-sep2026-quarter` to test just the Indus Motor filing. If
 
 The starter PDFs are stored in `evals/pdfs/` and pinned by SHA-256. A fresh checkout can run the default suite without downloading any reports. For custom cases that supply only a public PDF URL, the live runner downloads once to the Git-ignored `data/evals/pdfs/` directory. Use `--pdf-cache /path/to/shared/pdfs` to share those downloaded fixtures between workspaces.
 
+## Audit the financial statements
+
+```bash
+uv run python -m evals.model_benchmark --live \
+  --case lucky-cement-sep2026-results-scan --case indus-motor-sep2026-quarter \
+  --model google/gemini-3.1-flash-lite --temperature 0 \
+  --output data/evals/luck-indu-field-audit.json
+uv run python -m evals.calculation_audit
+```
+
+The extraction audit checks 46 fields for the LUCK scan and 58 for the INDU text PDF. It covers the numeric fields mapped by the app, reporting scope and units, entries in the selected notes, and fields that should remain null. Each field records the location in the filing, expected value, returned value, and finding. A failure reason is recorded only when the response matches a known alternative or has an identifiable sign or scale difference. An empty reason means the available output does not establish the cause. The audit does not enumerate every figure or verify all narrative in either filing.
+
+The calculation audit runs without an API key. It uses figures checked against the filings, separately supplied share counts and illustrative quotes, and expected values computed independently. It exercises the same Python functions the app uses for normalization, cash flow, working capital, margins, leverage, valuation, and the checks that require trailing-period data. The recorded results compare the initial and refined extraction prompts. [Field findings](../evals/results/2026-11-20-luck-indu-audit.md) · [Scored run snapshot](../evals/results/2026-11-20-luck-indu-audit.json)
+
 ## Candidates and list prices
 
 Prices are OpenRouter's advertised USD per million input and output tokens, checked November 20, 2026. Provider selection, cached inputs, reasoning tokens, and PDF parsing can affect the cost of a request. The benchmark uses the cost OpenRouter reports for each response. [OpenRouter usage accounting](https://openrouter.ai/docs/cookbook/administration/usage-accounting)
@@ -28,7 +42,8 @@ Prices are OpenRouter's advertised USD per million input and output tokens, chec
 | Stage | Model | Input | Output | Role |
 | --- | --- | ---: | ---: | --- |
 | Extraction | [Gemini 3 Flash Preview](https://openrouter.ai/google/gemini-3-flash-preview) | $0.50 | $3.00 | Repository baseline |
-| Extraction | [Gemini 3.5 Flash Lite](https://openrouter.ai/google/gemini-3.5-flash-lite) | $0.30 | $2.50 | Lowest listed price in the PDF comparison |
+| Extraction | [Gemini 3.1 Flash Lite](https://openrouter.ai/google/gemini-3.1-flash-lite) | $0.25 | $1.50 | LUCK and INDU field-audit candidate |
+| Extraction | [Gemini 3.5 Flash Lite](https://openrouter.ai/google/gemini-3.5-flash-lite) | $0.30 | $2.50 | Low-cost candidate in the initial PDF comparison |
 | Extraction | [Gemini 3.8 Flash](https://openrouter.ai/google/gemini-3.8-flash) | $0.75 | $3.75 | Discounted rate |
 | Extraction | [Gemini 4 Hydrogen](https://openrouter.ai/google/gemini-4-hydrogen) | $1.50 | $7.50 | Newer PDF candidate |
 | Analysis and decision | [GPT-4o](https://openrouter.ai/openai/gpt-4o) | $2.50 | $10.00 | Original screening baseline |

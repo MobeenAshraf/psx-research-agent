@@ -1,0 +1,221 @@
+[
+  {
+    "case": "lucky-cement-sep2026-results-scan",
+    "quote_pkr": 450,
+    "notes": "The share count and illustrative quote are separately supplied to isolate arithmetic from the PDF extraction. Expected ratios were computed independently from the filing values with decimal arithmetic.",
+    "inputs": {
+      "currency": "PKR",
+      "period_end": "2026-09-30",
+      "period_months": 3,
+      "monetary_scale": 1000,
+      "reporting_scope": "consolidated",
+      "net_income": 21628705,
+      "net_income_previous": 21994785,
+      "eps": 14.76,
+      "operating_cash_flow": 21229240,
+      "capital_expenditures": 2792915,
+      "dividends_paid": 1687,
+      "net_change_cash": 20466240,
+      "cash_fx_effect": -219029,
+      "ending_cash": 197040643,
+      "shareholders_equity": 442370186,
+      "total_equity": 487595141,
+      "total_liabilities": 328699699,
+      "cash": 14881450,
+      "total_debt": null,
+      "long_term_debt": 97769543,
+      "current_portion_long_term_debt": 15727367,
+      "short_term_borrowings": 68418105,
+      "total_assets": 816294840,
+      "current_assets": 395047980,
+      "current_liabilities": 185532347,
+      "noncurrent_liabilities": 143167352,
+      "accounts_receivable": 66078949,
+      "inventory": 67682133,
+      "shares_outstanding": 1465000000,
+      "cogs": 97897918,
+      "interest_expense": 4642843,
+      "beginning_cash": 176793432,
+      "operating_income": 26630000,
+      "operating_income_previous": 26826000,
+      "ebitda": 31959000,
+      "ttm_eps": null,
+      "ttm_revenue": null,
+      "ttm_ebitda": null,
+      "ttm_operating_cash_flow": null,
+      "ttm_capital_expenditures": null,
+      "book_value_per_share": null,
+      "free_cash_flow": null,
+      "revenue": {
+        "current": 131863008,
+        "previous": 125207898
+      },
+      "segment_data": [],
+      "other_income_breakdown": []
+    },
+    "expected": {
+      "normalized.total_liabilities": 328699699000,
+      "normalized.total_debt": 181915015000,
+      "normalized.revenue.current": 131863008000,
+      "normalized.eps": 14.76,
+      "calculated.free_cash_flow": 18436325000,
+      "calculated.market_cap": 659250000000,
+      "calculated.book_value_per_share": 301.95917133105803,
+      "calculated.pb_ratio": 1.4902677008165284,
+      "calculated.cash_per_share": 10.157986348122867,
+      "calculated.revenue_growth_pct": 5.31524776496128,
+      "calculated.net_income_growth_pct": -1.664394537159604,
+      "calculated.gross_margin_pct": 25.757860764104517,
+      "calculated.operating_margin": 20.195201371411155,
+      "calculated.net_margin": 16.40240529019329,
+      "calculated.capex_pct_revenue": 2.118042840339271,
+      "calculated.payout_ratio": 0.007799819730307478,
+      "calculated.fcf_coverage": 10928.467694131594,
+      "calculated.current_ratio": 2.1292674101729547,
+      "calculated.quick_ratio": 0.43636810674313303,
+      "calculated.working_capital": 209515633000,
+      "calculated.debt_to_equity": 0.4112280184270827,
+      "calculated.debt_to_assets": 0.2228545448112841,
+      "calculated.roe": 4.889277280544399,
+      "calculated.roa": 2.6496192233678704,
+      "calculated.interest_coverage": 5.735709779546713,
+      "calculated.pe_ratio": null,
+      "calculated.ps_ratio": null,
+      "calculated.ev_ebitda": null,
+      "calculated.fcf_yield": null
+    }
+  },
+  {
+    "case": "indus-motor-sep2026-quarter",
+    "quote_pkr": 1800,
+    "notes": "The share count and illustrative quote are separately supplied to isolate arithmetic from the PDF extraction. Expected ratios were computed independently from the filing values with decimal arithmetic.",
+    "inputs": {
+      "currency": "PKR",
+      "period_end": "2026-09-30",
+      "monetary_scale": 1000,
+      "reporting_scope": "standalone",
+      "cash": 4937597,
+      "long_term_debt": 109950,
+      "current_portion_long_term_debt": 39983,
+      "short_term_borrowings": null,
+      "shares_outstanding": 78600000,
+      "shareholders_equity": 90585731,
+      "total_equity": 90585731,
+      "total_assets": 166292088,
+      "current_assets": 146630292,
+      "current_liabilities": 71968634,
+      "noncurrent_liabilities": 3737723,
+      "total_liabilities": null,
+      "accounts_receivable": 3912990,
+      "inventory": 42927749,
+      "period_months": 3,
+      "net_income": 7384376,
+      "net_income_previous": 6719280,
+      "eps": 93.95,
+      "cogs": 62701692,
+      "operating_income": 8820589,
+      "operating_income_previous": 8220771,
+      "interest_expense": 203747,
+      "operating_cash_flow": -23894961,
+      "capital_expenditures": 430365,
+      "dividends_paid": 2619,
+      "beginning_cash": 31033238,
+      "net_change_cash": -26095641,
+      "cash_fx_effect": null,
+      "ending_cash": 4937597,
+      "total_debt": 149933,
+      "ebitda": null,
+      "ttm_eps": null,
+      "ttm_revenue": null,
+      "ttm_ebitda": null,
+      "ttm_operating_cash_flow": null,
+      "ttm_capital_expenditures": null,
+      "book_value_per_share": null,
+      "free_cash_flow": null,
+      "revenue": {
+        "current": 74014959,
+        "previous": 61737936
+      },
+      "segment_data": [
+        {
+          "name": "Manufacturing",
+          "revenue": 69160053,
+          "operating_income": 7233962
+        },
+        {
+          "name": "Trading",
+          "revenue": 4854906,
+          "operating_income": 1586627
+        }
+      ],
+      "other_income_breakdown": [
+        {
+          "item": "Return on bank deposits",
+          "value": 345905
+        },
+        {
+          "item": "Net gain on investment in listed mutual fund units",
+          "value": 476164
+        },
+        {
+          "item": "Dividend income from listed mutual fund units",
+          "value": 0
+        },
+        {
+          "item": "Gain on trade of investment in Government Securities",
+          "value": 1987371
+        },
+        {
+          "item": "Gain on sale of fixed assets",
+          "value": 124170
+        },
+        {
+          "item": "Freight and other charges income - net of expenses",
+          "value": 177928
+        },
+        {
+          "item": "Unclaimed liabilities written back",
+          "value": 90155
+        },
+        {
+          "item": "Others",
+          "value": 19221
+        }
+      ]
+    },
+    "expected": {
+      "normalized.total_liabilities": 75706357000,
+      "normalized.total_debt": 149933000,
+      "normalized.revenue.current": 74014959000,
+      "normalized.eps": 93.95,
+      "calculated.free_cash_flow": -24325326000,
+      "calculated.market_cap": 141480000000,
+      "calculated.book_value_per_share": 1152.4902162849874,
+      "calculated.pb_ratio": 1.5618353844271566,
+      "calculated.cash_per_share": 62.819300254452926,
+      "calculated.revenue_growth_pct": 19.88570366200775,
+      "calculated.net_income_growth_pct": 9.898322439308973,
+      "calculated.gross_margin_pct": 15.285108784563402,
+      "calculated.operating_margin": 11.917305797602348,
+      "calculated.net_margin": 9.976869675763787,
+      "calculated.capex_pct_revenue": 0.5814567836212677,
+      "calculated.payout_ratio": 0.035466774714613666,
+      "calculated.fcf_coverage": -9288.0206185567,
+      "calculated.current_ratio": 2.0374194124623792,
+      "calculated.quick_ratio": 0.12297839361519632,
+      "calculated.working_capital": 74661658000,
+      "calculated.debt_to_equity": 0.0016551503017622057,
+      "calculated.debt_to_assets": 0.0009016243755385403,
+      "calculated.roe": 8.151809251282634,
+      "calculated.roa": 4.4406057370570755,
+      "calculated.interest_coverage": 43.29187178216121,
+      "calculated.pe_ratio": null,
+      "calculated.ps_ratio": null,
+      "calculated.ev_ebitda": null,
+      "calculated.fcf_yield": null,
+      "calculated.income_composition.other_income.total": 3220914000,
+      "calculated.income_composition.segments.@Manufacturing.revenue_pct": 93.44064218153522,
+      "calculated.income_composition.segments.@Trading.income_pct": 17.987767030070213
+    }
+  }
+]

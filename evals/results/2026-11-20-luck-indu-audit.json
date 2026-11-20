@@ -1,0 +1,533 @@
+{
+  "initial": {
+    "timestamp_utc": "2026-11-20T16:26:05.077037+00:00",
+    "temperature": 0.0,
+    "repeats": 1,
+    "cases": [
+      {
+        "id": "indus-motor-sep2026-quarter",
+        "pdf_path": "pdfs/indus-motor-sep2026-quarter.pdf",
+        "pdf_sha256": "ae88559bd9464915e5cf74652aa0eb91119189efec754a58ad6fadbabd29a28a",
+        "pdf_input_kind": "selectable text",
+        "critical": [
+          "period_end",
+          "period_months",
+          "monetary_scale",
+          "reporting_scope",
+          "revenue.current",
+          "net_income",
+          "operating_cash_flow",
+          "net_change_cash"
+        ]
+      },
+      {
+        "id": "lucky-cement-sep2026-results-scan",
+        "pdf_path": "pdfs/lucky-cement-sep2026-results-scan.pdf",
+        "pdf_sha256": "8ad2bfb4a93019078d76d90398b975e251bd7c28e4f017f077d8eaa5a5a06a41",
+        "pdf_input_kind": "scanned images",
+        "critical": [
+          "period_end",
+          "period_months",
+          "monetary_scale",
+          "reporting_scope",
+          "revenue.current",
+          "net_income",
+          "operating_cash_flow",
+          "cash_fx_effect",
+          "total_assets",
+          "total_equity",
+          "total_liabilities"
+        ]
+      }
+    ],
+    "input_errors": {},
+    "baselines": {
+      "extraction": "google/gemini-3-flash-preview"
+    },
+    "prompt_hashes": {
+      "indus-motor-sep2026-quarter": "daea6b08e5fbdf749545091824d4aaedc9d8238fa88d3fddf0e669ea1560af13",
+      "lucky-cement-sep2026-results-scan": "086b851c4f448c8eb12a2ba24804f5c62c22c3c923b6616e8b0cbc62d49e8b16"
+    },
+    "summary": [
+      {
+        "stage": "extraction",
+        "model": "google/gemini-3-flash-preview",
+        "baseline": true,
+        "trials": 2,
+        "passed": 2,
+        "mean_score": 0.9242878560719641,
+        "json_rate": 1,
+        "median_latency_s": 12.682500000000001,
+        "total_cost_usd": 0.0255105,
+        "cost_per_pass_usd": 0.01275525,
+        "cost_savings_vs_baseline_pct": 0.0,
+        "score_delta_vs_baseline": 0.0
+      },
+      {
+        "stage": "extraction",
+        "model": "google/gemini-3.1-flash-lite",
+        "baseline": false,
+        "trials": 2,
+        "passed": 2,
+        "mean_score": 0.9134182908545727,
+        "json_rate": 1,
+        "median_latency_s": 8.248,
+        "total_cost_usd": 0.012396750000000002,
+        "cost_per_pass_usd": 0.006198375000000001,
+        "cost_savings_vs_baseline_pct": 51.40530369847709,
+        "score_delta_vs_baseline": -0.010869565217391353
+      }
+    ],
+    "cheapest_passing": {
+      "extraction": "google/gemini-3.1-flash-lite"
+    },
+    "trials": [
+      {
+        "stage": "extraction",
+        "case": "indus-motor-sep2026-quarter",
+        "model": "google/gemini-3-flash-preview",
+        "repeat": 1,
+        "score": 0.9137931034482759,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.0125925,
+        "latency_s": 15.228,
+        "resolved_model": "google/gemini-3-flash-preview",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "fields_checked": 58,
+        "findings": [
+          {
+            "field": "shares_outstanding",
+            "source": "PDF p. 9 (printed p. 8), balance sheet",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 78600000,
+            "reason": "This is the paid-up share capital divided by face value, rather than a count explicitly printed in the report."
+          },
+          {
+            "field": "total_liabilities",
+            "source": "PDF p. 9 (printed p. 8), balance sheet",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 75706357,
+            "reason": "This is the correct sum, but the report prints the components and the application owns the calculation."
+          },
+          {
+            "field": "other_income_breakdown.#count",
+            "source": "Printed p. 17, note 11",
+            "status": "wrong_value",
+            "expected": 8,
+            "actual": 7,
+            "reason": null
+          },
+          {
+            "field": "other_income_breakdown.@Dividend income from listed mutual fund units|Dividend income from mutual funds|Dividend income.value",
+            "source": "Printed p. 17, note 11",
+            "status": "omitted",
+            "expected": 0,
+            "actual": null,
+            "reason": null
+          },
+          {
+            "field": "book_value_per_share",
+            "source": "Computed by Python after extraction",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 1152.49,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "stage": "extraction",
+        "case": "indus-motor-sep2026-quarter",
+        "model": "google/gemini-3.1-flash-lite",
+        "repeat": 1,
+        "score": 0.9137931034482759,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.00627075,
+        "latency_s": 5.63,
+        "resolved_model": "google/gemini-3.1-flash-lite",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "fields_checked": 58,
+        "findings": [
+          {
+            "field": "shares_outstanding",
+            "source": "PDF p. 9 (printed p. 8), balance sheet",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 78600,
+            "reason": null
+          },
+          {
+            "field": "total_liabilities",
+            "source": "PDF p. 9 (printed p. 8), balance sheet",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 75706357,
+            "reason": "This is the correct sum, but the report prints the components and the application owns the calculation."
+          },
+          {
+            "field": "other_income_breakdown.#count",
+            "source": "Printed p. 17, note 11",
+            "status": "wrong_value",
+            "expected": 8,
+            "actual": 7,
+            "reason": null
+          },
+          {
+            "field": "other_income_breakdown.@Dividend income from listed mutual fund units|Dividend income from mutual funds|Dividend income.value",
+            "source": "Printed p. 17, note 11",
+            "status": "omitted",
+            "expected": 0,
+            "actual": null,
+            "reason": null
+          },
+          {
+            "field": "book_value_per_share",
+            "source": "Computed by Python after extraction",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 1152.49,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "stage": "extraction",
+        "case": "lucky-cement-sep2026-results-scan",
+        "model": "google/gemini-3-flash-preview",
+        "repeat": 1,
+        "score": 0.9347826086956522,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.012918,
+        "latency_s": 10.137,
+        "resolved_model": "google/gemini-3-flash-preview",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "fields_checked": 46,
+        "findings": [
+          {
+            "field": "total_debt",
+            "source": "PDF p. 4, balance sheet and unit caption",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 181914953,
+            "reason": null
+          },
+          {
+            "field": "shares_outstanding",
+            "source": "PDF p. 4, balance sheet and unit caption",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 293000000,
+            "reason": null
+          },
+          {
+            "field": "other_income_breakdown.#count",
+            "source": "Quarterly announcement, no audited trailing period or itemized consolidated notes in this packet",
+            "status": "wrong_value",
+            "expected": 0,
+            "actual": 1,
+            "reason": null
+          }
+        ]
+      },
+      {
+        "stage": "extraction",
+        "case": "lucky-cement-sep2026-results-scan",
+        "model": "google/gemini-3.1-flash-lite",
+        "repeat": 1,
+        "score": 0.9130434782608695,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.006126,
+        "latency_s": 10.866,
+        "resolved_model": "google/gemini-3.1-flash-lite",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "fields_checked": 46,
+        "findings": [
+          {
+            "field": "total_debt",
+            "source": "PDF p. 4, balance sheet and unit caption",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 183634512,
+            "reason": null
+          },
+          {
+            "field": "operating_income",
+            "source": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+            "status": "wrong_value",
+            "expected": 26630000,
+            "actual": 24624578,
+            "reason": "Copied the subtotal after finance costs rather than operating profit."
+          },
+          {
+            "field": "operating_income_previous",
+            "source": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+            "status": "wrong_value",
+            "expected": 26826000,
+            "actual": 24549184,
+            "reason": null
+          },
+          {
+            "field": "ebitda",
+            "source": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+            "status": "returned_null",
+            "expected": 31959000,
+            "actual": null,
+            "reason": null
+          }
+        ]
+      }
+    ]
+  },
+  "refined": {
+    "timestamp_utc": "2026-11-20T16:29:48.093287+00:00",
+    "temperature": 0.0,
+    "repeats": 1,
+    "cases": [
+      {
+        "id": "indus-motor-sep2026-quarter",
+        "pdf_path": "pdfs/indus-motor-sep2026-quarter.pdf",
+        "pdf_sha256": "ae88559bd9464915e5cf74652aa0eb91119189efec754a58ad6fadbabd29a28a",
+        "pdf_input_kind": "selectable text",
+        "critical": [
+          "period_end",
+          "period_months",
+          "monetary_scale",
+          "reporting_scope",
+          "revenue.current",
+          "net_income",
+          "operating_cash_flow",
+          "net_change_cash"
+        ]
+      },
+      {
+        "id": "lucky-cement-sep2026-results-scan",
+        "pdf_path": "pdfs/lucky-cement-sep2026-results-scan.pdf",
+        "pdf_sha256": "8ad2bfb4a93019078d76d90398b975e251bd7c28e4f017f077d8eaa5a5a06a41",
+        "pdf_input_kind": "scanned images",
+        "critical": [
+          "period_end",
+          "period_months",
+          "monetary_scale",
+          "reporting_scope",
+          "revenue.current",
+          "net_income",
+          "operating_cash_flow",
+          "cash_fx_effect",
+          "operating_income",
+          "operating_income_previous",
+          "ebitda",
+          "total_assets",
+          "total_equity",
+          "total_liabilities"
+        ]
+      }
+    ],
+    "input_errors": {},
+    "baselines": {
+      "extraction": "google/gemini-3-flash-preview"
+    },
+    "prompt_hashes": {
+      "indus-motor-sep2026-quarter": "2b18fbce63fd60c2957df3ec0b5d960207464764954291ba36c12806a61a4c66",
+      "lucky-cement-sep2026-results-scan": "f6282c99ab1ab588fb0f76fbacbd3b406fd8070d4b0acd5ec0ddd5f6bc1b875f"
+    },
+    "summary": [
+      {
+        "stage": "extraction",
+        "model": "google/gemini-3-flash-preview",
+        "baseline": true,
+        "trials": 2,
+        "passed": 1,
+        "mean_score": 0.9501499250374813,
+        "json_rate": 1,
+        "median_latency_s": 9.087,
+        "total_cost_usd": 0.0258525,
+        "cost_per_pass_usd": 0.0258525,
+        "cost_savings_vs_baseline_pct": 0.0,
+        "score_delta_vs_baseline": 0.0
+      },
+      {
+        "stage": "extraction",
+        "model": "google/gemini-3.1-flash-lite",
+        "baseline": false,
+        "trials": 2,
+        "passed": 1,
+        "mean_score": 0.9479010494752623,
+        "json_rate": 1,
+        "median_latency_s": 5.883,
+        "total_cost_usd": 0.012555750000000001,
+        "cost_per_pass_usd": 0.012555750000000001,
+        "cost_savings_vs_baseline_pct": 51.43313025819553,
+        "score_delta_vs_baseline": -0.002248875562218977
+      }
+    ],
+    "cheapest_passing": {},
+    "trials": [
+      {
+        "stage": "extraction",
+        "case": "indus-motor-sep2026-quarter",
+        "model": "google/gemini-3-flash-preview",
+        "repeat": 1,
+        "score": 0.9655172413793104,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.012933,
+        "latency_s": 8.542,
+        "resolved_model": "google/gemini-3-flash-preview",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "fields_checked": 58,
+        "findings": [
+          {
+            "field": "shares_outstanding",
+            "source": "PDF p. 9 (printed p. 8), balance sheet",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 78600000,
+            "reason": "This is the paid-up share capital divided by face value, rather than a count explicitly printed in the report."
+          },
+          {
+            "field": "total_liabilities",
+            "source": "PDF p. 9 (printed p. 8), balance sheet",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 75706357,
+            "reason": "This is the correct sum, but the report prints the components and the application owns the calculation."
+          }
+        ]
+      },
+      {
+        "stage": "extraction",
+        "case": "indus-motor-sep2026-quarter",
+        "model": "google/gemini-3.1-flash-lite",
+        "repeat": 1,
+        "score": 0.9827586206896551,
+        "passed": true,
+        "valid_json": true,
+        "cost_usd": 0.0063135,
+        "latency_s": 6.135,
+        "resolved_model": "google/gemini-3.1-flash-lite",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": true,
+        "fields_checked": 58,
+        "findings": [
+          {
+            "field": "total_liabilities",
+            "source": "PDF p. 9 (printed p. 8), balance sheet",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 75706357,
+            "reason": "This is the correct sum, but the report prints the components and the application owns the calculation."
+          }
+        ]
+      },
+      {
+        "stage": "extraction",
+        "case": "lucky-cement-sep2026-results-scan",
+        "model": "google/gemini-3-flash-preview",
+        "repeat": 1,
+        "score": 0.9347826086956522,
+        "passed": false,
+        "valid_json": true,
+        "cost_usd": 0.0129195,
+        "latency_s": 9.632,
+        "resolved_model": "google/gemini-3-flash-preview",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": false,
+        "fields_checked": 46,
+        "findings": [
+          {
+            "field": "total_debt",
+            "source": "PDF p. 4, balance sheet and unit caption",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 181914753,
+            "reason": null
+          },
+          {
+            "field": "operating_income",
+            "source": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+            "status": "wrong_value",
+            "expected": 26630000,
+            "actual": 24624578,
+            "reason": "Copied the subtotal after finance costs rather than operating profit."
+          },
+          {
+            "field": "operating_income_previous",
+            "source": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+            "status": "wrong_value",
+            "expected": 26826000,
+            "actual": 24549184,
+            "reason": "Copied the prior-year subtotal after finance costs rather than operating profit."
+          }
+        ]
+      },
+      {
+        "stage": "extraction",
+        "case": "lucky-cement-sep2026-results-scan",
+        "model": "google/gemini-3.1-flash-lite",
+        "repeat": 1,
+        "score": 0.9130434782608695,
+        "passed": false,
+        "valid_json": true,
+        "cost_usd": 0.00624225,
+        "latency_s": 5.631,
+        "resolved_model": "google/gemini-3.1-flash-lite",
+        "provider": "Google",
+        "finish_reason": "stop",
+        "critical_ok": false,
+        "fields_checked": 46,
+        "findings": [
+          {
+            "field": "total_debt",
+            "source": "PDF p. 4, balance sheet and unit caption",
+            "status": "unsubstantiated_value",
+            "expected": null,
+            "actual": 181796847,
+            "reason": null
+          },
+          {
+            "field": "operating_income",
+            "source": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+            "status": "wrong_value",
+            "expected": 26630000,
+            "actual": 24624578,
+            "reason": "Copied the subtotal after finance costs rather than operating profit."
+          },
+          {
+            "field": "operating_income_previous",
+            "source": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+            "status": "wrong_value",
+            "expected": 26826000,
+            "actual": 24549184,
+            "reason": "Copied the prior-year subtotal after finance costs rather than operating profit."
+          },
+          {
+            "field": "other_income_breakdown.#count",
+            "source": "Quarterly announcement, no audited trailing period or itemized consolidated notes in this packet",
+            "status": "wrong_value",
+            "expected": 0,
+            "actual": 1,
+            "reason": null
+          }
+        ]
+      }
+    ]
+  }
+}

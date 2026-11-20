@@ -557,6 +557,9 @@ async function handleFinancialAnalysis() {
         }
         
         const checkData = await checkResponse.json();
+        if (checkData.status === 'error' || checkData.status === 'no_report') {
+            throw new Error(checkData.error || checkData.message || 'Financial filing unavailable');
+        }
         
         if (checkData.status === 'exists') {
             const duration = Date.now() - startTime;

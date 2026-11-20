@@ -158,7 +158,7 @@ class FormatStep(BaseWorkflowStep):
         self._format_metric(report_lines, "Debt-to-Assets Ratio", calculated.get('debt_to_assets'), "{:.3f}")
         self._format_metric(report_lines, "Quick Ratio", calculated.get('quick_ratio'))
         self._format_metric(report_lines, "Gross Margin", calculated.get('gross_margin_pct'), suffix="%")
-        self._format_metric(report_lines, "Interest Coverage", calculated.get('interest_coverage'), suffix="x")
+        self._format_metric(report_lines, "Finance-Cost Coverage", calculated.get('interest_coverage'), suffix="x")
         report_lines.append("")
     
     def _format_initiatives(self, analysis: Dict[str, Any], report_lines: List[str]) -> None:

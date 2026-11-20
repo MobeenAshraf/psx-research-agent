@@ -1,7 +1,9 @@
 """Shared PDF download and caching service."""
 
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Optional
+from urllib.parse import urlparse
 
 import requests
 
@@ -30,24 +32,34 @@ class PDFDownloadService:
         """Download PDF if not cached and return file path."""
         filename = self._extract_filename(url, symbol)
         pdf_path = self.get_pdf_path(symbol, filename)
-        if pdf_path.exists():
-            return str(pdf_path)
-
+        temporary = None
         try:
-            response = requests.get(url, timeout=60, stream=True)
-            response.raise_for_status()
-            with open(pdf_path, "wb") as file_obj:
-                for chunk in response.iter_content(chunk_size=8192):
-                    file_obj.write(chunk)
+            if pdf_path.is_file():
+                with pdf_path.open("rb") as cached:
+                    if cached.read(5) == b"%PDF-":
+                        return str(pdf_path)
+            with requests.get(url, timeout=(10, 60), stream=True) as response:
+                response.raise_for_status()
+                with NamedTemporaryFile(dir=pdf_path.parent, delete=False) as stream:
+                    temporary = Path(stream.name)
+                    for chunk in response.iter_content(chunk_size=65536):
+                        stream.write(chunk)
+                    stream.seek(0)
+                    if stream.read(5) != b"%PDF-":
+                        raise PDFDownloadError("Filing source returned a response other than a PDF")
+            temporary.replace(pdf_path)
             return str(pdf_path)
         except requests.RequestException as exc:
             raise PDFDownloadError(f"Failed to download PDF: {exc}") from exc
         except OSError as exc:
             raise PDFDownloadError(f"Error saving PDF: {exc}") from exc
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
     def _extract_filename(self, url: str, symbol: str) -> str:
         """Generate filename from URL."""
-        parsed = url.split("/")[-1] or f"{symbol.upper()}_report.pdf"
+        parsed = Path(urlparse(url).path).name or f"{symbol.upper()}_report.pdf"
         if ".pdf" not in parsed.lower():
             parsed = f"{parsed}.pdf"
         return parsed

@@ -16,6 +16,10 @@ class StateManager:
     def __init__(self):
         self._state_save_dir: Path = None
         self._run_id: Optional[str] = None
+
+    @property
+    def run_started(self) -> bool:
+        return self._run_id is not None
     
     def setup_state_dir(
         self, 

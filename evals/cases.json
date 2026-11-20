@@ -59,21 +59,190 @@
     "expected": {
       "currency": "PKR",
       "period_end": "2026-09-30",
-      "period_months": 3,
       "monetary_scale": 1000,
       "reporting_scope": "standalone",
+      "cash": 4937597,
+      "long_term_debt": 109950,
+      "current_portion_long_term_debt": 39983,
+      "short_term_borrowings": null,
+      "shares_outstanding": null,
+      "shareholders_equity": 90585731,
+      "total_equity": 90585731,
+      "total_assets": 166292088,
+      "current_assets": 146630292,
+      "current_liabilities": 71968634,
+      "noncurrent_liabilities": 3737723,
+      "total_liabilities": null,
+      "accounts_receivable": 3912990,
+      "inventory": 42927749,
+      "period_months": 3,
       "revenue.current": 74014959,
       "revenue.previous": 61737936,
       "net_income": 7384376,
       "net_income_previous": 6719280,
       "eps": 93.95,
+      "cogs": 62701692,
+      "operating_income": 8820589,
+      "operating_income_previous": 8220771,
+      "interest_expense": 203747,
       "operating_cash_flow": -23894961,
       "capital_expenditures": 430365,
-      "shareholders_equity": 90585731,
-      "total_liabilities": 75706357,
-      "shares_outstanding": 78600000
+      "dividends_paid": 2619,
+      "beginning_cash": 31033238,
+      "net_change_cash": -26095641,
+      "cash_fx_effect": null,
+      "ending_cash": 4937597,
+      "total_debt": 149933,
+      "segment_data.#count": 2,
+      "segment_data.@Manufacturing|Vehicle Manufacturing.revenue": 69160053,
+      "segment_data.@Manufacturing|Vehicle Manufacturing.operating_income": 7233962,
+      "segment_data.@Trading|Vehicle Trading.revenue": 4854906,
+      "segment_data.@Trading|Vehicle Trading.operating_income": 1586627,
+      "other_income_breakdown.#count": 8,
+      "other_income_breakdown.@Return on bank deposits|Profit on bank deposits|Interest income on bank deposits|Interest on bank deposits.value": 345905,
+      "other_income_breakdown.@Net gain on investment in listed mutual fund units|Net gain on listed mutual fund units|Gain on investment in listed mutual fund units.value": 476164,
+      "other_income_breakdown.@Dividend income from listed mutual fund units|Dividend income from mutual funds|Dividend income.value": 0,
+      "other_income_breakdown.@Gain on trade of investment in Government Securities|Gain on trade of Government Securities|Gain on government securities.value": 1987371,
+      "other_income_breakdown.@Gain on sale of fixed assets|Gain on disposal of operating fixed assets.value": 124170,
+      "other_income_breakdown.@Freight and other charges income - net of expenses|Freight and other charges income|Freight and other charges income net.value": 177928,
+      "other_income_breakdown.@Unclaimed liabilities written back.value": 90155,
+      "other_income_breakdown.@Others|Other income|Other.value": 19221,
+      "ebitda": null,
+      "ttm_eps": null,
+      "ttm_revenue": null,
+      "ttm_ebitda": null,
+      "ttm_operating_cash_flow": null,
+      "ttm_capital_expenditures": null,
+      "book_value_per_share": null,
+      "free_cash_flow": null
     },
-    "critical": ["period_end", "period_months", "monetary_scale", "reporting_scope", "revenue.current", "net_income", "operating_cash_flow"]
+    "critical": [
+      "period_end",
+      "period_months",
+      "monetary_scale",
+      "reporting_scope",
+      "revenue.current",
+      "net_income",
+      "operating_cash_flow",
+      "net_change_cash"
+    ],
+    "pdf_input_kind": "selectable text",
+    "audit_references": {
+      "currency": "PDF p. 9 (printed p. 8), balance sheet",
+      "period_end": "PDF p. 9 (printed p. 8), balance sheet",
+      "monetary_scale": "PDF p. 9 (printed p. 8), balance sheet",
+      "reporting_scope": "PDF p. 9 (printed p. 8), balance sheet",
+      "cash": "PDF p. 9 (printed p. 8), balance sheet",
+      "long_term_debt": "PDF p. 9 (printed p. 8), balance sheet",
+      "current_portion_long_term_debt": "PDF p. 9 (printed p. 8), balance sheet",
+      "short_term_borrowings": "PDF p. 9 (printed p. 8), balance sheet",
+      "shares_outstanding": "PDF p. 9 (printed p. 8), balance sheet",
+      "shareholders_equity": "PDF p. 9 (printed p. 8), balance sheet",
+      "total_equity": "PDF p. 9 (printed p. 8), balance sheet",
+      "total_assets": "PDF p. 9 (printed p. 8), balance sheet",
+      "current_assets": "PDF p. 9 (printed p. 8), balance sheet",
+      "current_liabilities": "PDF p. 9 (printed p. 8), balance sheet",
+      "noncurrent_liabilities": "PDF p. 9 (printed p. 8), balance sheet",
+      "total_liabilities": "PDF p. 9 (printed p. 8), balance sheet",
+      "accounts_receivable": "PDF p. 9 (printed p. 8), balance sheet",
+      "inventory": "PDF p. 9 (printed p. 8), balance sheet",
+      "period_months": "PDF p. 10 (printed p. 9), income statement",
+      "revenue.current": "PDF p. 10 (printed p. 9), income statement",
+      "revenue.previous": "PDF p. 10 (printed p. 9), income statement",
+      "net_income": "PDF p. 10 (printed p. 9), income statement",
+      "net_income_previous": "PDF p. 10 (printed p. 9), income statement",
+      "eps": "PDF p. 10 (printed p. 9), income statement",
+      "cogs": "PDF p. 10 (printed p. 9), income statement",
+      "operating_income": "PDF p. 10 (printed p. 9), income statement",
+      "operating_income_previous": "PDF p. 10 (printed p. 9), income statement",
+      "interest_expense": "PDF p. 10 (printed p. 9), income statement",
+      "operating_cash_flow": "PDF p. 12 (printed p. 11), cash-flow statement",
+      "capital_expenditures": "PDF p. 12 (printed p. 11), cash-flow statement",
+      "dividends_paid": "PDF p. 12 (printed p. 11), cash-flow statement",
+      "beginning_cash": "PDF p. 12 (printed p. 11), cash-flow statement",
+      "net_change_cash": "PDF p. 12 (printed p. 11), cash-flow statement",
+      "cash_fx_effect": "PDF p. 12 (printed p. 11), cash-flow statement",
+      "ending_cash": "PDF p. 12 (printed p. 11), cash-flow statement",
+      "total_debt": "Note 6, total outstanding refinance borrowing",
+      "segment_data.#count": "Printed p. 17, note 10",
+      "segment_data.@Manufacturing|Vehicle Manufacturing.revenue": "Printed p. 17, note 10",
+      "segment_data.@Manufacturing|Vehicle Manufacturing.operating_income": "Printed p. 17, note 10",
+      "segment_data.@Trading|Vehicle Trading.revenue": "Printed p. 17, note 10",
+      "segment_data.@Trading|Vehicle Trading.operating_income": "Printed p. 17, note 10",
+      "other_income_breakdown.#count": "Printed p. 17, note 11",
+      "other_income_breakdown.@Return on bank deposits|Profit on bank deposits|Interest income on bank deposits|Interest on bank deposits.value": "Printed p. 17, note 11",
+      "other_income_breakdown.@Net gain on investment in listed mutual fund units|Net gain on listed mutual fund units|Gain on investment in listed mutual fund units.value": "Printed p. 17, note 11",
+      "other_income_breakdown.@Dividend income from listed mutual fund units|Dividend income from mutual funds|Dividend income.value": "Printed p. 17, note 11",
+      "other_income_breakdown.@Gain on trade of investment in Government Securities|Gain on trade of Government Securities|Gain on government securities.value": "Printed p. 17, note 11",
+      "other_income_breakdown.@Gain on sale of fixed assets|Gain on disposal of operating fixed assets.value": "Printed p. 17, note 11",
+      "other_income_breakdown.@Freight and other charges income - net of expenses|Freight and other charges income|Freight and other charges income net.value": "Printed p. 17, note 11",
+      "other_income_breakdown.@Unclaimed liabilities written back.value": "Printed p. 17, note 11",
+      "other_income_breakdown.@Others|Other income|Other.value": "Printed p. 17, note 11",
+      "ebitda": "No labeled EBITDA or trailing-12-month period in this interim report",
+      "ttm_eps": "No labeled EBITDA or trailing-12-month period in this interim report",
+      "ttm_revenue": "No labeled EBITDA or trailing-12-month period in this interim report",
+      "ttm_ebitda": "No labeled EBITDA or trailing-12-month period in this interim report",
+      "ttm_operating_cash_flow": "No labeled EBITDA or trailing-12-month period in this interim report",
+      "ttm_capital_expenditures": "No labeled EBITDA or trailing-12-month period in this interim report",
+      "book_value_per_share": "Computed by Python after extraction",
+      "free_cash_flow": "Computed by Python after extraction"
+    },
+    "audit_alternatives": {
+      "revenue.current": [
+        {
+          "value": 61737936,
+          "reason": "Copied the prior-year comparison column."
+        }
+      ],
+      "operating_income": [
+        {
+          "value": 9584052,
+          "reason": "Copied the subtotal before the workers’ fund charges."
+        }
+      ],
+      "operating_cash_flow": [
+        {
+          "value": -19683193,
+          "reason": "Copied cash used in operations before other operating cash-flow adjustments."
+        }
+      ],
+      "interest_expense": [
+        {
+          "value": 1632,
+          "reason": "Read the interest-on-loan subcomponent from note 12; the scored convention uses the total finance costs line."
+        }
+      ],
+      "net_change_cash": [
+        {
+          "value": 3081789,
+          "reason": "Copied the prior-year comparison column."
+        }
+      ],
+      "total_debt": [
+        {
+          "value": 109950,
+          "reason": "Omitted the current portion of the same long-term loan."
+        }
+      ],
+      "shares_outstanding": [
+        {
+          "value": 78600000,
+          "reason": "This is the paid-up share capital divided by face value, rather than a count explicitly printed in the report."
+        }
+      ],
+      "inventory": [
+        {
+          "value": 43612740,
+          "reason": "Added stores and spares to the stock-in-trade line."
+        }
+      ],
+      "total_liabilities": [
+        {
+          "value": 75706357,
+          "reason": "This is the correct sum, but the report prints the components and the application owns the calculation."
+        }
+      ]
+    }
   },
   {
     "id": "lucky-cement-sep2026-results-scan",
@@ -103,9 +272,179 @@
       "ending_cash": 197040643,
       "shareholders_equity": 442370186,
       "total_equity": 487595141,
-      "total_liabilities": 328699699
+      "total_liabilities": 328699699,
+      "cash": 14881450,
+      "total_debt": null,
+      "long_term_debt": 97769543,
+      "current_portion_long_term_debt": 15727367,
+      "short_term_borrowings": 68418105,
+      "total_assets": 816294840,
+      "current_assets": 395047980,
+      "current_liabilities": 185532347,
+      "noncurrent_liabilities": 143167352,
+      "accounts_receivable": 66078949,
+      "inventory": 67682133,
+      "shares_outstanding": null,
+      "cogs": 97897918,
+      "interest_expense": 4642843,
+      "beginning_cash": 176793432,
+      "operating_income": 26630000,
+      "operating_income_previous": 26826000,
+      "ebitda": 31959000,
+      "ttm_eps": null,
+      "ttm_revenue": null,
+      "ttm_ebitda": null,
+      "ttm_operating_cash_flow": null,
+      "ttm_capital_expenditures": null,
+      "segment_data.#count": 0,
+      "other_income_breakdown.#count": 0,
+      "book_value_per_share": null,
+      "free_cash_flow": null
     },
-    "critical": ["period_end", "period_months", "monetary_scale", "reporting_scope", "revenue.current", "net_income", "operating_cash_flow", "cash_fx_effect"]
+    "critical": [
+      "period_end",
+      "period_months",
+      "monetary_scale",
+      "reporting_scope",
+      "revenue.current",
+      "net_income",
+      "operating_cash_flow",
+      "cash_fx_effect",
+      "operating_income",
+      "operating_income_previous",
+      "ebitda",
+      "total_assets",
+      "total_equity",
+      "total_liabilities"
+    ],
+    "pdf_input_kind": "scanned images",
+    "audit_references": {
+      "currency": "PDF p. 4, balance sheet and unit caption",
+      "monetary_scale": "PDF p. 4, balance sheet and unit caption",
+      "period_end": "PDF p. 4, balance sheet and unit caption",
+      "reporting_scope": "PDF p. 4, balance sheet and unit caption",
+      "cash": "PDF p. 4, balance sheet and unit caption",
+      "total_debt": "PDF p. 4, balance sheet and unit caption",
+      "long_term_debt": "PDF p. 4, balance sheet and unit caption",
+      "current_portion_long_term_debt": "PDF p. 4, balance sheet and unit caption",
+      "short_term_borrowings": "PDF p. 4, balance sheet and unit caption",
+      "shareholders_equity": "PDF p. 4, balance sheet and unit caption",
+      "total_equity": "PDF p. 4, balance sheet and unit caption",
+      "total_assets": "PDF p. 4, balance sheet and unit caption",
+      "current_assets": "PDF p. 4, balance sheet and unit caption",
+      "current_liabilities": "PDF p. 4, balance sheet and unit caption",
+      "noncurrent_liabilities": "PDF p. 4, balance sheet and unit caption",
+      "total_liabilities": "PDF p. 4, balance sheet and unit caption",
+      "accounts_receivable": "PDF p. 4, balance sheet and unit caption",
+      "inventory": "PDF p. 4, balance sheet and unit caption",
+      "shares_outstanding": "PDF p. 4, balance sheet and unit caption",
+      "period_months": "PDF p. 5, consolidated income statement",
+      "revenue.current": "PDF p. 5, consolidated income statement",
+      "revenue.previous": "PDF p. 5, consolidated income statement",
+      "net_income": "PDF p. 5, consolidated income statement",
+      "net_income_previous": "PDF p. 5, consolidated income statement",
+      "eps": "PDF p. 5, consolidated income statement",
+      "cogs": "PDF p. 5, consolidated income statement",
+      "interest_expense": "PDF p. 5, consolidated income statement",
+      "operating_cash_flow": "PDF p. 8, consolidated cash-flow statement",
+      "capital_expenditures": "PDF p. 8, consolidated cash-flow statement",
+      "dividends_paid": "PDF p. 8, consolidated cash-flow statement",
+      "beginning_cash": "PDF p. 8, consolidated cash-flow statement",
+      "net_change_cash": "PDF p. 8, consolidated cash-flow statement",
+      "cash_fx_effect": "PDF p. 8, consolidated cash-flow statement",
+      "ending_cash": "PDF p. 8, consolidated cash-flow statement",
+      "operating_income": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+      "operating_income_previous": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+      "ebitda": "PDF p. 15, directors’ consolidated figures rounded to PKR millions",
+      "ttm_eps": "Quarterly announcement, no audited trailing period or itemized consolidated notes in this packet",
+      "ttm_revenue": "Quarterly announcement, no audited trailing period or itemized consolidated notes in this packet",
+      "ttm_ebitda": "Quarterly announcement, no audited trailing period or itemized consolidated notes in this packet",
+      "ttm_operating_cash_flow": "Quarterly announcement, no audited trailing period or itemized consolidated notes in this packet",
+      "ttm_capital_expenditures": "Quarterly announcement, no audited trailing period or itemized consolidated notes in this packet",
+      "segment_data.#count": "Quarterly announcement, no audited trailing period or itemized consolidated notes in this packet",
+      "other_income_breakdown.#count": "Quarterly announcement, no audited trailing period or itemized consolidated notes in this packet",
+      "book_value_per_share": "Computed by Python after extraction",
+      "free_cash_flow": "Computed by Python after extraction"
+    },
+    "absolute_tolerance": {
+      "operating_income": 500,
+      "operating_income_previous": 500,
+      "ebitda": 500
+    },
+    "audit_alternatives": {
+      "net_income": [
+        {
+          "value": 22557467,
+          "reason": "Copied group profit including non-controlling interests; the expected row is attributable to owners."
+        },
+        {
+          "value": 17130585,
+          "reason": "Copied standalone profit instead of consolidated parent-attributable profit."
+        }
+      ],
+      "net_income_previous": [
+        {
+          "value": 23561490,
+          "reason": "Copied comparative group profit including non-controlling interests."
+        }
+      ],
+      "revenue.current": [
+        {
+          "value": 166341324,
+          "reason": "Copied gross revenue."
+        },
+        {
+          "value": 41074258,
+          "reason": "Copied standalone net revenue."
+        },
+        {
+          "value": 125207898,
+          "reason": "Copied the comparative-period column."
+        }
+      ],
+      "cash": [
+        {
+          "value": 197040643,
+          "reason": "Copied closing cash equivalents including short-term investments instead of balance-sheet cash and bank balances."
+        }
+      ],
+      "cash_fx_effect": [
+        {
+          "value": -451194,
+          "reason": "Copied the unrelated foreign-currency translation amount from comprehensive income."
+        }
+      ],
+      "shares_outstanding": [
+        {
+          "value": 1465000000,
+          "reason": "The number agrees with the separately published PSX equity profile, but the scanned announcement gives paid-up capital rather than a directly disclosed share count."
+        }
+      ],
+      "operating_cash_flow": [
+        {
+          "value": 32368746,
+          "reason": "Copied cash generated before tax and financing adjustments."
+        }
+      ],
+      "operating_income": [
+        {
+          "value": 24624578,
+          "reason": "Copied the subtotal after finance costs rather than operating profit."
+        }
+      ],
+      "operating_income_previous": [
+        {
+          "value": 24549184,
+          "reason": "Copied the prior-year subtotal after finance costs rather than operating profit."
+        }
+      ],
+      "dividends_paid": [
+        {
+          "value": 0,
+          "reason": "Confused nil dividend recommended with cash dividends paid during the quarter."
+        }
+      ]
+    }
   },
   {
     "id": "analysis-payout-and-segments",

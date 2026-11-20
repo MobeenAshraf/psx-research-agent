@@ -18,6 +18,7 @@ class FinancialData(SerializableDataclass):
     new_investments: Optional[str] = None
     major_losses: Optional[str] = None
     report_url: Optional[str] = None
+    report_source: Optional[str] = None
     annual_financials: Dict[str, Dict[str, Optional[float]]] = field(
         default_factory=dict
     )
@@ -43,6 +44,7 @@ class FinancialData(SerializableDataclass):
             new_investments=data.get('new_investments'),
             major_losses=data.get('major_losses'),
             report_url=data.get('report_url'),
+            report_source=data.get('report_source'),
             annual_financials=data.get('annual_financials', {}),
             quarterly_financials=data.get('quarterly_financials', {}),
             ratios=data.get('ratios', {}),
